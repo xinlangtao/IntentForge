@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>cn.intentforge</groupId>
+    <artifactId>intentforge</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>intentforge-agent</artifactId>
+  <packaging>pom</packaging>
+
+  <name>IntentForge Agent</name>
+  <description>Agent abstraction family and runtime integrations.</description>
+
+  <modules>
+    <module>intentforge-agent-core</module>
+    <module>intentforge-agent-native</module>
+    <module>intentforge-agent-springai</module>
+    <module>intentforge-agent-external</module>
+  </modules>
+</project>

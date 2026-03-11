@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>cn.intentforge</groupId>
+    <artifactId>intentforge</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>intentforge-tool</artifactId>
+  <packaging>pom</packaging>
+
+  <name>IntentForge Tool</name>
+  <description>Tool SPI, connectors, execution, and validation modules.</description>
+
+  <modules>
+    <module>intentforge-tool-core</module>
+    <module>intentforge-tool-mcp</module>
+    <module>intentforge-tool-connectors</module>
+    <module>intentforge-tool-fs</module>
+    <module>intentforge-tool-shell</module>
+    <module>intentforge-tool-validation</module>
+  </modules>
+</project>

@@ -1,0 +1,93 @@
+# IntentForge Module Map
+
+## Core split
+
+- `governance` 负责管
+- `agent` 负责想
+- `tool` 负责做
+- `memory/config` 负责提供上下文
+- `audit` 负责留痕
+- `boot` 负责启动
+- `desktop` 负责桌面端宿主与平台适配
+
+## Root modules
+
+| Module | Role |
+| --- | --- |
+| `intentforge-bom` | Unified dependency version alignment for the repository and external consumers |
+| `intentforge-common` | Global shared enums, exceptions, constants, utils, and DTO bases |
+| `intentforge-api` | External protocol contracts, REST DTOs, AG-UI events, request/response objects |
+| `intentforge-governance` | Task orchestration, state machine, routing, strategy, coordination, scheduling |
+| `intentforge-audit` | Run/step/tool-call records, event snapshots, replay, audit services |
+| `intentforge-agent` | Agent abstraction family and runtime integrations |
+| `intentforge-tool` | Tool SPI, connectors, execution, validation |
+| `intentforge-memory` | Memory abstractions and implementations |
+| `intentforge-config` | Config abstractions and layered providers |
+| `intentforge-boot` | Startup entrypoints for local and server modes |
+| `intentforge-desktop` | Desktop host abstraction and platform adapters |
+
+## Nested module families
+
+### `intentforge-agent`
+
+| Module | Role |
+| --- | --- |
+| `intentforge-agent-core` | `Task`, `Plan`, `ContextPack`, `Executor`, `Artifact`, `Decision` and coordination models |
+| `intentforge-agent-native` | Native planner, coder, reviewer, judge implementations |
+| `intentforge-agent-springai` | Spring AI based chat, advisor, and tool execution adapters |
+| `intentforge-agent-external` | External runtime adapters such as Codex, Gemini, AgentScope |
+
+### `intentforge-tool`
+
+| Module | Role |
+| --- | --- |
+| `intentforge-tool-core` | Tool SPI, gateway, registry, permission model |
+| `intentforge-tool-mcp` | MCP client/server adapters and protocol wrappers |
+| `intentforge-tool-connectors` | Git, Jira, repo, file, DB, and other connector entrypoints |
+| `intentforge-tool-fs` | File read/write, patch, diff, snapshot, sandbox/worktree operations |
+| `intentforge-tool-shell` | Process execution, stdout/stderr capture, timeout, interrupt, resource control |
+| `intentforge-tool-validation` | Build, test, lint, rule checks, and acceptance validation |
+
+### `intentforge-memory`
+
+| Module | Role |
+| --- | --- |
+| `intentforge-memory-core` | `MemoryStore`, `MemoryStrategy`, `MemoryOrchestrator`, memory models |
+| `intentforge-memory-file` | JSON, YAML, Markdown, NDJSON storage implementations |
+| `intentforge-memory-sql` | SQLite and PostgreSQL working/episodic memory implementations |
+| `intentforge-memory-graph` | Entity relations, dependency graph, graph retrieval |
+
+### `intentforge-config`
+
+| Module | Role |
+| --- | --- |
+| `intentforge-config-core` | `ConfigProvider`, `ConfigResolver`, overlay, config query models |
+| `intentforge-config-file` | YAML/JSON local config loading and override |
+| `intentforge-config-db` | Runtime and policy config persistence |
+| `intentforge-config-graph` | Complex dependency and relation-driven config |
+
+### `intentforge-boot`
+
+| Module | Role |
+| --- | --- |
+| `intentforge-boot-local` | Local-first bootstrap and local storage initialization |
+| `intentforge-boot-server` | Server deployment bootstrap and remote runtime mode |
+
+### `intentforge-desktop`
+
+| Module | Role |
+| --- | --- |
+| `intentforge-desktop-core` | Shared desktop host abstractions |
+| `intentforge-desktop-windows` | Windows-specific host adapter and packaging entrypoint |
+| `intentforge-desktop-macos` | macOS-specific host adapter and packaging entrypoint |
+| `intentforge-desktop-linux` | Linux-specific host adapter and packaging entrypoint |
+
+## Placeholder directories
+
+| Path | Role |
+| --- | --- |
+| `frontend/desktop` | Electron + Vue rendering layer placeholder |
+| `frontend/ui` | Shared frontend UI assets and component placeholder |
+| `python/runtime` | Python runtime utilities and future bridge placeholder |
+| `scripts` | Development and automation script placeholder |
+
