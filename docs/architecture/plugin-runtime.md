@@ -26,6 +26,20 @@ Examples:
 - model plugin SPI: `META-INF/services/cn.intentforge.model.spi.ModelPlugin`
 - model-provider plugin SPI: `META-INF/services/cn.intentforge.model.provider.spi.ModelProviderPlugin`
 
+## Manager SPI (classpath)
+
+In addition to source plugins, manager/registry implementations can be replaced via classpath SPI:
+
+- prompt manager SPI: `META-INF/services/cn.intentforge.prompt.spi.PromptManagerProvider`
+- model manager SPI: `META-INF/services/cn.intentforge.model.spi.ModelManagerProvider`
+- model-provider registry SPI: `META-INF/services/cn.intentforge.model.provider.spi.ModelProviderRegistryProvider`
+
+Selection rule:
+
+- providers expose `priority()`
+- higher priority wins
+- same highest priority is rejected at startup
+
 ## Plugin metadata
 
 `META-INF/intentforge-plugin.properties` supports:

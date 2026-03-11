@@ -45,22 +45,22 @@
 
 | Module | Role |
 | --- | --- |
-| `intentforge-prompt-core` | Prompt definitions, variables, queries, registry SPI |
-| `intentforge-prompt-local` | In-memory prompt manager, classpath SPI loading, local plugin directory loading |
+| `intentforge-prompt-core` | Prompt definitions, variables, queries, registry SPI, manager-provider SPI |
+| `intentforge-prompt-local` | In-memory prompt manager provider, classpath SPI loading, local plugin directory loading |
 
 ### `intentforge-model`
 
 | Module | Role |
 | --- | --- |
-| `intentforge-model-core` | Model descriptors, capability catalog, registry SPI |
-| `intentforge-model-local` | In-memory model manager, classpath SPI loading, local plugin directory loading |
+| `intentforge-model-core` | Model descriptors, capability catalog, registry SPI, manager-provider SPI |
+| `intentforge-model-local` | In-memory model manager provider, classpath SPI loading, local plugin directory loading |
 
 ### `intentforge-model-provider`
 
 | Module | Role |
 | --- | --- |
-| `intentforge-model-provider-core` | Provider descriptors, provider SPI, provider registry contracts |
-| `intentforge-model-provider-local` | In-memory provider registry, local plugin loading, metadata and version validation |
+| `intentforge-model-provider-core` | Provider descriptors, provider SPI, provider registry contracts, registry-provider SPI |
+| `intentforge-model-provider-local` | In-memory provider registry provider, local plugin loading, metadata and version validation |
 
 ### `intentforge-tool`
 
