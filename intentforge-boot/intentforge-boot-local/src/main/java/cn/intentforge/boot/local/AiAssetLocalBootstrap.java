@@ -12,6 +12,9 @@ import cn.intentforge.prompt.local.plugin.DirectoryPromptPluginManager;
 import cn.intentforge.prompt.local.registry.InMemoryPromptManager;
 import cn.intentforge.prompt.registry.PromptManager;
 import cn.intentforge.prompt.spi.PromptManagerProvider;
+import cn.intentforge.session.local.SessionLocalRuntime;
+import cn.intentforge.session.local.SessionLocalRuntimeFactory;
+import cn.intentforge.session.registry.SessionManager;
 import cn.intentforge.space.SpaceRegistry;
 import cn.intentforge.space.SpaceResolver;
 import cn.intentforge.space.local.SpaceLocalRuntime;
@@ -86,6 +89,8 @@ public final class AiAssetLocalBootstrap {
     SpaceLocalRuntime spaceLocalRuntime = SpaceLocalRuntimeFactory.create(spaceConfigurer);
     SpaceRegistry spaceRegistry = spaceLocalRuntime.spaceRegistry();
     SpaceResolver spaceResolver = spaceLocalRuntime.spaceResolver();
+    SessionLocalRuntime sessionLocalRuntime = SessionLocalRuntimeFactory.create(classLoader);
+    SessionManager sessionManager = sessionLocalRuntime.sessionManager();
 
     PromptManager promptManager = createPromptManager(classLoader);
     promptManager.loadPlugins();
@@ -125,6 +130,7 @@ public final class AiAssetLocalBootstrap {
         toolPluginManager,
         toolPermissionPolicy,
         toolGateway,
+        sessionManager,
         spaceRegistry,
         spaceResolver);
   }

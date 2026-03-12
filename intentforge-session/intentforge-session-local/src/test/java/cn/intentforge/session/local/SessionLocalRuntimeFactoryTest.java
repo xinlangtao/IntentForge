@@ -1,9 +1,14 @@
 package cn.intentforge.session.local;
 
 import cn.intentforge.session.local.registry.InMemorySessionManager;
+import cn.intentforge.session.model.Session;
+import cn.intentforge.session.model.SessionDraft;
+import cn.intentforge.session.model.SessionMessageDraft;
+import cn.intentforge.session.model.SessionQuery;
 import cn.intentforge.session.registry.SessionManager;
 import cn.intentforge.session.spi.SessionManagerProvider;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -80,5 +85,33 @@ class SessionLocalRuntimeFactoryTest {
   }
 
   private static final class HighPrioritySessionManager implements SessionManager {
+    @Override
+    public Session create(SessionDraft draft) {
+      throw new UnsupportedOperationException("not used in this test");
+    }
+
+    @Override
+    public Optional<Session> find(String id) {
+      return Optional.empty();
+    }
+
+    @Override
+    public List<Session> list(SessionQuery query) {
+      return List.of();
+    }
+
+    @Override
+    public Session appendMessage(String sessionId, SessionMessageDraft messageDraft) {
+      throw new UnsupportedOperationException("not used in this test");
+    }
+
+    @Override
+    public Session archive(String sessionId) {
+      throw new UnsupportedOperationException("not used in this test");
+    }
+
+    @Override
+    public void delete(String sessionId) {
+    }
   }
 }
