@@ -1,7 +1,7 @@
 # Task: Native Java Coding Agent Event-Driven Run Model
 
 ## Requirement
-Starting from the completed synchronous MVP native Java coding agent, evolve the runtime into an event-driven run model that supports multi-turn dialogue adjustment. The next phase must let planner/coder/reviewer execution emit transport-agnostic run events, pause for user feedback, resume with updated instructions, and keep the existing session, space, prompt, model, provider, tool, governance, and boot integration aligned with the new run lifecycle.
+Starting from the completed event-driven native Java coding agent runtime, extend the MVP with the minimum API and boot-server chain required to run the agent from a terminal through a real server entrypoint. The next phase must preserve the existing run lifecycle while adding transport contracts, server bootstrap wiring, and a minimal HTTP/SSE flow that can create a run, observe run events, send user feedback, and cancel the run.
 
 ## Acceptance Criteria
 - [x] `intentforge-agent-core` defines run/event/lifecycle contracts for incremental execution, user-feedback checkpoints, and resume/cancel semantics across module boundaries.
@@ -9,11 +9,14 @@ Starting from the completed synchronous MVP native Java coding agent, evolve the
 - [x] `intentforge-agent-native` adapts planner/coder/reviewer execution to the new run lifecycle and preserves multi-turn context across turns.
 - [x] `intentforge-boot-local` exposes the event-driven runtime entry needed to start, observe, and continue a run without requiring a future API transport first.
 - [x] Unit and integration tests cover normal, boundary, invalid input, pause/resume, cancel, and exception paths, and `make test` passes without warnings or errors.
+- [ ] `intentforge-api` defines the minimum HTTP contract for run creation, event subscription, user feedback resume, and cancel operations, and the contract documentation is synchronized.
+- [ ] `intentforge-boot-server` provides the minimum runnable server entrypoint that wires the existing `AgentRunGateway` into HTTP and SSE transport without duplicating governance logic.
+- [ ] A local terminal smoke path can start the server and drive one real run through HTTP/SSE end to end.
 
 ## Overall Status
-- status: finished
-- process: 100%
-- current_step: 8
+- status: running
+- process: 10%
+- current_step: 9
 
 ## Steps
 | step | description | status | note |
@@ -26,6 +29,10 @@ Starting from the completed synchronous MVP native Java coding agent, evolve the
 | 6 | Add failing tests for run lifecycle, event emission, awaiting-user pause, resume, cancel, and transport-agnostic observation flow | finished | commit: ad2ee3c |
 | 7 | Implement agent-core run/event contracts, governance orchestrator, native feedback loop, and boot-local event-driven wiring | finished | commit: e81d513 |
 | 8 | Update docs, run full verification, sync task bookkeeping, and finalize event-driven checkpoints | finished | commits: e81d513, 87e6526 |
+| 9 | Re-scope the completed event-driven runtime to include the minimum API and boot-server chain and preserve the recovery baseline | running | commit: pending |
+| 10 | Add failing tests and API contract updates for run create, SSE events, feedback resume, cancel, and minimal boot-server startup flow | notrun | commit: pending |
+| 11 | Implement intentforge-api transport contracts and boot-server HTTP/SSE wiring on top of `AgentRunGateway` | notrun | commit: pending |
+| 12 | Update docs, verify terminal smoke flow and full test suite, sync task bookkeeping, and finalize API/server checkpoints | notrun | commit: pending |
 
 ## Update Log
 | time | status | process | update |
@@ -43,3 +50,4 @@ Starting from the completed synchronous MVP native Java coding agent, evolve the
 | 2026-03-12 20:58:36 +0800 | running | 80% | implemented event-driven run contracts, in-memory run orchestration, native feedback propagation, and boot-local wiring; targeted reactor tests passed for agent-core, governance, agent-native, and boot-local |
 | 2026-03-12 21:00:36 +0800 | finished | 100% | full `make test` passed after the event-driven run model landed; acceptance criteria are satisfied and final task bookkeeping is being synchronized |
 | 2026-03-12 21:01:21 +0800 | finished | 100% | task bookkeeping synchronized after docs checkpoint `87e6526`; event-driven multi-turn run model is fully closed |
+| 2026-03-12 21:44:12 +0800 | running | 10% | scope changed again: reopen the finished event-driven runtime task to add the minimum API and boot-server chain needed for terminal real calls; current gap is that `boot-server` is still a placeholder and there is no HTTP/SSE transport layer yet |
