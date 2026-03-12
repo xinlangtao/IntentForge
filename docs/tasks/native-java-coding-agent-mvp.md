@@ -44,7 +44,7 @@ Starting from the completed event-driven native Java coding agent runtime and mi
 | 14 | Add red tests and core contracts for config-managed runtime binding models, space inheritance of runtime selectors, and runtime catalog discovery | finished | commits: a73ea1f, ccf6918 |
 | 15 | Implement config-core models, space/runtime binding resolution, and bootstrap runtime catalog assembly without global hardcoded implementation winners | finished | commit: 7d3afc7 |
 | 16 | Propagate selected runtime bindings into governance, context pack, run snapshot, events, and API-facing observability models | finished | commit: 7d3afc7 |
-| 17 | Update architecture/docs, run full verification, sync task bookkeeping, and finalize the configuration-driven runtime-selection architecture | finished | commits: 70f3799, pending |
+| 17 | Update architecture/docs, run full verification, sync task bookkeeping, and finalize the configuration-driven runtime-selection architecture | finished | commits: 70f3799, c48aff9 |
 
 ## Update Log
 | time | status | process | update |
@@ -76,6 +76,7 @@ Starting from the completed event-driven native Java coding agent runtime and mi
 | 2026-03-12 23:41:49 +0800 | running | 35% | step 14 is closed and step 15 has started; runtime catalogs and stable provider descriptors now exist for prompt/model/model-provider/tool/session, and `boot-local` exposes discovered implementations, but governance still needs to switch from global runtime components to per-run space-selected components |
 | 2026-03-13 00:17:27 +0800 | running | 90% | checkpoint `7d3afc7` completed steps 15 and 16: `config-core` now defines `SpaceConfiguration` and `ResolvedRuntimeSelection`, `boot-local` assembles runtime catalogs plus component registries, governance resolves prompt/model/provider/tool per run from `SpaceProfile.runtimeBindings`, and HTTP responses now expose selected runtimes; docs sync and full `make test` remain |
 | 2026-03-13 00:18:45 +0800 | finished | 100% | architecture docs, OpenAPI contract, config README, and task bookkeeping have been updated; `make test` now passes across the full reactor after test checkpoint `70f3799` stabilized unordered runtime-selection responses |
+| 2026-03-13 00:19:39 +0800 | finished | 100% | task bookkeeping synchronized after docs checkpoint `c48aff9`; the configuration-driven runtime-selection architecture is fully closed |
 
 ## Sequence Diagram
 
