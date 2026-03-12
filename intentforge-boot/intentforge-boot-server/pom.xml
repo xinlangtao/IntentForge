@@ -14,4 +14,29 @@
   <artifactId>intentforge-boot-server</artifactId>
   <name>IntentForge Boot Server</name>
   <description>Server-side startup entrypoint and deployment bootstrap.</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-boot-local</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-json</artifactId>
+      <version>${spring.boot.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.12.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 </project>

@@ -1,0 +1,326 @@
+openapi: 3.2.0
+info:
+  title: IntentForge Minimal Agent Run API
+  version: nightly-SNAPSHOT
+  description: Minimal HTTP and SSE contract for the event-driven coding agent MVP.
+paths:
+  /api/agent-runs:
+    post:
+      summary: Create and start one agent run
+      operationId: createAgentRun
+      tags:
+        - agent-runs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRunCreateRequest'
+      responses:
+        '201':
+          description: Run created and executed until the first checkpoint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRunResponse'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/agent-runs/{runId}/events:
+    get:
+      summary: Subscribe to historical and live run events
+      operationId: subscribeAgentRunEvents
+      tags:
+        - agent-runs
+      parameters:
+        - $ref: '#/components/parameters/RunId'
+        - name: fromSequence
+          in: query
+          required: false
+          description: Replay events with sequence numbers greater than this value.
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        '200':
+          description: SSE stream of run events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-Sent Events where each data payload matches AgentRunEventResponse.
+        '404':
+          description: Run not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/agent-runs/{runId}/messages:
+    post:
+      summary: Resume one paused run with user feedback
+      operationId: resumeAgentRun
+      tags:
+        - agent-runs
+      parameters:
+        - $ref: '#/components/parameters/RunId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRunFeedbackRequest'
+      responses:
+        '200':
+          description: Run resumed and executed until the next checkpoint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRunResponse'
+        '404':
+          description: Run not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Run cannot be resumed in the current state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/agent-runs/{runId}/cancel:
+    post:
+      summary: Cancel one run
+      operationId: cancelAgentRun
+      tags:
+        - agent-runs
+      parameters:
+        - $ref: '#/components/parameters/RunId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRunCancelRequest'
+      responses:
+        '200':
+          description: Run cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRunResponse'
+        '404':
+          description: Run not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  parameters:
+    RunId:
+      name: runId
+      in: path
+      required: true
+      description: Stable run identifier.
+      schema:
+        type: string
+        minLength: 1
+        example: agent-run-1
+  schemas:
+    AgentRunCreateRequest:
+      type: object
+      description: Request used to create and start one agent run.
+      required:
+        - taskId
+        - sessionId
+        - workspaceRoot
+        - mode
+        - intent
+      properties:
+        taskId:
+          type: string
+          description: Stable task identifier.
+          example: task-1
+        sessionId:
+          type: string
+          description: Session identifier bound to the run.
+          example: session-1
+        spaceId:
+          type: string
+          description: Optional explicit space identifier.
+          example: application-alpha
+        workspaceRoot:
+          type: string
+          description: Workspace root path used by tool execution.
+          example: /tmp/intentforge-workspace
+        mode:
+          type: string
+          description: Requested execution mode.
+          enum:
+            - PLAN_ONLY
+            - IMPLEMENT_ONLY
+            - REVIEW_ONLY
+            - FULL
+        intent:
+          type: string
+          description: User intent for this run.
+          example: Implement event-driven agent runtime
+        targetAgentId:
+          type: string
+          description: Optional explicit target agent identifier.
+          example: intentforge.native.coder
+        metadata:
+          type: object
+          description: Optional task metadata.
+          additionalProperties:
+            type: string
+    AgentRunFeedbackRequest:
+      type: object
+      description: User feedback used to resume one paused run.
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: User feedback content.
+          example: Please add validation details.
+    AgentRunCancelRequest:
+      type: object
+      description: Cancellation request for one run.
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          description: Reason used to cancel the run.
+          example: User stopped the run.
+    AgentRunResponse:
+      type: object
+      description: Latest run snapshot returned by create, resume, and cancel operations.
+      required:
+        - runId
+        - taskId
+        - sessionId
+        - status
+        - nextStepIndex
+        - eventsPath
+        - events
+      properties:
+        runId:
+          type: string
+          description: Stable run identifier.
+          example: agent-run-1
+        taskId:
+          type: string
+          description: Task identifier.
+          example: task-1
+        sessionId:
+          type: string
+          description: Session identifier.
+          example: session-1
+        status:
+          type: string
+          description: Current run status.
+          enum:
+            - RUNNING
+            - AWAITING_USER
+            - COMPLETED
+            - CANCELLED
+            - FAILED
+        nextStepIndex:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Zero-based index of the next stage to execute.
+          example: 1
+        awaitingReason:
+          type: string
+          description: Optional human-readable reason shown when the run pauses.
+          example: awaiting user feedback before continuing to CODER
+        eventsPath:
+          type: string
+          description: Relative SSE path used to subscribe to run events.
+          example: /api/agent-runs/agent-run-1/events
+        events:
+          type: array
+          description: Ordered run events known at the time of the response.
+          items:
+            $ref: '#/components/schemas/AgentRunEventResponse'
+    AgentRunEventResponse:
+      type: object
+      description: One run event payload used in HTTP responses and SSE data blocks.
+      required:
+        - runId
+        - sequence
+        - type
+        - status
+        - message
+        - metadata
+        - createdAt
+      properties:
+        runId:
+          type: string
+          description: Target run identifier.
+          example: agent-run-1
+        sequence:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Ordered event sequence number.
+          example: 1
+        type:
+          type: string
+          description: Event type emitted by the run lifecycle.
+          enum:
+            - RUN_CREATED
+            - CONTEXT_RESOLVED
+            - ROUTE_SELECTED
+            - STAGE_STARTED
+            - STAGE_COMPLETED
+            - USER_FEEDBACK_RECEIVED
+            - RUN_RESUMED
+            - AWAITING_USER
+            - RUN_COMPLETED
+            - RUN_CANCELLED
+            - RUN_FAILED
+        status:
+          type: string
+          description: Run status at the time of the event.
+          enum:
+            - RUNNING
+            - AWAITING_USER
+            - COMPLETED
+            - CANCELLED
+            - FAILED
+        message:
+          type: string
+          description: Short event message.
+          example: run created
+        metadata:
+          type: object
+          description: Event metadata.
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Event creation timestamp.
+          example: '2026-03-12T13:00:00Z'
+    ErrorResponse:
+      type: object
+      description: Minimal error payload.
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Stable error code.
+          example: AGENT_RUN_NOT_FOUND
+        message:
+          type: string
+          description: Human-readable error message.
+          example: run not found: agent-run-1

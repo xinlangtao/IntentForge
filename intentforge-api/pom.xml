@@ -14,4 +14,13 @@
   <artifactId>intentforge-api</artifactId>
   <name>IntentForge API</name>
   <description>External protocols, DTOs, and event models for IntentForge.</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.12.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 </project>
