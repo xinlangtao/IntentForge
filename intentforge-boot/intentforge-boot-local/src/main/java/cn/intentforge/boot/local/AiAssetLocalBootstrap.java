@@ -12,6 +12,10 @@ import cn.intentforge.prompt.local.plugin.DirectoryPromptPluginManager;
 import cn.intentforge.prompt.local.registry.InMemoryPromptManager;
 import cn.intentforge.prompt.registry.PromptManager;
 import cn.intentforge.prompt.spi.PromptManagerProvider;
+import cn.intentforge.space.SpaceRegistry;
+import cn.intentforge.space.SpaceResolver;
+import cn.intentforge.space.local.SpaceLocalRuntime;
+import cn.intentforge.space.local.SpaceLocalRuntimeFactory;
 import cn.intentforge.tool.core.gateway.DefaultToolGateway;
 import cn.intentforge.tool.core.gateway.ToolGateway;
 import cn.intentforge.tool.core.local.plugin.DirectoryToolPluginManager;
@@ -25,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
@@ -65,7 +70,22 @@ public final class AiAssetLocalBootstrap {
    * @return local runtime wiring
    */
   public static AiAssetLocalRuntime bootstrap(Path pluginsDirectory) {
+    return bootstrap(pluginsDirectory, registry -> {
+    });
+  }
+
+  /**
+   * Bootstraps runtime with the provided plugin directory and initial space definitions.
+   *
+   * @param pluginsDirectory plugin directory
+   * @param spaceConfigurer callback used to register initial space definitions
+   * @return local runtime wiring
+   */
+  public static AiAssetLocalRuntime bootstrap(Path pluginsDirectory, Consumer<SpaceRegistry> spaceConfigurer) {
     ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    SpaceLocalRuntime spaceLocalRuntime = SpaceLocalRuntimeFactory.create(spaceConfigurer);
+    SpaceRegistry spaceRegistry = spaceLocalRuntime.spaceRegistry();
+    SpaceResolver spaceResolver = spaceLocalRuntime.spaceResolver();
 
     PromptManager promptManager = createPromptManager(classLoader);
     promptManager.loadPlugins();
@@ -104,7 +124,9 @@ public final class AiAssetLocalBootstrap {
         toolRegistry,
         toolPluginManager,
         toolPermissionPolicy,
-        toolGateway);
+        toolGateway,
+        spaceRegistry,
+        spaceResolver);
   }
 
   private static PromptManager createPromptManager(ClassLoader classLoader) {

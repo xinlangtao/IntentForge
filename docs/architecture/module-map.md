@@ -7,6 +7,7 @@
 - `prompt/model/model-provider` 负责定义提示词、模型目录与模型提供方能力面
 - `tool` 负责做
 - `memory/config` 负责提供上下文
+- `space` 负责公司、项目、产品、应用四级空间隔离、多资源绑定与继承解析
 - `audit` 负责留痕
 - `boot` 负责启动
 - `desktop` 负责桌面端宿主与平台适配
@@ -27,6 +28,7 @@
 | `intentforge-tool` | Tool SPI, connectors, execution, validation |
 | `intentforge-memory` | Memory abstractions and implementations |
 | `intentforge-config` | Config abstractions and layered providers |
+| `intentforge-space` | Space hierarchy, inheritance resolution, and isolation bindings |
 | `intentforge-boot` | Startup entrypoints for local and server modes |
 | `intentforge-desktop` | Desktop host abstraction and platform adapters |
 
@@ -91,11 +93,18 @@
 | `intentforge-config-db` | Runtime and policy config persistence |
 | `intentforge-config-graph` | Complex dependency and relation-driven config |
 
+### `intentforge-space`
+
+| Module | Role |
+| --- | --- |
+| `intentforge-space-core` | Company/project/product/application hierarchy definitions, resource binding profiles, SPI contracts, exceptions, and resolved profile models |
+| `intentforge-space-local` | In-memory registry, multi-resource inheritance resolver, and local runtime assembly |
+
 ### `intentforge-boot`
 
 | Module | Role |
 | --- | --- |
-| `intentforge-boot-local` | Local-first bootstrap and local storage initialization |
+| `intentforge-boot-local` | Local-first bootstrap, local storage initialization, and space-aware runtime wiring |
 | `intentforge-boot-server` | Server deployment bootstrap and remote runtime mode |
 
 ### `intentforge-desktop`

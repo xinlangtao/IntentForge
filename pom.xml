@@ -40,6 +40,7 @@
     <module>intentforge-tool</module>
     <module>intentforge-memory</module>
     <module>intentforge-config</module>
+    <module>intentforge-space</module>
     <module>intentforge-boot</module>
     <module>intentforge-desktop</module>
   </modules>

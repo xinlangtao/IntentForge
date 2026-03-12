@@ -33,6 +33,16 @@
     </dependency>
     <dependency>
       <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-space-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-space-local</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
       <artifactId>intentforge-tool-core</artifactId>
       <version>${project.version}</version>
     </dependency>

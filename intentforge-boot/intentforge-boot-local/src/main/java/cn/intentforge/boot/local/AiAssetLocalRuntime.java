@@ -6,13 +6,15 @@ import cn.intentforge.model.provider.registry.ModelProviderRegistry;
 import cn.intentforge.model.registry.ModelManager;
 import cn.intentforge.prompt.local.plugin.DirectoryPromptPluginManager;
 import cn.intentforge.prompt.registry.PromptManager;
+import cn.intentforge.space.SpaceRegistry;
+import cn.intentforge.space.SpaceResolver;
 import cn.intentforge.tool.core.gateway.ToolGateway;
 import cn.intentforge.tool.core.local.plugin.DirectoryToolPluginManager;
 import cn.intentforge.tool.core.permission.ToolPermissionPolicy;
 import cn.intentforge.tool.core.registry.ToolRegistry;
 
 /**
- * Local runtime wiring for prompt, model, and provider assets.
+ * Local runtime wiring for prompt, model, provider, tool, and space assets.
  *
  * @param promptManager prompt manager implementation in use
  * @param promptPluginManager prompt plugin directory manager
@@ -24,6 +26,8 @@ import cn.intentforge.tool.core.registry.ToolRegistry;
  * @param toolPluginManager tool plugin directory manager
  * @param toolPermissionPolicy tool permission policy
  * @param toolGateway tool execution gateway
+ * @param spaceRegistry space registry implementation in use
+ * @param spaceResolver space inheritance resolver
  */
 public record AiAssetLocalRuntime(
     PromptManager promptManager,
@@ -35,6 +39,8 @@ public record AiAssetLocalRuntime(
     ToolRegistry toolRegistry,
     DirectoryToolPluginManager toolPluginManager,
     ToolPermissionPolicy toolPermissionPolicy,
-    ToolGateway toolGateway
+    ToolGateway toolGateway,
+    SpaceRegistry spaceRegistry,
+    SpaceResolver spaceResolver
 ) {
 }
