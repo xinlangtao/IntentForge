@@ -2,6 +2,8 @@ package cn.intentforge.agent.nativejava;
 
 import cn.intentforge.agent.core.AgentExecutionException;
 import cn.intentforge.agent.core.AgentExecutionState;
+import cn.intentforge.agent.core.AgentRunMessage;
+import cn.intentforge.agent.core.AgentRunMessageRole;
 import cn.intentforge.agent.core.AgentStepResult;
 import cn.intentforge.agent.core.AgentTask;
 import cn.intentforge.agent.core.ContextPack;
@@ -65,6 +67,35 @@ class NativeCodingAgentsTest {
         AgentExecutionException.class,
         () -> coder.execute(contextPack(Files.createTempDirectory("native-agent-missing")), AgentExecutionState.empty()));
     Assertions.assertTrue(exception.getMessage().contains("plan"));
+  }
+
+  @Test
+  void shouldCarryUserFeedbackAcrossTurnsIntoCoderAndReviewerArtifacts() throws Exception {
+    Path workspace = Files.createTempDirectory("native-agent-feedback");
+    ContextPack contextPack = contextPack(workspace);
+    NativePlannerAgent planner = new NativePlannerAgent();
+    NativeCoderAgent coder = new NativeCoderAgent(new StubToolGateway());
+    NativeReviewerAgent reviewer = new NativeReviewerAgent();
+
+    AgentExecutionState planningState = AgentExecutionState.empty().merge(planner.execute(contextPack, AgentExecutionState.empty()));
+    AgentExecutionState feedbackState = planningState.appendMessage(new AgentRunMessage(
+        "message-1",
+        AgentRunMessageRole.USER,
+        "Please add stronger validation",
+        Instant.parse("2026-03-12T10:10:00Z"),
+        Map.of("turn", "1")));
+
+    AgentStepResult coding = coder.execute(contextPack, feedbackState);
+    Assertions.assertTrue(coding.artifacts().getFirst().content().contains("Please add stronger validation"));
+
+    AgentExecutionState reviewerState = feedbackState.merge(coding).appendMessage(new AgentRunMessage(
+        "message-2",
+        AgentRunMessageRole.USER,
+        "Review boundary cases carefully",
+        Instant.parse("2026-03-12T10:20:00Z"),
+        Map.of("turn", "2")));
+    AgentStepResult review = reviewer.execute(contextPack, reviewerState);
+    Assertions.assertTrue(review.artifacts().getFirst().content().contains("feedback messages: 2"));
   }
 
   private static ContextPack contextPack(Path workspace) {
