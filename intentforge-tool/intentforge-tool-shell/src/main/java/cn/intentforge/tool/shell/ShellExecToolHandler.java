@@ -4,6 +4,7 @@ import cn.intentforge.tool.core.ToolHandler;
 import cn.intentforge.tool.core.model.ToolCallRequest;
 import cn.intentforge.tool.core.model.ToolCallResult;
 import cn.intentforge.tool.core.model.ToolExecutionContext;
+import cn.intentforge.tool.core.model.ToolRuntimeEnvironment;
 import cn.intentforge.tool.core.util.OutputTruncator;
 import cn.intentforge.tool.shell.security.ShellCommandValidator;
 import java.io.IOException;
@@ -82,7 +83,7 @@ public final class ShellExecToolHandler implements ToolHandler {
     }
 
     try {
-      ProcessBuilder processBuilder = new ProcessBuilder(buildCommand(command, loginShell));
+      ProcessBuilder processBuilder = new ProcessBuilder(buildCommand(command, loginShell, context.runtimeEnvironment()));
       processBuilder.directory(workingDirectory.toFile());
       Process process = processBuilder.start();
 
@@ -138,15 +139,17 @@ public final class ShellExecToolHandler implements ToolHandler {
     }
   }
 
-  private static List<String> buildCommand(String command, boolean loginShell) {
-    String osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-    if (osName.contains("win")) {
-      return List.of("cmd.exe", "/c", command);
+  private static List<String> buildCommand(
+      String command,
+      boolean loginShell,
+      ToolRuntimeEnvironment runtimeEnvironment
+  ) {
+    if ("windows".equals(runtimeEnvironment.operatingSystemFamily())) {
+      return List.of(runtimeEnvironment.shell().executable(), "/c", command);
     }
 
-    String shell = "/bin/bash";
     List<String> args = new ArrayList<>();
-    args.add(shell);
+    args.add(runtimeEnvironment.shell().executable());
     args.add(loginShell ? "-lc" : "-c");
     args.add(command);
     return List.copyOf(args);

@@ -3,6 +3,7 @@ package cn.intentforge.tool.validation;
 import cn.intentforge.tool.core.ToolHandler;
 import cn.intentforge.tool.core.model.ToolCallRequest;
 import cn.intentforge.tool.core.model.ToolCallResult;
+import cn.intentforge.tool.core.model.ToolRuntimeEnvironment;
 import cn.intentforge.tool.validation.model.ValidationReport;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +14,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,7 +53,7 @@ final class ValidationCommandToolHandler implements ToolHandler {
     Instant startedAt = Instant.now();
 
     try {
-      ProcessBuilder processBuilder = new ProcessBuilder(buildCommand(command));
+      ProcessBuilder processBuilder = new ProcessBuilder(buildCommand(command, request.context().runtimeEnvironment()));
       processBuilder.directory(workdir.toFile());
       Process process = processBuilder.start();
 
@@ -124,14 +124,13 @@ final class ValidationCommandToolHandler implements ToolHandler {
     }
   }
 
-  private static List<String> buildCommand(String command) {
-    String osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-    if (osName.contains("win")) {
-      return List.of("cmd.exe", "/c", command);
+  private static List<String> buildCommand(String command, ToolRuntimeEnvironment runtimeEnvironment) {
+    if ("windows".equals(runtimeEnvironment.operatingSystemFamily())) {
+      return List.of(runtimeEnvironment.shell().executable(), "/c", command);
     }
     List<String> args = new ArrayList<>();
-    args.add("/bin/bash");
-    args.add("-lc");
+    args.add(runtimeEnvironment.shell().executable());
+    args.add(runtimeEnvironment.shell().loginShellPreferred() ? "-lc" : "-c");
     args.add(command);
     return List.copyOf(args);
   }

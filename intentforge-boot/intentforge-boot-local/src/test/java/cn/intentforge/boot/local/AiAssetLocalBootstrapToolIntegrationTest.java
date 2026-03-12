@@ -4,6 +4,7 @@ import cn.intentforge.tool.core.model.ToolCallRequest;
 import cn.intentforge.tool.core.model.ToolCallStatus;
 import cn.intentforge.tool.core.model.ToolExecutionContext;
 import cn.intentforge.tool.core.permission.DefaultToolPermissionPolicy;
+import cn.intentforge.tool.connectors.ConnectorToolPlugin;
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -24,6 +25,7 @@ class AiAssetLocalBootstrapToolIntegrationTest {
     Assertions.assertTrue(runtime.toolRegistry().find("intentforge.shell.exec").isPresent());
     Assertions.assertTrue(runtime.toolRegistry().find("intentforge.fs.list").isPresent());
     Assertions.assertTrue(runtime.toolRegistry().find("intentforge.web.fetch").isPresent());
+    Assertions.assertTrue(runtime.toolRegistry().find(ConnectorToolPlugin.TOOL_RUNTIME_ENVIRONMENT_READ).isPresent());
 
     if (runtime.toolPermissionPolicy() instanceof DefaultToolPermissionPolicy policy) {
       policy.allow("intentforge.shell.exec");
@@ -44,6 +46,13 @@ class AiAssetLocalBootstrapToolIntegrationTest {
         Map.of("path", "."),
         context));
     Assertions.assertEquals(ToolCallStatus.SUCCESS, fsResult.status());
+
+    var environmentResult = runtime.toolGateway().execute(new ToolCallRequest(
+        ConnectorToolPlugin.TOOL_RUNTIME_ENVIRONMENT_READ,
+        Map.of(),
+        context));
+    Assertions.assertEquals(ToolCallStatus.SUCCESS, environmentResult.status());
+    Assertions.assertTrue(environmentResult.structured() instanceof Map<?, ?>);
 
     try (TestServer server = TestServer.start()) {
       var webResult = runtime.toolGateway().execute(new ToolCallRequest(

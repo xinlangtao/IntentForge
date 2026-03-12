@@ -15,11 +15,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ToolExecutionContext {
   private final Path workspaceRoot;
   private final Path toolOutputDirectory;
+  private final ToolRuntimeEnvironment runtimeEnvironment;
   private final ConcurrentHashMap<String, Object> attributes;
 
-  private ToolExecutionContext(Path workspaceRoot, Path toolOutputDirectory, Map<String, Object> initialAttributes) {
+  private ToolExecutionContext(
+      Path workspaceRoot,
+      Path toolOutputDirectory,
+      ToolRuntimeEnvironment runtimeEnvironment,
+      Map<String, Object> initialAttributes
+  ) {
     this.workspaceRoot = workspaceRoot;
     this.toolOutputDirectory = toolOutputDirectory;
+    this.runtimeEnvironment = Objects.requireNonNull(runtimeEnvironment, "runtimeEnvironment must not be null");
     this.attributes = new ConcurrentHashMap<>();
     if (initialAttributes != null && !initialAttributes.isEmpty()) {
       this.attributes.putAll(initialAttributes);
@@ -36,7 +43,11 @@ public final class ToolExecutionContext {
     Path normalizedWorkspace = normalizeWorkspace(workspaceRoot);
     Path outputDirectory = normalizedWorkspace.resolve(".intentforge").resolve("tool-output");
     ensureDirectory(outputDirectory);
-    return new ToolExecutionContext(normalizedWorkspace, outputDirectory, Map.of());
+    return new ToolExecutionContext(
+        normalizedWorkspace,
+        outputDirectory,
+        ToolRuntimeEnvironmentDetector.detect(normalizedWorkspace),
+        Map.of());
   }
 
   /**
@@ -53,9 +64,36 @@ public final class ToolExecutionContext {
       Map<String, Object> initialAttributes
   ) {
     Path normalizedWorkspace = normalizeWorkspace(workspaceRoot);
+    return of(
+        normalizedWorkspace,
+        toolOutputDirectory,
+        ToolRuntimeEnvironmentDetector.detect(normalizedWorkspace),
+        initialAttributes);
+  }
+
+  /**
+   * Creates a context with custom output directory, runtime environment, and attributes.
+   *
+   * @param workspaceRoot workspace root path
+   * @param toolOutputDirectory output directory
+   * @param runtimeEnvironment runtime environment details
+   * @param initialAttributes initial attributes
+   * @return execution context
+   */
+  public static ToolExecutionContext of(
+      Path workspaceRoot,
+      Path toolOutputDirectory,
+      ToolRuntimeEnvironment runtimeEnvironment,
+      Map<String, Object> initialAttributes
+  ) {
+    Path normalizedWorkspace = normalizeWorkspace(workspaceRoot);
     Path normalizedOutput = normalizePath(toolOutputDirectory);
     ensureDirectory(normalizedOutput);
-    return new ToolExecutionContext(normalizedWorkspace, normalizedOutput, initialAttributes);
+    return new ToolExecutionContext(
+        normalizedWorkspace,
+        normalizedOutput,
+        runtimeEnvironment == null ? ToolRuntimeEnvironmentDetector.detect(normalizedWorkspace) : runtimeEnvironment,
+        initialAttributes);
   }
 
   /**
@@ -74,6 +112,15 @@ public final class ToolExecutionContext {
    */
   public Path toolOutputDirectory() {
     return toolOutputDirectory;
+  }
+
+  /**
+   * Returns normalized runtime environment details.
+   *
+   * @return runtime environment
+   */
+  public ToolRuntimeEnvironment runtimeEnvironment() {
+    return runtimeEnvironment;
   }
 
   /**

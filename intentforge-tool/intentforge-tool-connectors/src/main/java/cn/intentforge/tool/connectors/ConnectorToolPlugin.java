@@ -26,6 +26,10 @@ public final class ConnectorToolPlugin implements ToolPlugin {
    */
   public static final String TOOL_WEB_SEARCH = "intentforge.web.search";
   /**
+   * Tool id: runtime environment read.
+   */
+  public static final String TOOL_RUNTIME_ENVIRONMENT_READ = "intentforge.runtime.environment.read";
+  /**
    * Tool id: interactive ask.
    */
   public static final String TOOL_FLOW_ASK = "intentforge.flow.ask";
@@ -76,6 +80,13 @@ public final class ConnectorToolPlugin implements ToolPlugin {
                     "required", List.of("q")),
                 true),
             new WebSearchToolHandler()),
+        new ToolRegistration(
+            new ToolDefinition(
+                TOOL_RUNTIME_ENVIRONMENT_READ,
+                "Read normalized runtime environment details including OS, shell, terminal, and IDE launch entries.",
+                Map.of("type", "object", "properties", Map.of()),
+                false),
+            new RuntimeEnvironmentToolHandler()),
         new ToolRegistration(
             new ToolDefinition(
                 TOOL_FLOW_ASK,
