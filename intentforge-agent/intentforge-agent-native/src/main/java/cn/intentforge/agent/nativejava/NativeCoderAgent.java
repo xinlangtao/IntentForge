@@ -77,6 +77,8 @@ public final class NativeCoderAgent implements AgentExecutor {
           nonNullContextPack.toolExecutionContext())));
     }
 
+    String latestFeedback = nonNullState.messages().isEmpty() ? "none" : nonNullState.messages().getLast().content();
+
     String content = """
         # Native Coder Output
         task: %s
@@ -85,13 +87,15 @@ public final class NativeCoderAgent implements AgentExecutor {
         provider: %s
         workspace: %s
         tool calls: %d
+        latest feedback: %s
         """.formatted(
         nonNullContextPack.task().intent(),
         NativeAgentSupport.firstPromptId(nonNullContextPack),
         NativeAgentSupport.firstModelId(nonNullContextPack),
         NativeAgentSupport.firstProviderId(nonNullContextPack),
         nonNullContextPack.task().workspaceRoot(),
-        toolCalls.size());
+        toolCalls.size(),
+        latestFeedback);
     return new AgentStepResult(
         null,
         new Decision(descriptor().id(), descriptor().role(), descriptor().id() + " completed", Map.of("stage", "code")),

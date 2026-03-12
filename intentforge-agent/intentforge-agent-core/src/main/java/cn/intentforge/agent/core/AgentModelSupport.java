@@ -43,6 +43,20 @@ final class AgentModelSupport {
     return Map.copyOf(normalized);
   }
 
+  static Map<String, Object> immutableObjectMap(Map<String, Object> metadata) {
+    if (metadata == null || metadata.isEmpty()) {
+      return Map.of();
+    }
+    Map<String, Object> normalized = new LinkedHashMap<>();
+    for (Map.Entry<String, Object> entry : metadata.entrySet()) {
+      Objects.requireNonNull(entry, "metadata entry must not be null");
+      normalized.put(
+          requireText(entry.getKey(), "metadata key"),
+          Objects.requireNonNull(entry.getValue(), "metadata value must not be null"));
+    }
+    return Map.copyOf(normalized);
+  }
+
   static <T> List<T> immutableList(List<T> values, String fieldName) {
     if (values == null || values.isEmpty()) {
       return List.of();

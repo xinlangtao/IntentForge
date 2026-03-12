@@ -1,6 +1,7 @@
 package cn.intentforge.boot.local;
 
 import cn.intentforge.agent.core.AgentGateway;
+import cn.intentforge.agent.core.AgentRunGateway;
 import cn.intentforge.model.local.plugin.DirectoryModelPluginManager;
 import cn.intentforge.model.provider.local.plugin.DirectoryModelProviderPluginManager;
 import cn.intentforge.model.provider.registry.ModelProviderRegistry;
@@ -29,6 +30,7 @@ import cn.intentforge.tool.core.registry.ToolRegistry;
  * @param toolPermissionPolicy tool permission policy
  * @param toolGateway tool execution gateway
  * @param agentGateway agent execution gateway
+ * @param agentRunGateway event-driven agent run gateway
  * @param sessionManager session manager implementation in use
  * @param spaceRegistry space registry implementation in use
  * @param spaceResolver space inheritance resolver
@@ -45,6 +47,7 @@ public record AiAssetLocalRuntime(
     ToolPermissionPolicy toolPermissionPolicy,
     ToolGateway toolGateway,
     AgentGateway agentGateway,
+    AgentRunGateway agentRunGateway,
     SessionManager sessionManager,
     SpaceRegistry spaceRegistry,
     SpaceResolver spaceResolver

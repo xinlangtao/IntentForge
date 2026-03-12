@@ -20,7 +20,7 @@
 | `intentforge-bom` | Unified dependency version alignment for the repository and external consumers |
 | `intentforge-common` | Global shared enums, exceptions, constants, utils, and DTO bases |
 | `intentforge-api` | External protocol contracts, REST DTOs, AG-UI events, request/response objects |
-| `intentforge-governance` | Task orchestration, state machine, routing, strategy, coordination, scheduling, and the default agent gateway |
+| `intentforge-governance` | Task orchestration, state machine, routing, strategy, coordination, scheduling, synchronous compatibility gateway, and event-driven run orchestration |
 | `intentforge-audit` | Run/step/tool-call records, event snapshots, replay, audit services |
 | `intentforge-agent` | Agent abstraction family, routed execution contracts, and runtime integrations |
 | `intentforge-prompt` | Prompt definitions, registries, and pluggable prompt runtime |
@@ -40,7 +40,7 @@
 
 | Module | Role |
 | --- | --- |
-| `intentforge-agent-core` | `AgentTask`, `Plan`, `ContextPack`, `AgentRoute`, `AgentGateway`, `Artifact`, `Decision`, and executor contracts |
+| `intentforge-agent-core` | `AgentTask`, `Plan`, `ContextPack`, `AgentRoute`, `AgentGateway`, `AgentRunGateway`, `AgentRunSnapshot`, `AgentRunEvent`, `AgentRunMessage`, `Artifact`, `Decision`, and executor contracts |
 | `intentforge-agent-native` | Native planner, coder, reviewer implementations and default native executor factory |
 | `intentforge-agent-springai` | Spring AI based chat, advisor, and tool execution adapters |
 | `intentforge-agent-external` | External runtime adapters such as Codex, Gemini, AgentScope |
@@ -49,7 +49,7 @@
 
 | Module | Role |
 | --- | --- |
-| `intentforge-governance` | Default stage-based router plus gateway that resolves session/space/prompt/model/provider/tool context and runs the selected agent pipeline |
+| `intentforge-governance` | Default stage-based router plus synchronous and event-driven gateways that resolve session/space/prompt/model/provider/tool context, emit ordered run events, pause on `awaiting_user`, and resume or cancel the selected agent pipeline |
 
 ### `intentforge-prompt`
 
@@ -119,7 +119,7 @@
 
 | Module | Role |
 | --- | --- |
-| `intentforge-boot-local` | Local-first bootstrap, local storage initialization, space/session-aware runtime wiring, and native agent gateway assembly |
+| `intentforge-boot-local` | Local-first bootstrap, local storage initialization, space/session-aware runtime wiring, native agent gateway assembly, and local exposure of both synchronous and event-driven run entrypoints |
 | `intentforge-boot-server` | Server deployment bootstrap and remote runtime mode |
 
 ### `intentforge-desktop`

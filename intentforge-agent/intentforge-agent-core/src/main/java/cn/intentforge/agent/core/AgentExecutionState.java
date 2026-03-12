@@ -11,12 +11,14 @@ import java.util.List;
  * @param decisions ordered stage decisions
  * @param artifacts ordered emitted artifacts
  * @param toolCalls ordered tool call results
+ * @param messages ordered user or runtime messages accumulated across turns
  */
 public record AgentExecutionState(
     Plan plan,
     List<Decision> decisions,
     List<Artifact> artifacts,
-    List<ToolCallResult> toolCalls
+    List<ToolCallResult> toolCalls,
+    List<AgentRunMessage> messages
 ) {
   /**
    * Creates a validated state snapshot.
@@ -25,6 +27,7 @@ public record AgentExecutionState(
     decisions = AgentModelSupport.immutableList(decisions, "decisions");
     artifacts = AgentModelSupport.immutableList(artifacts, "artifacts");
     toolCalls = AgentModelSupport.immutableList(toolCalls, "toolCalls");
+    messages = AgentModelSupport.immutableList(messages, "messages");
   }
 
   /**
@@ -33,7 +36,7 @@ public record AgentExecutionState(
    * @return empty state
    */
   public static AgentExecutionState empty() {
-    return new AgentExecutionState(null, List.of(), List.of(), List.of());
+    return new AgentExecutionState(null, List.of(), List.of(), List.of(), List.of());
   }
 
   /**
@@ -54,6 +57,20 @@ public record AgentExecutionState(
         nonNullResult.plan() == null ? plan : nonNullResult.plan(),
         mergedDecisions,
         mergedArtifacts,
-        mergedToolCalls);
+        mergedToolCalls,
+        messages);
+  }
+
+  /**
+   * Appends one run message without dropping accumulated execution results.
+   *
+   * @param message run message to append
+   * @return merged immutable state
+   */
+  public AgentExecutionState appendMessage(AgentRunMessage message) {
+    AgentRunMessage nonNullMessage = java.util.Objects.requireNonNull(message, "message must not be null");
+    List<AgentRunMessage> mergedMessages = new ArrayList<>(messages);
+    mergedMessages.add(nonNullMessage);
+    return new AgentExecutionState(plan, decisions, artifacts, toolCalls, mergedMessages);
   }
 }

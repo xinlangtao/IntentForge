@@ -52,10 +52,12 @@ public final class NativeReviewerAgent implements AgentExecutor {
         summary: %s
         artifacts: %d
         tool calls: %d
+        feedback messages: %d
         """.formatted(
         nonNullState.plan().summary(),
         nonNullState.artifacts().size(),
-        nonNullState.toolCalls().size());
+        nonNullState.toolCalls().size(),
+        nonNullState.messages().size());
     return new AgentStepResult(
         null,
         new Decision(descriptor().id(), descriptor().role(), descriptor().id() + " completed", Map.of("stage", "review")),
