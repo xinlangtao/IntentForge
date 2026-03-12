@@ -323,4 +323,4 @@ components:
         message:
           type: string
           description: Human-readable error message.
-          example: run not found: agent-run-1
+          example: 'run not found: agent-run-1'
