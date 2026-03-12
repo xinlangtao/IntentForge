@@ -3,6 +3,8 @@ package cn.intentforge.boot.local;
 import cn.intentforge.agent.core.AgentGateway;
 import cn.intentforge.agent.core.AgentRunGateway;
 import cn.intentforge.agent.nativejava.NativeCodingAgentFactory;
+import cn.intentforge.config.RuntimeCatalog;
+import cn.intentforge.config.RuntimeImplementationDescriptor;
 import cn.intentforge.governance.agent.DefaultAgentGateway;
 import cn.intentforge.governance.agent.DefaultAgentRunGateway;
 import cn.intentforge.governance.agent.StageRoutingAgentRouter;
@@ -21,6 +23,7 @@ import cn.intentforge.prompt.spi.PromptManagerProvider;
 import cn.intentforge.session.local.SessionLocalRuntime;
 import cn.intentforge.session.local.SessionLocalRuntimeFactory;
 import cn.intentforge.session.registry.SessionManager;
+import cn.intentforge.session.spi.SessionManagerProvider;
 import cn.intentforge.space.SpaceRegistry;
 import cn.intentforge.space.SpaceResolver;
 import cn.intentforge.space.local.SpaceLocalRuntime;
@@ -97,30 +100,42 @@ public final class AiAssetLocalBootstrap {
     SpaceResolver spaceResolver = spaceLocalRuntime.spaceResolver();
     SessionLocalRuntime sessionLocalRuntime = SessionLocalRuntimeFactory.create(classLoader);
     SessionManager sessionManager = sessionLocalRuntime.sessionManager();
+    List<SessionManagerProvider> sessionManagerProviders = loadProviders(classLoader, SessionManagerProvider.class);
 
-    PromptManager promptManager = createPromptManager(classLoader);
+    List<PromptManagerProvider> promptManagerProviders = loadProviders(classLoader, PromptManagerProvider.class);
+    PromptManager promptManager = createPromptManager(classLoader, promptManagerProviders);
     promptManager.loadPlugins();
     DirectoryPromptPluginManager promptPluginManager =
         new DirectoryPromptPluginManager(pluginsDirectory, promptManager);
     promptPluginManager.loadAll();
 
-    ModelManager modelManager = createModelManager(classLoader);
+    List<ModelManagerProvider> modelManagerProviders = loadProviders(classLoader, ModelManagerProvider.class);
+    ModelManager modelManager = createModelManager(classLoader, modelManagerProviders);
     modelManager.loadPlugins();
     DirectoryModelPluginManager modelPluginManager =
         new DirectoryModelPluginManager(pluginsDirectory, modelManager);
     modelPluginManager.loadAll();
 
-    ModelProviderRegistry providerRegistry = createProviderRegistry(classLoader);
+    List<ModelProviderRegistryProvider> providerRegistryProviders = loadProviders(classLoader, ModelProviderRegistryProvider.class);
+    ModelProviderRegistry providerRegistry = createProviderRegistry(classLoader, providerRegistryProviders);
     providerRegistry.loadPlugins();
     DirectoryModelProviderPluginManager providerPluginManager =
         new DirectoryModelProviderPluginManager(pluginsDirectory, providerRegistry, modelManager);
     providerPluginManager.loadAll();
 
-    ToolRegistry toolRegistry = createToolRegistry(classLoader);
+    List<ToolRegistryProvider> toolRegistryProviders = loadProviders(classLoader, ToolRegistryProvider.class);
+    ToolRegistry toolRegistry = createToolRegistry(classLoader, toolRegistryProviders);
     toolRegistry.loadPlugins();
     DirectoryToolPluginManager toolPluginManager =
         new DirectoryToolPluginManager(pluginsDirectory, toolRegistry);
     toolPluginManager.loadAll();
+
+    RuntimeCatalog runtimeCatalog = RuntimeCatalog.of(concatDescriptors(
+        promptManagerProviders.stream().map(PromptManagerProvider::descriptor).toList(),
+        modelManagerProviders.stream().map(ModelManagerProvider::descriptor).toList(),
+        providerRegistryProviders.stream().map(ModelProviderRegistryProvider::descriptor).toList(),
+        toolRegistryProviders.stream().map(ToolRegistryProvider::descriptor).toList(),
+        sessionManagerProviders.stream().map(SessionManagerProvider::descriptor).toList()));
 
     DefaultToolPermissionPolicy toolPermissionPolicy = new DefaultToolPermissionPolicy(DEFAULT_SENSITIVE_TOOL_IDS);
     ToolGateway toolGateway = new DefaultToolGateway(toolRegistry, toolPermissionPolicy);
@@ -137,6 +152,7 @@ public final class AiAssetLocalBootstrap {
     AgentGateway agentGateway = new DefaultAgentGateway(agentRunGateway, executors);
 
     return new AiAssetLocalRuntime(
+        runtimeCatalog,
         promptManager,
         promptPluginManager,
         modelManager,
@@ -154,40 +170,59 @@ public final class AiAssetLocalBootstrap {
         spaceResolver);
   }
 
-  private static PromptManager createPromptManager(ClassLoader classLoader) {
+  private static PromptManager createPromptManager(ClassLoader classLoader, List<PromptManagerProvider> providers) {
     return selectSingleProvider(
-        classLoader,
+        providers,
         PromptManagerProvider.class,
         PromptManagerProvider::priority,
         provider -> provider.create(classLoader),
         () -> new InMemoryPromptManager(classLoader));
   }
 
-  private static ModelManager createModelManager(ClassLoader classLoader) {
+  private static ModelManager createModelManager(ClassLoader classLoader, List<ModelManagerProvider> providers) {
     return selectSingleProvider(
-        classLoader,
+        providers,
         ModelManagerProvider.class,
         ModelManagerProvider::priority,
         provider -> provider.create(classLoader),
         () -> new InMemoryModelManager(classLoader));
   }
 
-  private static ModelProviderRegistry createProviderRegistry(ClassLoader classLoader) {
+  private static ModelProviderRegistry createProviderRegistry(
+      ClassLoader classLoader,
+      List<ModelProviderRegistryProvider> providers
+  ) {
     return selectSingleProvider(
-        classLoader,
+        providers,
         ModelProviderRegistryProvider.class,
         ModelProviderRegistryProvider::priority,
         provider -> provider.create(classLoader),
         () -> new InMemoryModelProviderRegistry(classLoader));
   }
 
-  private static ToolRegistry createToolRegistry(ClassLoader classLoader) {
+  private static ToolRegistry createToolRegistry(ClassLoader classLoader, List<ToolRegistryProvider> providers) {
     return selectSingleProvider(
-        classLoader,
+        providers,
         ToolRegistryProvider.class,
         ToolRegistryProvider::priority,
         provider -> provider.create(classLoader),
         () -> new InMemoryToolRegistry(classLoader));
+  }
+
+  private static <P> List<P> loadProviders(ClassLoader classLoader, Class<P> providerType) {
+    return ServiceLoader.load(providerType, classLoader)
+        .stream()
+        .map(ServiceLoader.Provider::get)
+        .toList();
+  }
+
+  @SafeVarargs
+  private static List<RuntimeImplementationDescriptor> concatDescriptors(List<RuntimeImplementationDescriptor>... groups) {
+    List<RuntimeImplementationDescriptor> descriptors = new ArrayList<>();
+    for (List<RuntimeImplementationDescriptor> group : groups) {
+      descriptors.addAll(group);
+    }
+    return List.copyOf(descriptors);
   }
 
   static <P, R> R selectSingleProvider(

@@ -1,6 +1,9 @@
 package cn.intentforge.prompt.spi;
 
+import cn.intentforge.config.RuntimeCapability;
+import cn.intentforge.config.RuntimeImplementationDescriptor;
 import cn.intentforge.prompt.registry.PromptManager;
+import java.util.Map;
 
 /**
  * Supplies a {@link PromptManager} implementation for runtime composition.
@@ -9,6 +12,20 @@ import cn.intentforge.prompt.registry.PromptManager;
  * Higher {@link #priority()} values win when multiple providers are present.
  */
 public interface PromptManagerProvider {
+  /**
+   * Describes the provider for runtime catalog assembly and configuration binding.
+   *
+   * @return implementation descriptor
+   */
+  default RuntimeImplementationDescriptor descriptor() {
+    return new RuntimeImplementationDescriptor(
+        getClass().getName(),
+        RuntimeCapability.PROMPT_MANAGER,
+        getClass().getSimpleName(),
+        getClass().getName(),
+        Map.of());
+  }
+
   /**
    * Provider priority for conflict resolution.
    *

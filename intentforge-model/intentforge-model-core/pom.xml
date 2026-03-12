@@ -14,4 +14,12 @@
   <artifactId>intentforge-model-core</artifactId>
   <name>IntentForge Model Core</name>
   <description>Core model descriptors, filters, registry SPI, and plugin contracts.</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-config-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 </project>

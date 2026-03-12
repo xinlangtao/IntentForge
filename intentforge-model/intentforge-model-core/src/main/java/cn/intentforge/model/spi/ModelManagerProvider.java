@@ -1,6 +1,9 @@
 package cn.intentforge.model.spi;
 
+import cn.intentforge.config.RuntimeCapability;
+import cn.intentforge.config.RuntimeImplementationDescriptor;
 import cn.intentforge.model.registry.ModelManager;
+import java.util.Map;
 
 /**
  * Supplies a {@link ModelManager} implementation for runtime composition.
@@ -9,6 +12,20 @@ import cn.intentforge.model.registry.ModelManager;
  * Higher {@link #priority()} values win when multiple providers are present.
  */
 public interface ModelManagerProvider {
+  /**
+   * Describes the provider for runtime catalog assembly and configuration binding.
+   *
+   * @return implementation descriptor
+   */
+  default RuntimeImplementationDescriptor descriptor() {
+    return new RuntimeImplementationDescriptor(
+        getClass().getName(),
+        RuntimeCapability.MODEL_MANAGER,
+        getClass().getSimpleName(),
+        getClass().getName(),
+        Map.of());
+  }
+
   /**
    * Provider priority for conflict resolution.
    *

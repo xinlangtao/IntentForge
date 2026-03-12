@@ -21,6 +21,10 @@ public enum RuntimeCapability {
    */
   TOOL_REGISTRY,
   /**
+   * Session manager implementation.
+   */
+  SESSION_MANAGER,
+  /**
    * Memory store implementation.
    */
   MEMORY_STORE,

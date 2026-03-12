@@ -1,6 +1,9 @@
 package cn.intentforge.model.provider.spi;
 
+import cn.intentforge.config.RuntimeCapability;
+import cn.intentforge.config.RuntimeImplementationDescriptor;
 import cn.intentforge.model.provider.registry.ModelProviderRegistry;
+import java.util.Map;
 
 /**
  * Supplies a {@link ModelProviderRegistry} implementation for runtime composition.
@@ -9,6 +12,20 @@ import cn.intentforge.model.provider.registry.ModelProviderRegistry;
  * Higher {@link #priority()} values win when multiple providers are present.
  */
 public interface ModelProviderRegistryProvider {
+  /**
+   * Describes the provider for runtime catalog assembly and configuration binding.
+   *
+   * @return implementation descriptor
+   */
+  default RuntimeImplementationDescriptor descriptor() {
+    return new RuntimeImplementationDescriptor(
+        getClass().getName(),
+        RuntimeCapability.MODEL_PROVIDER_REGISTRY,
+        getClass().getSimpleName(),
+        getClass().getName(),
+        Map.of());
+  }
+
   /**
    * Provider priority for conflict resolution.
    *

@@ -14,4 +14,12 @@
   <artifactId>intentforge-prompt-core</artifactId>
   <name>IntentForge Prompt Core</name>
   <description>Core prompt definitions, queries, registry SPI, and plugin contracts.</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-config-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 </project>
