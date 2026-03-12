@@ -12,16 +12,16 @@ Implement an MVP native Java coding agent that connects the existing session, sp
 
 ## Overall Status
 - status: running
-- process: 75%
-- current_step: 3
+- process: 90%
+- current_step: 4
 
 ## Steps
 | step | description | status | note |
 | --- | --- | --- | --- |
 | 1 | Create progress file, inspect architecture/spec docs, inspect existing agent/governance/boot runtime, and verify git checkpoint capability | finished | commit: bd46a0c |
 | 2 | Add failing tests for agent contracts, routing/orchestration, native execution, and local bootstrap integration | finished | commit: 7fd06db |
-| 3 | Implement agent core abstractions, governance router/gateway, native MVP execution flow, and boot wiring | running | commit: pending |
-| 4 | Update docs, run full verification, sync task bookkeeping, and finalize checkpoints | notrun | commit: pending |
+| 3 | Implement agent core abstractions, governance router/gateway, native MVP execution flow, and boot wiring | finished | commit: c1f72dd |
+| 4 | Update docs, run full verification, sync task bookkeeping, and finalize checkpoints | running | commit: pending |
 
 ## Update Log
 | time | status | process | update |
@@ -30,3 +30,4 @@ Implement an MVP native Java coding agent that connects the existing session, sp
 | 2026-03-12 18:29:17 +0800 | running | 5% | task started; required docs inspected; current agent/governance modules are mostly placeholders; git checkpoint capability verified |
 | 2026-03-12 18:33:43 +0800 | running | 25% | finalized MVP layering: agent-core for contracts, governance for routing/gateway, agent-native for planner/coder/reviewer, boot-local for wiring; started adding red tests and module dependencies |
 | 2026-03-12 18:42:08 +0800 | running | 75% | implemented agent-core contracts, governance routing/gateway, native planner/coder/reviewer flow, and boot-local wiring; targeted reactor tests passed for the affected modules |
+| 2026-03-12 18:43:02 +0800 | running | 90% | updated architecture docs for the new runtime spine and verified the full reactor with `make test` |
