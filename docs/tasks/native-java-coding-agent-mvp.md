@@ -15,8 +15,8 @@ Starting from the completed event-driven native Java coding agent runtime, exten
 
 ## Overall Status
 - status: running
-- process: 10%
-- current_step: 9
+- process: 15%
+- current_step: 10
 
 ## Steps
 | step | description | status | note |
@@ -29,7 +29,7 @@ Starting from the completed event-driven native Java coding agent runtime, exten
 | 6 | Add failing tests for run lifecycle, event emission, awaiting-user pause, resume, cancel, and transport-agnostic observation flow | finished | commit: ad2ee3c |
 | 7 | Implement agent-core run/event contracts, governance orchestrator, native feedback loop, and boot-local event-driven wiring | finished | commit: e81d513 |
 | 8 | Update docs, run full verification, sync task bookkeeping, and finalize event-driven checkpoints | finished | commits: e81d513, 87e6526 |
-| 9 | Re-scope the completed event-driven runtime to include the minimum API and boot-server chain and preserve the recovery baseline | running | commit: pending |
+| 9 | Re-scope the completed event-driven runtime to include the minimum API and boot-server chain and preserve the recovery baseline | finished | commit: 3d6a9e8 |
 | 10 | Add failing tests and API contract updates for run create, SSE events, feedback resume, cancel, and minimal boot-server startup flow | notrun | commit: pending |
 | 11 | Implement intentforge-api transport contracts and boot-server HTTP/SSE wiring on top of `AgentRunGateway` | notrun | commit: pending |
 | 12 | Update docs, verify terminal smoke flow and full test suite, sync task bookkeeping, and finalize API/server checkpoints | notrun | commit: pending |
@@ -51,3 +51,4 @@ Starting from the completed event-driven native Java coding agent runtime, exten
 | 2026-03-12 21:00:36 +0800 | finished | 100% | full `make test` passed after the event-driven run model landed; acceptance criteria are satisfied and final task bookkeeping is being synchronized |
 | 2026-03-12 21:01:21 +0800 | finished | 100% | task bookkeeping synchronized after docs checkpoint `87e6526`; event-driven multi-turn run model is fully closed |
 | 2026-03-12 21:44:12 +0800 | running | 10% | scope changed again: reopen the finished event-driven runtime task to add the minimum API and boot-server chain needed for terminal real calls; current gap is that `boot-server` is still a placeholder and there is no HTTP/SSE transport layer yet |
+| 2026-03-12 21:44:33 +0800 | running | 15% | scope-change checkpoint `3d6a9e8` recorded; next execution step is to add red tests and minimal API contracts for the server chain |
