@@ -33,6 +33,21 @@
     </dependency>
     <dependency>
       <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-agent-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-agent-native</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-governance</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
       <artifactId>intentforge-space-core</artifactId>
       <version>${project.version}</version>
     </dependency>
