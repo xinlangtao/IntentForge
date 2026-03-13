@@ -35,6 +35,7 @@
     <module>intentforge-governance</module>
     <module>intentforge-audit</module>
     <module>intentforge-agent</module>
+    <module>intentforge-channel</module>
     <module>intentforge-prompt</module>
     <module>intentforge-model</module>
     <module>intentforge-model-provider</module>

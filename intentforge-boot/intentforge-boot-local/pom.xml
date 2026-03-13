@@ -48,6 +48,16 @@
     </dependency>
     <dependency>
       <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-channel-local</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-channel-connectors</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
       <artifactId>intentforge-governance</artifactId>
       <version>${project.version}</version>
     </dependency>

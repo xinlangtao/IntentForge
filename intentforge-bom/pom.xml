@@ -76,6 +76,26 @@
       </dependency>
       <dependency>
         <groupId>cn.intentforge</groupId>
+        <artifactId>intentforge-channel-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>cn.intentforge</groupId>
+        <artifactId>intentforge-channel-local</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>cn.intentforge</groupId>
+        <artifactId>intentforge-channel-spring</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>cn.intentforge</groupId>
+        <artifactId>intentforge-channel-connectors</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>cn.intentforge</groupId>
         <artifactId>intentforge-prompt-core</artifactId>
         <version>${project.version}</version>
       </dependency>
