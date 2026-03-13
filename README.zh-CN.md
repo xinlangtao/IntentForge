@@ -40,6 +40,7 @@ IntentForge 不仅仅是与AI对话界面。
 
 - governance：负责管
 - agent：负责想
+- channel：负责外部消息渠道接入、账号/会话路由与连接器可插拔
 - prompt/model/model-provider：负责提示词资产、模型目录和提供方可插拔能力面
 - tool：负责做
 - memory/config：负责提供上下文
@@ -61,6 +62,11 @@ intentforge/
 │  ├─ intentforge-agent-native             # 自研原生 coding agent 实现
 │  ├─ intentforge-agent-springai           # 基于 Spring AI 的执行器实现
 │  └─ intentforge-agent-external           # 外部 agent 适配器：opencode/codex/gemini/agentscope 等
+├─ intentforge-channel                     # 渠道聚合模块
+│  ├─ intentforge-channel-core             # 渠道描述、账号/目标/消息模型、路由契约、管理器/插件 SPI
+│  ├─ intentforge-channel-local            # 内存渠道管理器 Provider、classpath SPI 加载、本地 plugins 目录加载
+│  ├─ intentforge-channel-spring           # Spring factories 渠道插件发现桥接
+│  └─ intentforge-channel-connectors       # 内置连接器实现与可复用连接器入口
 ├─ intentforge-prompt                      # 提示词聚合模块
 │  ├─ intentforge-prompt-core              # 提示词定义、变量、查询条件、注册中心 SPI、管理器 Provider SPI
 │  └─ intentforge-prompt-local             # 内存提示词管理 Provider、classpath SPI 加载、本地 plugins 目录加载

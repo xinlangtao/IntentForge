@@ -22,6 +22,7 @@ Each plugin jar must include:
 
 Examples:
 
+- channel plugin SPI: `META-INF/services/cn.intentforge.channel.spi.ChannelPlugin`
 - prompt plugin SPI: `META-INF/services/cn.intentforge.prompt.spi.PromptPlugin`
 - model plugin SPI: `META-INF/services/cn.intentforge.model.spi.ModelPlugin`
 - model-provider plugin SPI: `META-INF/services/cn.intentforge.model.provider.spi.ModelProviderPlugin`
@@ -30,10 +31,16 @@ Examples:
 
 In addition to source plugins, manager/registry implementations can be replaced via classpath SPI:
 
+- channel manager SPI: `META-INF/services/cn.intentforge.channel.spi.ChannelManagerProvider`
 - prompt manager SPI: `META-INF/services/cn.intentforge.prompt.spi.PromptManagerProvider`
 - model manager SPI: `META-INF/services/cn.intentforge.model.spi.ModelManagerProvider`
 - model-provider registry SPI: `META-INF/services/cn.intentforge.model.provider.spi.ModelProviderRegistryProvider`
 - session manager SPI: `META-INF/services/cn.intentforge.session.spi.SessionManagerProvider`
+
+Additional integration-specific channel discovery can be contributed through:
+
+- channel discovery SPI: `META-INF/services/cn.intentforge.channel.spi.ChannelPluginDiscoveryStrategy`
+- Spring factories bridge implementation: `cn.intentforge.channel.spring.SpringFactoriesChannelPluginDiscoveryStrategy`
 
 Selection rule:
 
@@ -42,7 +49,7 @@ Selection rule:
 - each `RuntimeImplementationDescriptor` exposes explicit `version` metadata for runtime observability and API responses
 - `SpaceProfile.runtimeBindings` selects the effective prompt/model/provider/tool runtime per run
 - if a capability has only one implementation, or one implementation marked with metadata `default=true`, it can be used as the default fallback when the space does not bind it explicitly
-- bootstrap-scoped capabilities such as the session manager still resolve once at bootstrap and are exposed in run observability data
+- bootstrap-scoped capabilities such as the session manager and channel manager still resolve once at bootstrap and are exposed in run observability data
 
 `session` currently uses classpath manager SPI only and is assembled via
 `cn.intentforge.session.local.SessionLocalRuntimeFactory`.
@@ -86,6 +93,7 @@ plugin.enabled=false
 
 ## Runtime entrypoints
 
+- channel: `cn.intentforge.channel.local.plugin.DirectoryChannelPluginManager`
 - prompt: `cn.intentforge.prompt.local.plugin.DirectoryPromptPluginManager`
 - model: `cn.intentforge.model.local.plugin.DirectoryModelPluginManager`
 - model-provider: `cn.intentforge.model.provider.local.plugin.DirectoryModelProviderPluginManager`

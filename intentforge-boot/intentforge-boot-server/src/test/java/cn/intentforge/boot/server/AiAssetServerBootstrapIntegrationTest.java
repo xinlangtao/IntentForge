@@ -72,7 +72,8 @@ class AiAssetServerBootstrapIntegrationTest {
                 "MODEL_MANAGER", "intentforge.model.manager.in-memory",
                 "MODEL_PROVIDER_REGISTRY", "intentforge.model-provider.registry.in-memory",
                 "TOOL_REGISTRY", "intentforge.tool.registry.in-memory",
-                "SESSION_MANAGER", "intentforge.session.manager.in-memory"),
+                "SESSION_MANAGER", "intentforge.session.manager.in-memory",
+                "CHANNEL_MANAGER", "intentforge.channel.manager.in-memory"),
             recorder.awaitEvent("CONTEXT_RESOLVED").metadata().get("selectedRuntimeIds"));
         AgentRunEventResponse awaitingPlanner = recorder.awaitEvent("AWAITING_USER");
         Assertions.assertEquals("AWAITING_USER", awaitingPlanner.type());

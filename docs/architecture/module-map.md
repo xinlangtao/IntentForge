@@ -4,6 +4,7 @@
 
 - `governance` 负责管
 - `agent` 负责想
+- `channel` 负责连接外部消息渠道、账号实例、会话目标与路由入口
 - `prompt/model/model-provider` 负责定义提示词、模型目录与模型提供方能力面
 - `tool` 负责做
 - `memory/config` 负责提供上下文
@@ -23,6 +24,7 @@
 | `intentforge-governance` | Task orchestration, state machine, routing, strategy, coordination, scheduling, synchronous compatibility gateway, event-driven run orchestration, user-directed checkpoint transitions, and per-run runtime resolution |
 | `intentforge-audit` | Run/step/tool-call records, event snapshots, replay, audit services |
 | `intentforge-agent` | Agent abstraction family, routed execution contracts, and runtime integrations |
+| `intentforge-channel` | Channel abstractions, runtime managers, Spring SPI bridge, and pluggable connector adapters |
 | `intentforge-prompt` | Prompt definitions, registries, and pluggable prompt runtime |
 | `intentforge-model` | Model catalogs, capability metadata, and pluggable model runtime |
 | `intentforge-model-provider` | Model provider SPI, provider registries, and pluggable provider adapters |
@@ -44,6 +46,15 @@
 | `intentforge-agent-native` | Native planner, coder, reviewer implementations and default native executor factory |
 | `intentforge-agent-springai` | Spring AI based chat, advisor, and tool execution adapters |
 | `intentforge-agent-external` | External runtime adapters such as Codex, Gemini, AgentScope |
+
+### `intentforge-channel`
+
+| Module | Role |
+| --- | --- |
+| `intentforge-channel-core` | Channel descriptors, account/target/message models, routing contracts, and manager/plugin SPI |
+| `intentforge-channel-local` | In-memory channel manager provider, classpath SPI loading, and local plugin directory loading |
+| `intentforge-channel-spring` | Spring `spring.factories` bridge for channel plugin discovery |
+| `intentforge-channel-connectors` | Built-in connector implementations and reusable connector entrypoints |
 
 ### `intentforge-governance`
 

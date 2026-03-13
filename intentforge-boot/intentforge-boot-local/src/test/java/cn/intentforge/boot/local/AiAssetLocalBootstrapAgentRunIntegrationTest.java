@@ -125,7 +125,8 @@ class AiAssetLocalBootstrapAgentRunIntegrationTest {
             "MODEL_MANAGER", "intentforge.model.manager.in-memory",
             "MODEL_PROVIDER_REGISTRY", "intentforge.model-provider.registry.in-memory",
             "TOOL_REGISTRY", "intentforge.tool.registry.in-memory",
-            "SESSION_MANAGER", "intentforge.session.manager.in-memory"),
+            "SESSION_MANAGER", "intentforge.session.manager.in-memory",
+            "CHANNEL_MANAGER", "intentforge.channel.manager.in-memory"),
         pausedAfterPlanner.events().stream()
             .filter(event -> event.type() == AgentRunEventType.CONTEXT_RESOLVED)
             .findFirst()

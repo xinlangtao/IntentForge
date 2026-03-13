@@ -40,6 +40,7 @@ It is an **AI-Native Development Platform**.
 
 - governance: responsible for governance
 - agent: responsible for reasoning
+- channel: responsible for external channel integration, account/session routing, and connector pluggability
 - prompt/model/model-provider: responsible for prompt assets, model catalogs, and provider pluggability
 - tool: responsible for execution
 - memory/config: responsible for contextual data
@@ -61,6 +62,11 @@ intentforge/
 │  ├─ intentforge-agent-native             # Native in-house coding agent implementation
 │  ├─ intentforge-agent-springai           # Executor implementation based on Spring AI
 │  └─ intentforge-agent-external           # External agent adapters: opencode / codex / gemini / agentscope, etc.
+├─ intentforge-channel                     # Channel aggregation module
+│  ├─ intentforge-channel-core             # Channel descriptors, account/target/message models, routing contracts, manager/plugin SPI
+│  ├─ intentforge-channel-local            # In-memory channel manager provider, classpath SPI loading, local plugin directory loading
+│  ├─ intentforge-channel-spring           # Spring factories bridge for channel plugin discovery
+│  └─ intentforge-channel-connectors       # Built-in connector implementations and reusable connector entrypoints
 ├─ intentforge-prompt                      # Prompt aggregation module
 │  ├─ intentforge-prompt-core              # Prompt definitions, variables, queries, registry SPI, manager-provider SPI
 │  └─ intentforge-prompt-local             # In-memory prompt manager provider, classpath SPI loading, local plugin directory loading
