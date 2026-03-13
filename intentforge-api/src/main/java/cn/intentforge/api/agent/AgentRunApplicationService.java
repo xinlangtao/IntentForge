@@ -8,7 +8,6 @@ import cn.intentforge.agent.core.AgentTask;
 import cn.intentforge.agent.core.AgentRunTransition;
 import cn.intentforge.agent.core.AgentRole;
 import cn.intentforge.agent.core.TaskMode;
-import cn.intentforge.api.util.ApiModelSupport;
 import cn.intentforge.session.model.Session;
 import cn.intentforge.session.model.SessionDraft;
 import cn.intentforge.session.registry.SessionManager;
@@ -72,7 +71,7 @@ public final class AgentRunApplicationService {
    */
   public AgentRunSnapshot getRun(String runId) {
     try {
-      return agentRunGateway.get(ApiModelSupport.requireText(runId, "runId"));
+      return agentRunGateway.get(cn.intentforge.common.util.ValidationSupport.requireText(runId, "runId"));
     } catch (IllegalArgumentException ex) {
       throw invalidRequest(messageOrFallback(ex, "invalid run identifier"), ex);
     } catch (AgentExecutionException ex) {
@@ -95,7 +94,7 @@ public final class AgentRunApplicationService {
     try {
       AgentRunObserver nonNullObserver = observer == null ? AgentRunObserver.NOOP : observer;
       return agentRunGateway.resume(
-          ApiModelSupport.requireText(runId, "runId"),
+          cn.intentforge.common.util.ValidationSupport.requireText(runId, "runId"),
           toTransition(Objects.requireNonNull(request, "request must not be null")),
           nonNullObserver);
     } catch (IllegalArgumentException ex) {
@@ -117,7 +116,7 @@ public final class AgentRunApplicationService {
     try {
       AgentRunObserver nonNullObserver = observer == null ? AgentRunObserver.NOOP : observer;
       return agentRunGateway.cancel(
-          ApiModelSupport.requireText(runId, "runId"),
+          cn.intentforge.common.util.ValidationSupport.requireText(runId, "runId"),
           Objects.requireNonNull(request, "request must not be null").reason(),
           nonNullObserver);
     } catch (IllegalArgumentException ex) {

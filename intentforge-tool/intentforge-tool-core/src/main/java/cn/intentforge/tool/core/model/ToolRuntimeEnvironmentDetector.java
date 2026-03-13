@@ -1,5 +1,7 @@
 package cn.intentforge.tool.core.model;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -292,15 +294,6 @@ final class ToolRuntimeEnvironmentDetector {
   private static boolean hasText(String value) {
     return normalize(value) != null;
   }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
-  }
-
   private static String valueOrDefault(String value, String fallback) {
     String normalized = normalize(value);
     return normalized == null ? fallback : normalized;

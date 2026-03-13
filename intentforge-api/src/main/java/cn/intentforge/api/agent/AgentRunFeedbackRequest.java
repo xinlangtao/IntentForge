@@ -1,6 +1,5 @@
 package cn.intentforge.api.agent;
 
-import cn.intentforge.api.util.ApiModelSupport;
 
 /**
  * HTTP request used to resume one paused run with user feedback.
@@ -20,9 +19,9 @@ public record AgentRunFeedbackRequest(
    * Creates a validated feedback request.
    */
   public AgentRunFeedbackRequest {
-    content = ApiModelSupport.normalize(content);
-    nextRole = ApiModelSupport.normalize(nextRole);
-    nextAgentId = ApiModelSupport.normalize(nextAgentId);
+    content = cn.intentforge.common.util.ValidationSupport.normalize(content);
+    nextRole = cn.intentforge.common.util.ValidationSupport.normalize(nextRole);
+    nextAgentId = cn.intentforge.common.util.ValidationSupport.normalize(nextAgentId);
     if (complete) {
       if (nextRole != null || nextAgentId != null) {
         throw new IllegalArgumentException("complete request must not define nextRole or nextAgentId");

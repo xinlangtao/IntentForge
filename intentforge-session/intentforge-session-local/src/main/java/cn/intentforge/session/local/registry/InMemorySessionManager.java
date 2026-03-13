@@ -1,5 +1,8 @@
 package cn.intentforge.session.local.registry;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+import static cn.intentforge.common.util.ValidationSupport.requireText;
+
 import cn.intentforge.session.SessionNotFoundException;
 import cn.intentforge.session.model.Session;
 import cn.intentforge.session.model.SessionDraft;
@@ -205,18 +208,6 @@ public class InMemorySessionManager implements SessionManager {
   }
 
   private static String requireSessionId(String sessionId) {
-    String normalized = normalize(sessionId);
-    if (normalized == null) {
-      throw new IllegalArgumentException("sessionId must not be blank");
-    }
-    return normalized;
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
+    return requireText(sessionId, "sessionId");
   }
 }

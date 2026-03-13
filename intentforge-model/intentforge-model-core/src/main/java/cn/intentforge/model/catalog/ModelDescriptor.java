@@ -1,5 +1,8 @@
 package cn.intentforge.model.catalog;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+import static cn.intentforge.common.util.ValidationSupport.requireText;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,22 +47,6 @@ public record ModelDescriptor(
       return false;
     }
     return query.streaming() == null || query.streaming() == streaming;
-  }
-
-  private static String requireText(String value, String fieldName) {
-    String normalized = normalize(value);
-    if (normalized == null) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return normalized;
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 
   private static List<ModelCapability> immutableCapabilities(List<ModelCapability> capabilities) {

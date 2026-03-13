@@ -1,5 +1,7 @@
 package cn.intentforge.tool.connectors.web;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 /**
  * One search result entry.
  *
@@ -22,13 +24,5 @@ public record SearchResultItem(String title, String url, String snippet) {
     if (title == null && snippet == null) {
       throw new IllegalArgumentException("title and snippet cannot both be blank");
     }
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

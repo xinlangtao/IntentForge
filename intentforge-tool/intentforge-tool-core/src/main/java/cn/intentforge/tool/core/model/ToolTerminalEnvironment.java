@@ -1,5 +1,7 @@
 package cn.intentforge.tool.core.model;
 
+import static cn.intentforge.common.util.ValidationSupport.textOrDefault;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -29,11 +31,11 @@ public record ToolTerminalEnvironment(
    * @param host detected host IDE or terminal family
    */
   public ToolTerminalEnvironment {
-    program = normalize(program);
-    type = normalize(type);
-    version = normalize(version);
-    sessionId = normalize(sessionId);
-    host = normalize(host);
+    program = textOrDefault(program, "unknown");
+    type = textOrDefault(type, "unknown");
+    version = textOrDefault(version, "unknown");
+    sessionId = textOrDefault(sessionId, "unknown");
+    host = textOrDefault(host, "unknown");
   }
 
   /**
@@ -49,13 +51,5 @@ public record ToolTerminalEnvironment(
     result.put("sessionId", sessionId);
     result.put("host", host);
     return Map.copyOf(result);
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return "unknown";
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? "unknown" : normalized;
   }
 }

@@ -1,5 +1,7 @@
 package cn.intentforge.tool.core.permission;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import cn.intentforge.tool.core.model.ToolCallRequest;
 import cn.intentforge.tool.core.model.ToolExecutionContext;
 import java.util.Collection;
@@ -162,13 +164,5 @@ public final class DefaultToolPermissionPolicy implements ToolPermissionPolicy {
       }
     }
     return normalized;
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

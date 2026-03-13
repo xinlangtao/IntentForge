@@ -1,5 +1,7 @@
 package cn.intentforge.model.provider.local.registry;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import cn.intentforge.model.catalog.ModelDescriptor;
 import cn.intentforge.model.provider.ModelProvider;
 import cn.intentforge.model.provider.ModelProviderDescriptor;
@@ -116,13 +118,5 @@ public final class InMemoryModelProviderRegistry implements ModelProviderRegistr
         .toList();
     registerAll(providers);
     pluginsLoaded = true;
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

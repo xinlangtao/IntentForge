@@ -1,5 +1,7 @@
 package cn.intentforge.tool.core.registry;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import cn.intentforge.tool.core.spi.ToolPlugin;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -105,13 +107,5 @@ public final class InMemoryToolRegistry implements ToolRegistry {
       throw new IllegalArgumentException("registration must not be null");
     }
     return registration;
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

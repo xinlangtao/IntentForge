@@ -1,5 +1,7 @@
 package cn.intentforge.model.local.registry;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import cn.intentforge.model.catalog.ModelDescriptor;
 import cn.intentforge.model.catalog.ModelQuery;
 import cn.intentforge.model.registry.ModelManager;
@@ -102,13 +104,5 @@ public final class InMemoryModelManager implements ModelManager {
         .map(ModelPlugin::models)
         .forEach(this::registerAll);
     pluginsLoaded = true;
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

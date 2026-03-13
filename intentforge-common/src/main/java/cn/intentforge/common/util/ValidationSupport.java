@@ -1,4 +1,4 @@
-package cn.intentforge.api.util;
+package cn.intentforge.common.util;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -6,10 +6,34 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Shared validation and normalization helpers used by public API transport models.
+ * Shared validation and normalization helpers for text and immutable collections.
  */
-public final class ApiModelSupport {
-  private ApiModelSupport() {
+public final class ValidationSupport {
+  private ValidationSupport() {
+  }
+
+  /**
+   * Normalizes one potentially blank text value to trimmed text or {@code null}.
+   *
+   * @param value raw input
+   * @return trimmed text or {@code null}
+   */
+  public static String normalize(String value) {
+    if (value == null) {
+      return null;
+    }
+    String normalized = value.trim();
+    return normalized.isEmpty() ? null : normalized;
+  }
+
+  /**
+   * Normalizes one optional text value.
+   *
+   * @param value raw input
+   * @return trimmed text or {@code null}
+   */
+  public static String normalizeOptional(String value) {
+    return normalize(value);
   }
 
   /**
@@ -28,17 +52,15 @@ public final class ApiModelSupport {
   }
 
   /**
-   * Normalizes one potentially blank text value to trimmed text or {@code null}.
+   * Returns normalized text when present, otherwise one normalized default value.
    *
    * @param value raw input
-   * @return trimmed text or {@code null}
+   * @param defaultValue fallback value
+   * @return normalized input or fallback
    */
-  public static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
+  public static String textOrDefault(String value, String defaultValue) {
+    String normalized = normalize(value);
+    return normalized == null ? requireText(defaultValue, "defaultValue") : normalized;
   }
 
   /**
@@ -76,8 +98,9 @@ public final class ApiModelSupport {
     Map<String, Object> normalized = new LinkedHashMap<>();
     for (Map.Entry<String, Object> entry : value.entrySet()) {
       Objects.requireNonNull(entry, fieldName + " entry must not be null");
-      normalized.put(requireText(entry.getKey(), fieldName + " key"), Objects.requireNonNull(entry.getValue(),
-          fieldName + " value must not be null"));
+      normalized.put(
+          requireText(entry.getKey(), fieldName + " key"),
+          Objects.requireNonNull(entry.getValue(), fieldName + " value must not be null"));
     }
     return Map.copyOf(normalized);
   }
@@ -91,7 +114,7 @@ public final class ApiModelSupport {
    * @return immutable validated list
    */
   public static <T> List<T> immutableList(List<T> value, String fieldName) {
-    if (value == null) {
+    if (value == null || value.isEmpty()) {
       return List.of();
     }
     for (T item : value) {

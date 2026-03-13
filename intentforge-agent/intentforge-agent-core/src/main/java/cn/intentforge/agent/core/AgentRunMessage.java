@@ -24,9 +24,9 @@ public record AgentRunMessage(
    * Creates a validated run message.
    */
   public AgentRunMessage {
-    id = AgentModelSupport.requireText(id, "id");
+    id = cn.intentforge.common.util.ValidationSupport.requireText(id, "id");
     role = Objects.requireNonNull(role, "role must not be null");
-    content = AgentModelSupport.requireText(content, "content");
+    content = cn.intentforge.common.util.ValidationSupport.requireText(content, "content");
     createdAt = Objects.requireNonNull(createdAt, "createdAt must not be null");
     metadata = AgentModelSupport.immutableMetadata(metadata);
   }

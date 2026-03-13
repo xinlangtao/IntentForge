@@ -1,6 +1,5 @@
 package cn.intentforge.api.agent;
 
-import cn.intentforge.api.util.ApiModelSupport;
 
 import java.util.Map;
 
@@ -26,11 +25,11 @@ public record RuntimeImplementationResponse(
    * Creates a validated runtime implementation response payload.
    */
   public RuntimeImplementationResponse {
-    id = ApiModelSupport.requireText(id, "id");
-    capability = ApiModelSupport.requireText(capability, "capability");
-    displayName = ApiModelSupport.requireText(displayName, "displayName");
-    version = ApiModelSupport.requireText(version, "version");
-    implementationClass = ApiModelSupport.requireText(implementationClass, "implementationClass");
-    metadata = ApiModelSupport.immutableStringMap(metadata, "metadata");
+    id = cn.intentforge.common.util.ValidationSupport.requireText(id, "id");
+    capability = cn.intentforge.common.util.ValidationSupport.requireText(capability, "capability");
+    displayName = cn.intentforge.common.util.ValidationSupport.requireText(displayName, "displayName");
+    version = cn.intentforge.common.util.ValidationSupport.requireText(version, "version");
+    implementationClass = cn.intentforge.common.util.ValidationSupport.requireText(implementationClass, "implementationClass");
+    metadata = cn.intentforge.common.util.ValidationSupport.immutableStringMap(metadata, "metadata");
   }
 }

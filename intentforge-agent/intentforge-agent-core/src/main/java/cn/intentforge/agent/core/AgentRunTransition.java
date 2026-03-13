@@ -20,8 +20,8 @@ public record AgentRunTransition(
    * Creates one validated transition request.
    */
   public AgentRunTransition {
-    feedback = AgentModelSupport.normalize(feedback);
-    nextAgentId = AgentModelSupport.normalize(nextAgentId);
+    feedback = cn.intentforge.common.util.ValidationSupport.normalize(feedback);
+    nextAgentId = cn.intentforge.common.util.ValidationSupport.normalize(nextAgentId);
     if (complete) {
       if (nextAgentId != null || nextRole != null) {
         throw new IllegalArgumentException("complete transition must not define nextAgentId or nextRole");

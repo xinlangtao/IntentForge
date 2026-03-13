@@ -23,8 +23,8 @@ public record AgentRouteStep(
     if (order < 1) {
       throw new IllegalArgumentException("order must be greater than zero");
     }
-    agentId = AgentModelSupport.requireText(agentId, "agentId");
+    agentId = cn.intentforge.common.util.ValidationSupport.requireText(agentId, "agentId");
     role = Objects.requireNonNull(role, "role must not be null");
-    reason = AgentModelSupport.requireText(reason, "reason");
+    reason = cn.intentforge.common.util.ValidationSupport.requireText(reason, "reason");
   }
 }

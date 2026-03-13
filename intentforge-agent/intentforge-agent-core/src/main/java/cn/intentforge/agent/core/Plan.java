@@ -19,7 +19,7 @@ public record Plan(
    * Creates a validated plan.
    */
   public Plan {
-    summary = AgentModelSupport.requireText(summary, "summary");
+    summary = cn.intentforge.common.util.ValidationSupport.requireText(summary, "summary");
     steps = AgentModelSupport.immutableList(steps, "steps");
     if (steps.isEmpty()) {
       throw new IllegalArgumentException("steps must not be empty");

@@ -18,6 +18,11 @@
   <dependencies>
     <dependency>
       <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
       <artifactId>intentforge-config-core</artifactId>
       <version>${project.version}</version>
     </dependency>

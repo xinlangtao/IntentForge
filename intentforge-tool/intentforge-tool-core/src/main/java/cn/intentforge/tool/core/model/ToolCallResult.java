@@ -1,5 +1,7 @@
 package cn.intentforge.tool.core.model;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -102,13 +104,5 @@ public record ToolCallResult(
       return Map.of();
     }
     return Map.copyOf(new LinkedHashMap<>(value));
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

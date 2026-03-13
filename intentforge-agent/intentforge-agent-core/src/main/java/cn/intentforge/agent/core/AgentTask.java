@@ -30,13 +30,13 @@ public record AgentTask(
    * Creates a validated task request.
    */
   public AgentTask {
-    id = AgentModelSupport.requireText(id, "id");
-    sessionId = AgentModelSupport.requireText(sessionId, "sessionId");
-    spaceId = AgentModelSupport.normalize(spaceId);
+    id = cn.intentforge.common.util.ValidationSupport.requireText(id, "id");
+    sessionId = cn.intentforge.common.util.ValidationSupport.requireText(sessionId, "sessionId");
+    spaceId = cn.intentforge.common.util.ValidationSupport.normalize(spaceId);
     workspaceRoot = AgentModelSupport.normalizeWorkspace(workspaceRoot);
     mode = Objects.requireNonNullElse(mode, TaskMode.FULL);
-    intent = AgentModelSupport.requireText(intent, "intent");
-    targetAgentId = AgentModelSupport.normalize(targetAgentId);
+    intent = cn.intentforge.common.util.ValidationSupport.requireText(intent, "intent");
+    targetAgentId = cn.intentforge.common.util.ValidationSupport.normalize(targetAgentId);
     metadata = AgentModelSupport.immutableMetadata(metadata);
   }
 }

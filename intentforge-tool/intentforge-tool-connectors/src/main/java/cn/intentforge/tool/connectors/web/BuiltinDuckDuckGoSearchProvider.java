@@ -1,5 +1,7 @@
 package cn.intentforge.tool.connectors.web;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -157,14 +159,6 @@ public final class BuiltinDuckDuckGoSearchProvider implements SearchProvider {
       }
     }
     String normalized = builder.toString().trim();
-    return normalized.isEmpty() ? null : normalized;
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
     return normalized.isEmpty() ? null : normalized;
   }
 }

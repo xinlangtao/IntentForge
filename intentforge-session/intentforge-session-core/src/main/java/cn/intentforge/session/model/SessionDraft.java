@@ -22,9 +22,9 @@ public record SessionDraft(
    * Creates a validated immutable draft.
    */
   public SessionDraft {
-    id = SessionModelSupport.requireText(id, "id");
-    title = SessionModelSupport.normalize(title);
-    spaceId = SessionModelSupport.normalize(spaceId);
+    id = cn.intentforge.common.util.ValidationSupport.requireText(id, "id");
+    title = cn.intentforge.common.util.ValidationSupport.normalize(title);
+    spaceId = cn.intentforge.common.util.ValidationSupport.normalize(spaceId);
     metadata = SessionModelSupport.immutableMetadata(metadata);
   }
 }

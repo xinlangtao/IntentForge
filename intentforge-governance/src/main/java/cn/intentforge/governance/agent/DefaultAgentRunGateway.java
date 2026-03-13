@@ -1,5 +1,7 @@
 package cn.intentforge.governance.agent;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import cn.intentforge.agent.core.AgentDescriptor;
 import cn.intentforge.agent.core.AgentExecutionException;
 import cn.intentforge.agent.core.AgentExecutionState;
@@ -631,15 +633,6 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
     }
     return Collections.unmodifiableMap(new LinkedHashMap<>(indexed));
   }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
-  }
-
   private static final class StoredRun {
     private final String runId;
     private final AgentTask task;

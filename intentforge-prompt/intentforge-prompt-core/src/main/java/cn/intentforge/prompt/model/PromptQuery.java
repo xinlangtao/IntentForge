@@ -1,5 +1,7 @@
 package cn.intentforge.prompt.model;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import java.util.Locale;
 
 public record PromptQuery(
@@ -25,15 +27,6 @@ public record PromptQuery(
   public static PromptQuery byTag(String tag) {
     return new PromptQuery(null, null, null, tag);
   }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
-  }
-
   private static String normalizeTag(String value) {
     String normalized = normalize(value);
     return normalized == null ? null : normalized.toLowerCase(Locale.ROOT);

@@ -33,9 +33,9 @@ public record Session(
    * Creates a validated immutable session snapshot.
    */
   public Session {
-    id = SessionModelSupport.requireText(id, "id");
-    title = SessionModelSupport.normalize(title);
-    spaceId = SessionModelSupport.normalize(spaceId);
+    id = cn.intentforge.common.util.ValidationSupport.requireText(id, "id");
+    title = cn.intentforge.common.util.ValidationSupport.normalize(title);
+    spaceId = cn.intentforge.common.util.ValidationSupport.normalize(spaceId);
     status = Objects.requireNonNullElse(status, SessionStatus.ACTIVE);
     messages = SessionModelSupport.immutableMessages(messages);
     metadata = SessionModelSupport.immutableMetadata(metadata);

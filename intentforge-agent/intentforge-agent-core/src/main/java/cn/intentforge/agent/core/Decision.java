@@ -21,9 +21,9 @@ public record Decision(
    * Creates a validated decision.
    */
   public Decision {
-    agentId = AgentModelSupport.requireText(agentId, "agentId");
+    agentId = cn.intentforge.common.util.ValidationSupport.requireText(agentId, "agentId");
     role = Objects.requireNonNull(role, "role must not be null");
-    summary = AgentModelSupport.requireText(summary, "summary");
+    summary = cn.intentforge.common.util.ValidationSupport.requireText(summary, "summary");
     metadata = AgentModelSupport.immutableMetadata(metadata);
   }
 }

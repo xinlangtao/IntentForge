@@ -20,9 +20,9 @@ public record PlanStep(
    * Creates a validated plan step.
    */
   public PlanStep {
-    id = AgentModelSupport.requireText(id, "id");
-    title = AgentModelSupport.requireText(title, "title");
-    description = AgentModelSupport.requireText(description, "description");
-    toolId = AgentModelSupport.normalize(toolId);
+    id = cn.intentforge.common.util.ValidationSupport.requireText(id, "id");
+    title = cn.intentforge.common.util.ValidationSupport.requireText(title, "title");
+    description = cn.intentforge.common.util.ValidationSupport.requireText(description, "description");
+    toolId = cn.intentforge.common.util.ValidationSupport.normalize(toolId);
   }
 }

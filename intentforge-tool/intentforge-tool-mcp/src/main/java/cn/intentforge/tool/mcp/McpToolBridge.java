@@ -1,5 +1,7 @@
 package cn.intentforge.tool.mcp;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import cn.intentforge.tool.core.model.ToolCallResult;
 import cn.intentforge.tool.core.model.ToolDefinition;
 import cn.intentforge.tool.core.registry.ToolRegistration;
@@ -111,13 +113,5 @@ public final class McpToolBridge {
       errorMessage = "MCP tool failed: " + remoteToolId;
     }
     return ToolCallResult.error(errorCode, errorMessage, remoteResult.metadata());
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

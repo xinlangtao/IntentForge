@@ -1,6 +1,5 @@
 package cn.intentforge.api.agent;
 
-import cn.intentforge.api.util.ApiModelSupport;
 
 /**
  * HTTP response that describes one selectable next action for a paused run.
@@ -22,13 +21,13 @@ public record AgentRunActionResponse(
    * Creates one validated action response.
    */
   public AgentRunActionResponse {
-    reason = ApiModelSupport.requireText(reason, "reason");
+    reason = cn.intentforge.common.util.ValidationSupport.requireText(reason, "reason");
     if (complete) {
-      agentId = ApiModelSupport.normalize(agentId);
-      role = ApiModelSupport.normalize(role);
+      agentId = cn.intentforge.common.util.ValidationSupport.normalize(agentId);
+      role = cn.intentforge.common.util.ValidationSupport.normalize(role);
     } else {
-      agentId = ApiModelSupport.requireText(agentId, "agentId");
-      role = ApiModelSupport.requireText(role, "role");
+      agentId = cn.intentforge.common.util.ValidationSupport.requireText(agentId, "agentId");
+      role = cn.intentforge.common.util.ValidationSupport.requireText(role, "role");
     }
   }
 }

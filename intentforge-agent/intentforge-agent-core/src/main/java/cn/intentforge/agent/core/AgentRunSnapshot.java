@@ -38,14 +38,14 @@ public record AgentRunSnapshot(
    * Creates a validated snapshot.
    */
   public AgentRunSnapshot {
-    runId = AgentModelSupport.requireText(runId, "runId");
+    runId = cn.intentforge.common.util.ValidationSupport.requireText(runId, "runId");
     task = Objects.requireNonNull(task, "task must not be null");
     status = Objects.requireNonNull(status, "status must not be null");
     contextPack = Objects.requireNonNull(contextPack, "contextPack must not be null");
     route = Objects.requireNonNull(route, "route must not be null");
     state = Objects.requireNonNull(state, "state must not be null");
     events = AgentModelSupport.immutableList(events, "events");
-    awaitingReason = AgentModelSupport.normalize(awaitingReason);
+    awaitingReason = cn.intentforge.common.util.ValidationSupport.normalize(awaitingReason);
     if (nextStepIndex < 0) {
       throw new IllegalArgumentException("nextStepIndex must not be negative");
     }

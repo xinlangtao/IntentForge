@@ -1,5 +1,8 @@
 package cn.intentforge.model.provider;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+import static cn.intentforge.common.util.ValidationSupport.requireText;
+
 import cn.intentforge.model.catalog.ModelCapability;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -24,22 +27,6 @@ public record ModelProviderDescriptor(
     endpoint = normalize(endpoint);
     capabilities = immutableCapabilities(capabilities);
     metadata = immutableMetadata(metadata);
-  }
-
-  private static String requireText(String value, String fieldName) {
-    String normalized = normalize(value);
-    if (normalized == null) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return normalized;
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 
   private static List<ModelCapability> immutableCapabilities(List<ModelCapability> capabilities) {

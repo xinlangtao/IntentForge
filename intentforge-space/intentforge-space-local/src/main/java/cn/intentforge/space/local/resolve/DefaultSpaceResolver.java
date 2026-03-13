@@ -1,5 +1,7 @@
 package cn.intentforge.space.local.resolve;
 
+import static cn.intentforge.common.util.ValidationSupport.requireText;
+
 import cn.intentforge.config.RuntimeBindings;
 import cn.intentforge.space.ResolvedSpaceProfile;
 import cn.intentforge.space.SpaceDefinition;
@@ -148,13 +150,5 @@ public final class DefaultSpaceResolver implements SpaceResolver {
         memoryIds,
         config,
         runtimeBindings);
-  }
-
-  private static String requireText(String value, String fieldName) {
-    String normalized = Objects.requireNonNull(value, fieldName + " must not be null").trim();
-    if (normalized.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return normalized;
   }
 }

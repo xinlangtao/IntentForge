@@ -1,5 +1,7 @@
 package cn.intentforge.prompt.local.registry;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import cn.intentforge.prompt.model.PromptDefinition;
 import cn.intentforge.prompt.model.PromptQuery;
 import cn.intentforge.prompt.registry.PromptManager;
@@ -139,13 +141,5 @@ public final class InMemoryPromptManager implements PromptManager {
         .map(PromptPlugin::prompts)
         .forEach(this::registerAll);
     pluginsLoaded = true;
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

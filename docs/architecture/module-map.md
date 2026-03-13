@@ -18,7 +18,7 @@
 | Module | Role |
 | --- | --- |
 | `intentforge-bom` | Unified dependency version alignment for the repository and external consumers |
-| `intentforge-common` | Global shared enums, exceptions, constants, utils, and DTO bases |
+| `intentforge-common` | Global shared enums, exceptions, constants, shared validation/normalization utils, and DTO bases |
 | `intentforge-api` | External protocol contracts, REST DTOs, transport-neutral API controllers and application services, checkpoint-transition selection, SSE event payloads, AG-UI events, and request/response objects |
 | `intentforge-governance` | Task orchestration, state machine, routing, strategy, coordination, scheduling, synchronous compatibility gateway, event-driven run orchestration, user-directed checkpoint transitions, and per-run runtime resolution |
 | `intentforge-audit` | Run/step/tool-call records, event snapshots, replay, audit services |

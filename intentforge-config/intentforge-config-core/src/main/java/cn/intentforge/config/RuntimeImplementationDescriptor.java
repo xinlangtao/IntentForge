@@ -1,5 +1,8 @@
 package cn.intentforge.config;
 
+import static cn.intentforge.common.util.ValidationSupport.normalizeOptional;
+import static cn.intentforge.common.util.ValidationSupport.requireText;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -90,21 +93,5 @@ public record RuntimeImplementationDescriptor(
       normalized.put(requireText(entry.getKey(), "metadata key"), requireText(entry.getValue(), "metadata value"));
     }
     return Map.copyOf(normalized);
-  }
-
-  private static String requireText(String value, String fieldName) {
-    String normalized = Objects.requireNonNull(value, fieldName + " must not be null").trim();
-    if (normalized.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return normalized;
-  }
-
-  private static String normalizeOptional(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

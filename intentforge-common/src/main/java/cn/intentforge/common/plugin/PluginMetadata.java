@@ -1,5 +1,9 @@
 package cn.intentforge.common.plugin;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+import static cn.intentforge.common.util.ValidationSupport.requireText;
+import static cn.intentforge.common.util.ValidationSupport.textOrDefault;
+
 import java.util.Objects;
 import java.util.Properties;
 
@@ -40,26 +44,5 @@ public record PluginMetadata(
     String apiVersion = normalize(properties.getProperty(API_VERSION_KEY));
     String intentforgeVersion = normalize(properties.getProperty(INTENTFORGE_VERSION_KEY));
     return new PluginMetadata(id, name, version, description, enabled, apiVersion, intentforgeVersion);
-  }
-
-  private static String requireText(String value, String fieldName) {
-    String normalized = normalize(value);
-    if (normalized == null) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return normalized;
-  }
-
-  private static String textOrDefault(String value, String defaultValue) {
-    String normalized = normalize(value);
-    return normalized == null ? defaultValue : normalized;
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

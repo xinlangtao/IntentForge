@@ -1,6 +1,5 @@
 package cn.intentforge.api.agent;
 
-import cn.intentforge.api.util.ApiModelSupport;
 
 import java.util.List;
 
@@ -36,18 +35,18 @@ public record AgentRunResponse(
    * Creates a validated run response payload.
    */
   public AgentRunResponse {
-    runId = ApiModelSupport.requireText(runId, "runId");
-    taskId = ApiModelSupport.requireText(taskId, "taskId");
-    sessionId = ApiModelSupport.requireText(sessionId, "sessionId");
-    status = ApiModelSupport.requireText(status, "status");
+    runId = cn.intentforge.common.util.ValidationSupport.requireText(runId, "runId");
+    taskId = cn.intentforge.common.util.ValidationSupport.requireText(taskId, "taskId");
+    sessionId = cn.intentforge.common.util.ValidationSupport.requireText(sessionId, "sessionId");
+    status = cn.intentforge.common.util.ValidationSupport.requireText(status, "status");
     if (nextStepIndex < 0) {
       throw new IllegalArgumentException("nextStepIndex must not be negative");
     }
-    awaitingReason = ApiModelSupport.normalize(awaitingReason);
-    eventsPath = ApiModelSupport.requireText(eventsPath, "eventsPath");
-    selectedRuntimes = ApiModelSupport.immutableList(selectedRuntimes, "selectedRuntimes");
-    selectedRouteSteps = ApiModelSupport.immutableList(selectedRouteSteps, "selectedRouteSteps");
-    availableNextActions = ApiModelSupport.immutableList(availableNextActions, "availableNextActions");
-    events = ApiModelSupport.immutableList(events, "events");
+    awaitingReason = cn.intentforge.common.util.ValidationSupport.normalize(awaitingReason);
+    eventsPath = cn.intentforge.common.util.ValidationSupport.requireText(eventsPath, "eventsPath");
+    selectedRuntimes = cn.intentforge.common.util.ValidationSupport.immutableList(selectedRuntimes, "selectedRuntimes");
+    selectedRouteSteps = cn.intentforge.common.util.ValidationSupport.immutableList(selectedRouteSteps, "selectedRouteSteps");
+    availableNextActions = cn.intentforge.common.util.ValidationSupport.immutableList(availableNextActions, "availableNextActions");
+    events = cn.intentforge.common.util.ValidationSupport.immutableList(events, "events");
   }
 }

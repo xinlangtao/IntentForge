@@ -32,6 +32,6 @@ public record AgentRunResult(
     decisions = AgentModelSupport.immutableList(decisions, "decisions");
     artifacts = AgentModelSupport.immutableList(artifacts, "artifacts");
     toolCalls = AgentModelSupport.immutableList(toolCalls, "toolCalls");
-    summary = AgentModelSupport.requireText(summary, "summary");
+    summary = cn.intentforge.common.util.ValidationSupport.requireText(summary, "summary");
   }
 }

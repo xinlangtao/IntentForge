@@ -1,5 +1,7 @@
 package cn.intentforge.tool.core.annotation;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import cn.intentforge.tool.core.model.ToolCallRequest;
 import cn.intentforge.tool.core.model.ToolCallResult;
 import cn.intentforge.tool.core.model.ToolDefinition;
@@ -217,13 +219,5 @@ public final class AnnotationToolRegistrar {
       return enumValue;
     }
     return value;
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

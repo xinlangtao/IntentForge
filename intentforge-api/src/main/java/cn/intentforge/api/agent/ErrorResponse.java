@@ -1,6 +1,5 @@
 package cn.intentforge.api.agent;
 
-import cn.intentforge.api.util.ApiModelSupport;
 
 /**
  * Minimal error payload returned by the HTTP API.
@@ -13,7 +12,7 @@ public record ErrorResponse(String code, String message) {
    * Creates a validated error payload.
    */
   public ErrorResponse {
-    code = ApiModelSupport.requireText(code, "code");
-    message = ApiModelSupport.requireText(message, "message");
+    code = cn.intentforge.common.util.ValidationSupport.requireText(code, "code");
+    message = cn.intentforge.common.util.ValidationSupport.requireText(message, "message");
   }
 }

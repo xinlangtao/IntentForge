@@ -1,5 +1,7 @@
 package cn.intentforge.tool.core.model;
 
+import static cn.intentforge.common.util.ValidationSupport.requireText;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -49,16 +51,5 @@ public record ToolIdeLauncher(
     result.put("launchCommand", launchCommand);
     result.put("source", source);
     return Map.copyOf(result);
-  }
-
-  private static String requireText(String value, String fieldName) {
-    if (value == null) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    String normalized = value.trim();
-    if (normalized.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return normalized;
   }
 }

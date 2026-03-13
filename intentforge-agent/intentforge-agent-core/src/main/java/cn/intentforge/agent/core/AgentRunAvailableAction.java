@@ -22,13 +22,13 @@ public record AgentRunAvailableAction(
    * Creates one validated available action.
    */
   public AgentRunAvailableAction {
-    reason = AgentModelSupport.requireText(reason, "reason");
+    reason = cn.intentforge.common.util.ValidationSupport.requireText(reason, "reason");
     if (complete) {
       if (agentId != null || role != null) {
         throw new IllegalArgumentException("complete action must not define agentId or role");
       }
     } else {
-      agentId = AgentModelSupport.requireText(agentId, "agentId");
+      agentId = cn.intentforge.common.util.ValidationSupport.requireText(agentId, "agentId");
       role = Objects.requireNonNull(role, "role must not be null");
     }
   }

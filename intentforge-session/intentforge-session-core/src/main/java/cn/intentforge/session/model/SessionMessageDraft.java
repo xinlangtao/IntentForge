@@ -23,9 +23,9 @@ public record SessionMessageDraft(
    * Creates a validated immutable draft.
    */
   public SessionMessageDraft {
-    id = SessionModelSupport.requireText(id, "id");
+    id = cn.intentforge.common.util.ValidationSupport.requireText(id, "id");
     role = Objects.requireNonNull(role, "role must not be null");
-    content = SessionModelSupport.requireText(content, "content");
+    content = cn.intentforge.common.util.ValidationSupport.requireText(content, "content");
     metadata = SessionModelSupport.immutableMetadata(metadata);
   }
 }

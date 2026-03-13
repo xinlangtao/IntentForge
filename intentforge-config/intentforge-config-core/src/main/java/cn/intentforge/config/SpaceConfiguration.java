@@ -1,9 +1,10 @@
 package cn.intentforge.config;
 
-import java.util.LinkedHashMap;
+import static cn.intentforge.common.util.ValidationSupport.immutableStringMap;
+import static cn.intentforge.common.util.ValidationSupport.requireText;
+
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * User-managed configuration snapshot for one space.
@@ -56,27 +57,5 @@ public record SpaceConfiguration(
     }
     List<String> normalized = values.stream().map(value -> requireText(value, fieldName + " item")).toList();
     return List.copyOf(normalized);
-  }
-
-  private static Map<String, String> immutableStringMap(Map<String, String> values, String fieldName) {
-    if (values == null || values.isEmpty()) {
-      return Map.of();
-    }
-    Map<String, String> normalized = new LinkedHashMap<>();
-    for (Map.Entry<String, String> entry : values.entrySet()) {
-      Objects.requireNonNull(entry, fieldName + " entry must not be null");
-      normalized.put(
-          requireText(entry.getKey(), fieldName + " key"),
-          requireText(entry.getValue(), fieldName + " value"));
-    }
-    return Map.copyOf(normalized);
-  }
-
-  private static String requireText(String value, String fieldName) {
-    String normalized = Objects.requireNonNull(value, fieldName + " must not be null").trim();
-    if (normalized.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return normalized;
   }
 }

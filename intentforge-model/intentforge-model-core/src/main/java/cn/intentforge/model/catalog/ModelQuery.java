@@ -1,5 +1,7 @@
 package cn.intentforge.model.catalog;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 public record ModelQuery(
     String providerId,
     ModelType type,
@@ -20,13 +22,5 @@ public record ModelQuery(
 
   public static ModelQuery byCapability(ModelCapability capability) {
     return new ModelQuery(null, null, capability, null);
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }

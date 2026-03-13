@@ -1,5 +1,7 @@
 package cn.intentforge.space;
 
+import static cn.intentforge.common.util.ValidationSupport.requireText;
+
 import cn.intentforge.config.RuntimeBindings;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -127,13 +129,5 @@ public record ResolvedSpaceProfile(
       normalized.put(key, value);
     }
     return Map.copyOf(normalized);
-  }
-
-  private static String requireText(String value, String fieldName) {
-    String normalized = Objects.requireNonNull(value, fieldName + " must not be null").trim();
-    if (normalized.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return normalized;
   }
 }

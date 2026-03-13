@@ -28,13 +28,13 @@ public record AgentRunEvent(
    * Creates a validated event.
    */
   public AgentRunEvent {
-    runId = AgentModelSupport.requireText(runId, "runId");
+    runId = cn.intentforge.common.util.ValidationSupport.requireText(runId, "runId");
     if (sequence < 1) {
       throw new IllegalArgumentException("sequence must be greater than zero");
     }
     type = Objects.requireNonNull(type, "type must not be null");
     status = Objects.requireNonNull(status, "status must not be null");
-    message = AgentModelSupport.requireText(message, "message");
+    message = cn.intentforge.common.util.ValidationSupport.requireText(message, "message");
     metadata = AgentModelSupport.immutableObjectMap(metadata);
     createdAt = Objects.requireNonNull(createdAt, "createdAt must not be null");
   }

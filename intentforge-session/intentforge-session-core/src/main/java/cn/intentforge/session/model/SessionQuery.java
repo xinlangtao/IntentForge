@@ -21,7 +21,7 @@ public record SessionQuery(
     if (spaceId != null && spaceId.trim().isEmpty()) {
       throw new IllegalArgumentException("spaceId must not be blank");
     }
-    spaceId = SessionModelSupport.normalize(spaceId);
+    spaceId = cn.intentforge.common.util.ValidationSupport.normalize(spaceId);
     keyword = SessionModelSupport.normalizeKeyword(keyword);
   }
 }

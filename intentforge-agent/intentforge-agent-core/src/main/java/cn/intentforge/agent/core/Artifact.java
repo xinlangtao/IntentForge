@@ -20,9 +20,9 @@ public record Artifact(
    * Creates a validated artifact.
    */
   public Artifact {
-    name = AgentModelSupport.requireText(name, "name");
-    mediaType = AgentModelSupport.requireText(mediaType, "mediaType");
-    content = AgentModelSupport.requireText(content, "content");
+    name = cn.intentforge.common.util.ValidationSupport.requireText(name, "name");
+    mediaType = cn.intentforge.common.util.ValidationSupport.requireText(mediaType, "mediaType");
+    content = cn.intentforge.common.util.ValidationSupport.requireText(content, "content");
     metadata = AgentModelSupport.immutableMetadata(metadata);
   }
 }

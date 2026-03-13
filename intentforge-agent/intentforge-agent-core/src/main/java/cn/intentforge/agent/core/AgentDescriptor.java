@@ -20,9 +20,9 @@ public record AgentDescriptor(
    * Creates a validated descriptor.
    */
   public AgentDescriptor {
-    id = AgentModelSupport.requireText(id, "id");
+    id = cn.intentforge.common.util.ValidationSupport.requireText(id, "id");
     role = Objects.requireNonNull(role, "role must not be null");
-    displayName = AgentModelSupport.requireText(displayName, "displayName");
-    description = AgentModelSupport.requireText(description, "description");
+    displayName = cn.intentforge.common.util.ValidationSupport.requireText(displayName, "displayName");
+    description = cn.intentforge.common.util.ValidationSupport.requireText(description, "description");
   }
 }

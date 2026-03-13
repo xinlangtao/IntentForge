@@ -26,9 +26,9 @@ public record SessionMessage(
    * Creates a validated immutable message snapshot.
    */
   public SessionMessage {
-    id = SessionModelSupport.requireText(id, "id");
+    id = cn.intentforge.common.util.ValidationSupport.requireText(id, "id");
     role = Objects.requireNonNull(role, "role must not be null");
-    content = SessionModelSupport.requireText(content, "content");
+    content = cn.intentforge.common.util.ValidationSupport.requireText(content, "content");
     metadata = SessionModelSupport.immutableMetadata(metadata);
     createdAt = Objects.requireNonNull(createdAt, "createdAt must not be null");
   }

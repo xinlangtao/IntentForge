@@ -16,7 +16,7 @@ public record AgentRoute(
    * Creates a validated route.
    */
   public AgentRoute {
-    strategy = AgentModelSupport.requireText(strategy, "strategy");
+    strategy = cn.intentforge.common.util.ValidationSupport.requireText(strategy, "strategy");
     steps = AgentModelSupport.immutableList(steps, "steps");
     if (steps.isEmpty()) {
       throw new IllegalArgumentException("steps must not be empty");

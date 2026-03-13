@@ -1,5 +1,7 @@
 package cn.intentforge.boot.local;
 
+import static cn.intentforge.common.util.ValidationSupport.requireText;
+
 import cn.intentforge.model.provider.registry.ModelProviderRegistry;
 import cn.intentforge.model.registry.ModelManager;
 import cn.intentforge.prompt.registry.PromptManager;
@@ -119,13 +121,5 @@ public record LocalRuntimeComponentRegistry(
       throw new IllegalArgumentException(componentName + " not found: " + normalizedId);
     }
     return component;
-  }
-
-  private static String requireText(String value, String fieldName) {
-    String normalized = Objects.requireNonNull(value, fieldName + " must not be null").trim();
-    if (normalized.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return normalized;
   }
 }

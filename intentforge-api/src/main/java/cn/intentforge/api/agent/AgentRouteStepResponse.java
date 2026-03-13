@@ -1,6 +1,5 @@
 package cn.intentforge.api.agent;
 
-import cn.intentforge.api.util.ApiModelSupport;
 
 /**
  * HTTP response that describes one selected route step in the run history.
@@ -23,8 +22,8 @@ public record AgentRouteStepResponse(
     if (order < 1) {
       throw new IllegalArgumentException("order must be greater than zero");
     }
-    agentId = ApiModelSupport.requireText(agentId, "agentId");
-    role = ApiModelSupport.requireText(role, "role");
-    reason = ApiModelSupport.requireText(reason, "reason");
+    agentId = cn.intentforge.common.util.ValidationSupport.requireText(agentId, "agentId");
+    role = cn.intentforge.common.util.ValidationSupport.requireText(role, "role");
+    reason = cn.intentforge.common.util.ValidationSupport.requireText(reason, "reason");
   }
 }

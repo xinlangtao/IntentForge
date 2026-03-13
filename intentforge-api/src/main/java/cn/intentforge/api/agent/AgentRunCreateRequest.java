@@ -1,6 +1,5 @@
 package cn.intentforge.api.agent;
 
-import cn.intentforge.api.util.ApiModelSupport;
 
 import java.util.Map;
 
@@ -30,17 +29,17 @@ public record AgentRunCreateRequest(
    * Creates a validated create request.
    */
   public AgentRunCreateRequest {
-    taskId = ApiModelSupport.requireText(taskId, "taskId");
-    String normalizedSessionId = ApiModelSupport.normalize(sessionId);
+    taskId = cn.intentforge.common.util.ValidationSupport.requireText(taskId, "taskId");
+    String normalizedSessionId = cn.intentforge.common.util.ValidationSupport.normalize(sessionId);
     if (sessionId != null && normalizedSessionId == null) {
       throw new IllegalArgumentException("sessionId must not be blank");
     }
     sessionId = normalizedSessionId;
-    spaceId = ApiModelSupport.normalize(spaceId);
-    workspaceRoot = ApiModelSupport.requireText(workspaceRoot, "workspaceRoot");
-    mode = ApiModelSupport.requireText(mode, "mode");
-    intent = ApiModelSupport.requireText(intent, "intent");
-    targetAgentId = ApiModelSupport.normalize(targetAgentId);
-    metadata = ApiModelSupport.immutableStringMap(metadata, "metadata");
+    spaceId = cn.intentforge.common.util.ValidationSupport.normalize(spaceId);
+    workspaceRoot = cn.intentforge.common.util.ValidationSupport.requireText(workspaceRoot, "workspaceRoot");
+    mode = cn.intentforge.common.util.ValidationSupport.requireText(mode, "mode");
+    intent = cn.intentforge.common.util.ValidationSupport.requireText(intent, "intent");
+    targetAgentId = cn.intentforge.common.util.ValidationSupport.normalize(targetAgentId);
+    metadata = cn.intentforge.common.util.ValidationSupport.immutableStringMap(metadata, "metadata");
   }
 }

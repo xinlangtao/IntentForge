@@ -1,6 +1,5 @@
 package cn.intentforge.api.agent;
 
-import cn.intentforge.api.util.ApiModelSupport;
 
 import java.util.Map;
 
@@ -28,14 +27,14 @@ public record AgentRunEventResponse(
    * Creates a validated event response payload.
    */
   public AgentRunEventResponse {
-    runId = ApiModelSupport.requireText(runId, "runId");
+    runId = cn.intentforge.common.util.ValidationSupport.requireText(runId, "runId");
     if (sequence < 1) {
       throw new IllegalArgumentException("sequence must be greater than zero");
     }
-    type = ApiModelSupport.requireText(type, "type");
-    status = ApiModelSupport.requireText(status, "status");
-    message = ApiModelSupport.requireText(message, "message");
-    metadata = ApiModelSupport.immutableObjectMap(metadata, "metadata");
-    createdAt = ApiModelSupport.requireText(createdAt, "createdAt");
+    type = cn.intentforge.common.util.ValidationSupport.requireText(type, "type");
+    status = cn.intentforge.common.util.ValidationSupport.requireText(status, "status");
+    message = cn.intentforge.common.util.ValidationSupport.requireText(message, "message");
+    metadata = cn.intentforge.common.util.ValidationSupport.immutableObjectMap(metadata, "metadata");
+    createdAt = cn.intentforge.common.util.ValidationSupport.requireText(createdAt, "createdAt");
   }
 }

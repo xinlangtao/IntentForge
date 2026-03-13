@@ -1,5 +1,7 @@
 package cn.intentforge.tool.shell.security;
 
+import static cn.intentforge.common.util.ValidationSupport.normalize;
+
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
@@ -93,13 +95,5 @@ public final class DefaultShellCommandValidator implements ShellCommandValidator
       return spaceIndex;
     }
     return Math.min(spaceIndex, tabIndex);
-  }
-
-  private static String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    String normalized = value.trim();
-    return normalized.isEmpty() ? null : normalized;
   }
 }
