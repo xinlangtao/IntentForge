@@ -5,6 +5,10 @@ package cn.intentforge.config;
  */
 public enum RuntimeCapability {
   /**
+   * Channel manager implementation.
+   */
+  CHANNEL_MANAGER,
+  /**
    * Prompt manager implementation.
    */
   PROMPT_MANAGER,

@@ -2,6 +2,8 @@ package cn.intentforge.boot.local;
 
 import cn.intentforge.agent.core.AgentGateway;
 import cn.intentforge.agent.core.AgentRunGateway;
+import cn.intentforge.channel.local.plugin.DirectoryChannelPluginManager;
+import cn.intentforge.channel.registry.ChannelManager;
 import cn.intentforge.config.RuntimeCatalog;
 import cn.intentforge.model.local.plugin.DirectoryModelPluginManager;
 import cn.intentforge.model.provider.local.plugin.DirectoryModelProviderPluginManager;
@@ -22,6 +24,8 @@ import cn.intentforge.tool.core.registry.ToolRegistry;
  *
  * @param runtimeCatalog discovered runtime implementation catalog
  * @param runtimeComponents discovered runtime component instances keyed by implementation identifier
+ * @param channelManager channel manager implementation in use
+ * @param channelPluginManager channel plugin directory manager
  * @param promptManager prompt manager implementation in use
  * @param promptPluginManager prompt plugin directory manager
  * @param modelManager model manager implementation in use
@@ -41,6 +45,8 @@ import cn.intentforge.tool.core.registry.ToolRegistry;
 public record AiAssetLocalRuntime(
     RuntimeCatalog runtimeCatalog,
     LocalRuntimeComponentRegistry runtimeComponents,
+    ChannelManager channelManager,
+    DirectoryChannelPluginManager channelPluginManager,
     PromptManager promptManager,
     DirectoryPromptPluginManager promptPluginManager,
     ModelManager modelManager,

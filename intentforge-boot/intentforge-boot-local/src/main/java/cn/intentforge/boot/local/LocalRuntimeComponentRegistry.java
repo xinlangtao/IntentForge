@@ -2,6 +2,7 @@ package cn.intentforge.boot.local;
 
 import static cn.intentforge.common.util.ValidationSupport.requireText;
 
+import cn.intentforge.channel.registry.ChannelManager;
 import cn.intentforge.model.provider.registry.ModelProviderRegistry;
 import cn.intentforge.model.registry.ModelManager;
 import cn.intentforge.prompt.registry.PromptManager;
@@ -15,6 +16,7 @@ import java.util.Objects;
 /**
  * Holds all discovered runtime component instances keyed by their stable implementation identifiers.
  *
+ * @param channelManagers channel manager instances keyed by implementation identifier
  * @param promptManagers prompt manager instances keyed by implementation identifier
  * @param modelManagers model manager instances keyed by implementation identifier
  * @param modelProviderRegistries model-provider registry instances keyed by implementation identifier
@@ -23,6 +25,7 @@ import java.util.Objects;
  * @param sessionManagers session manager instances keyed by implementation identifier
  */
 public record LocalRuntimeComponentRegistry(
+    Map<String, ChannelManager> channelManagers,
     Map<String, PromptManager> promptManagers,
     Map<String, ModelManager> modelManagers,
     Map<String, ModelProviderRegistry> modelProviderRegistries,
@@ -34,12 +37,23 @@ public record LocalRuntimeComponentRegistry(
    * Creates a validated immutable component registry.
    */
   public LocalRuntimeComponentRegistry {
+    channelManagers = immutableComponents(channelManagers, "channelManagers");
     promptManagers = immutableComponents(promptManagers, "promptManagers");
     modelManagers = immutableComponents(modelManagers, "modelManagers");
     modelProviderRegistries = immutableComponents(modelProviderRegistries, "modelProviderRegistries");
     toolRegistries = immutableComponents(toolRegistries, "toolRegistries");
     toolGateways = immutableComponents(toolGateways, "toolGateways");
     sessionManagers = immutableComponents(sessionManagers, "sessionManagers");
+  }
+
+  /**
+   * Returns the channel manager for the provided implementation identifier.
+   *
+   * @param implementationId runtime implementation identifier
+   * @return matching channel manager
+   */
+  public ChannelManager channelManager(String implementationId) {
+    return requireComponent(channelManagers, implementationId, "channel manager");
   }
 
   /**

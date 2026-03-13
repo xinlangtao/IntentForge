@@ -3,6 +3,9 @@ package cn.intentforge.boot.local;
 import cn.intentforge.agent.core.AgentGateway;
 import cn.intentforge.agent.core.AgentRunGateway;
 import cn.intentforge.agent.nativejava.NativeCodingAgentFactory;
+import cn.intentforge.channel.local.plugin.DirectoryChannelPluginManager;
+import cn.intentforge.channel.registry.ChannelManager;
+import cn.intentforge.channel.spi.ChannelManagerProvider;
 import cn.intentforge.config.ResolvedRuntimeSelection;
 import cn.intentforge.config.RuntimeCapability;
 import cn.intentforge.config.RuntimeCatalog;
@@ -100,6 +103,19 @@ public final class AiAssetLocalBootstrap {
     SpaceLocalRuntime spaceLocalRuntime = SpaceLocalRuntimeFactory.create(spaceConfigurer);
     SpaceRegistry spaceRegistry = spaceLocalRuntime.spaceRegistry();
     SpaceResolver spaceResolver = spaceLocalRuntime.spaceResolver();
+    List<ChannelManagerProvider> channelManagerProviders = loadProviders(classLoader, ChannelManagerProvider.class);
+    Map<String, ChannelManager> channelManagers = instantiateComponents(
+        channelManagerProviders,
+        ChannelManagerProvider::descriptor,
+        provider -> provider.create(classLoader));
+    Map<String, DirectoryChannelPluginManager> channelPluginManagers = new LinkedHashMap<>();
+    for (Map.Entry<String, ChannelManager> entry : channelManagers.entrySet()) {
+      entry.getValue().loadPlugins();
+      DirectoryChannelPluginManager pluginManager = new DirectoryChannelPluginManager(pluginsDirectory, entry.getValue());
+      pluginManager.loadAll();
+      channelPluginManagers.put(entry.getKey(), pluginManager);
+    }
+
     List<SessionManagerProvider> sessionManagerProviders = loadProviders(classLoader, SessionManagerProvider.class);
     Map<String, SessionManager> sessionManagers = instantiateComponents(
         sessionManagerProviders,
@@ -152,6 +168,7 @@ public final class AiAssetLocalBootstrap {
     }
 
     RuntimeCatalog runtimeCatalog = RuntimeCatalog.of(concatDescriptors(
+        channelManagerProviders.stream().map(ChannelManagerProvider::descriptor).toList(),
         promptManagerProviders.stream().map(PromptManagerProvider::descriptor).toList(),
         modelManagerProviders.stream().map(ModelManagerProvider::descriptor).toList(),
         providerRegistryProviders.stream().map(ModelProviderRegistryProvider::descriptor).toList(),
@@ -165,6 +182,7 @@ public final class AiAssetLocalBootstrap {
     }
 
     LocalRuntimeComponentRegistry runtimeComponents = new LocalRuntimeComponentRegistry(
+        channelManagers,
         promptManagers,
         modelManagers,
         providerRegistries,
@@ -177,7 +195,10 @@ public final class AiAssetLocalBootstrap {
         requireDefaultDescriptor(runtimeCatalog, RuntimeCapability.MODEL_PROVIDER_REGISTRY);
     RuntimeImplementationDescriptor defaultToolDescriptor = requireDefaultDescriptor(runtimeCatalog, RuntimeCapability.TOOL_REGISTRY);
     RuntimeImplementationDescriptor defaultSessionDescriptor = requireDefaultDescriptor(runtimeCatalog, RuntimeCapability.SESSION_MANAGER);
+    RuntimeImplementationDescriptor defaultChannelDescriptor = requireDefaultDescriptor(runtimeCatalog, RuntimeCapability.CHANNEL_MANAGER);
 
+    ChannelManager channelManager = runtimeComponents.channelManager(defaultChannelDescriptor.id());
+    DirectoryChannelPluginManager channelPluginManager = channelPluginManagers.get(defaultChannelDescriptor.id());
     PromptManager promptManager = runtimeComponents.promptManager(defaultPromptDescriptor.id());
     DirectoryPromptPluginManager promptPluginManager = promptPluginManagers.get(defaultPromptDescriptor.id());
     ModelManager modelManager = runtimeComponents.modelManager(defaultModelDescriptor.id());
@@ -207,7 +228,9 @@ public final class AiAssetLocalBootstrap {
     LocalRuntimeComponentResolver runtimeResolver = new LocalRuntimeComponentResolver(
         runtimeCatalog,
         runtimeComponents,
-        new ResolvedRuntimeSelection(Map.of(RuntimeCapability.SESSION_MANAGER, defaultSessionDescriptor)));
+        new ResolvedRuntimeSelection(Map.of(
+            RuntimeCapability.SESSION_MANAGER, defaultSessionDescriptor,
+            RuntimeCapability.CHANNEL_MANAGER, defaultChannelDescriptor)));
 
     List<cn.intentforge.agent.core.AgentExecutor> executors = NativeCodingAgentFactory.createDefaultExecutors();
     AgentRunGateway agentRunGateway = new DefaultAgentRunGateway(
@@ -221,6 +244,8 @@ public final class AiAssetLocalBootstrap {
     return new AiAssetLocalRuntime(
         runtimeCatalog,
         runtimeComponents,
+        channelManager,
+        channelPluginManager,
         promptManager,
         promptPluginManager,
         modelManager,

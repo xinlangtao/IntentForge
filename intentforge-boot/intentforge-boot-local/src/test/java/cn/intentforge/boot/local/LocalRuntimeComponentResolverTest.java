@@ -69,6 +69,7 @@ class LocalRuntimeComponentResolverTest {
                 InMemorySessionManager.class.getName(),
                 Map.of("default", "true")))),
         new LocalRuntimeComponentRegistry(
+            Map.of(),
             Map.of(
                 "prompt-default", new InMemoryPromptManager(),
                 "prompt-db", new InMemoryPromptManager()),
@@ -140,6 +141,7 @@ class LocalRuntimeComponentResolverTest {
                 StubToolGateway.class.getName(),
                 Map.of("default", "true")))),
         new LocalRuntimeComponentRegistry(
+            Map.of(),
             Map.of("prompt-default", new InMemoryPromptManager()),
             Map.of("model-default", new InMemoryModelManager()),
             Map.of("provider-default", new InMemoryModelProviderRegistry()),
@@ -201,6 +203,7 @@ class LocalRuntimeComponentResolverTest {
                 StubToolGateway.class.getName(),
                 Map.of("default", "true")))),
         new LocalRuntimeComponentRegistry(
+            Map.of(),
             Map.of(
                 "prompt-a", new InMemoryPromptManager(),
                 "prompt-b", new InMemoryPromptManager()),
