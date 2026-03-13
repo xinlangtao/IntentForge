@@ -22,6 +22,7 @@ public final class InMemorySessionManagerProvider implements SessionManagerProvi
         "intentforge.session.manager.in-memory",
         RuntimeCapability.SESSION_MANAGER,
         "In-Memory Session Manager",
+        RuntimeImplementationDescriptor.detectVersion(InMemorySessionManager.class),
         InMemorySessionManager.class.getName(),
         Map.of("builtin", "true", "default", "true"));
   }

@@ -22,6 +22,7 @@ public interface SessionManagerProvider {
         getClass().getName(),
         RuntimeCapability.SESSION_MANAGER,
         getClass().getSimpleName(),
+        RuntimeImplementationDescriptor.detectVersion(getClass()),
         getClass().getName(),
         Map.of());
   }

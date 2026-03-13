@@ -369,8 +369,6 @@ components:
         - id
         - capability
         - displayName
-        - implementationClass
-        - metadata
       properties:
         id:
           type: string
@@ -384,6 +382,10 @@ components:
           type: string
           description: Human-readable implementation name.
           example: In-Memory Prompt Manager
+        version:
+          type: string
+          description: Implementation version text.
+          example: nightly-SNAPSHOT
         implementationClass:
           type: string
           description: Concrete implementation class name.

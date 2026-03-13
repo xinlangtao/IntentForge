@@ -70,6 +70,7 @@ class AgentRunControllerTest {
         sessionManager.find(response.sessionId()).orElseThrow().spaceId());
     Assertions.assertEquals("/api/agent-runs/agent-run-1/events", response.eventsPath());
     Assertions.assertEquals("PROMPT_MANAGER", response.selectedRuntimes().getFirst().capability());
+    Assertions.assertEquals("nightly-SNAPSHOT", response.selectedRuntimes().getFirst().version());
     Assertions.assertEquals("intentforge.native.planner", response.selectedRouteSteps().getFirst().agentId());
     Assertions.assertEquals("CODER", response.availableNextActions().stream()
         .filter(action -> "intentforge.native.coder".equals(action.agentId()))
@@ -191,6 +192,7 @@ class AgentRunControllerTest {
           "intentforge.prompt.manager.in-memory",
           RuntimeCapability.PROMPT_MANAGER,
           "In-Memory Prompt Manager",
+          "nightly-SNAPSHOT",
           "cn.intentforge.prompt.local.registry.InMemoryPromptManager",
           Map.of("builtin", "true"));
       ContextPack contextPack = new ContextPack(

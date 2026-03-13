@@ -26,5 +26,8 @@ class AiAssetLocalBootstrapRuntimeCatalogTest {
     Assertions.assertEquals(
         List.of("intentforge.session.manager.in-memory"),
         runtime.runtimeCatalog().list(RuntimeCapability.SESSION_MANAGER).stream().map(descriptor -> descriptor.id()).toList());
+    Assertions.assertTrue(runtime.runtimeCatalog().implementationsByCapability().values().stream()
+        .flatMap(List::stream)
+        .allMatch(descriptor -> "nightly-SNAPSHOT".equals(descriptor.version())));
   }
 }

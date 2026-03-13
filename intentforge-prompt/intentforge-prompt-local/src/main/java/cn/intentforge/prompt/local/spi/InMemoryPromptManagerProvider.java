@@ -22,6 +22,7 @@ public final class InMemoryPromptManagerProvider implements PromptManagerProvide
         "intentforge.prompt.manager.in-memory",
         RuntimeCapability.PROMPT_MANAGER,
         "In-Memory Prompt Manager",
+        RuntimeImplementationDescriptor.detectVersion(InMemoryPromptManager.class),
         InMemoryPromptManager.class.getName(),
         Map.of("builtin", "true", "default", "true"));
   }

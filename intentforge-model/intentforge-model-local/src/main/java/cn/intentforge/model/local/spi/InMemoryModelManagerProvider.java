@@ -22,6 +22,7 @@ public final class InMemoryModelManagerProvider implements ModelManagerProvider 
         "intentforge.model.manager.in-memory",
         RuntimeCapability.MODEL_MANAGER,
         "In-Memory Model Manager",
+        RuntimeImplementationDescriptor.detectVersion(InMemoryModelManager.class),
         InMemoryModelManager.class.getName(),
         Map.of("builtin", "true", "default", "true"));
   }

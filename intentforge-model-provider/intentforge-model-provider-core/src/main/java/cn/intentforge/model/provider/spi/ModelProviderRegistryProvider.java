@@ -22,6 +22,7 @@ public interface ModelProviderRegistryProvider {
         getClass().getName(),
         RuntimeCapability.MODEL_PROVIDER_REGISTRY,
         getClass().getSimpleName(),
+        RuntimeImplementationDescriptor.detectVersion(getClass()),
         getClass().getName(),
         Map.of());
   }

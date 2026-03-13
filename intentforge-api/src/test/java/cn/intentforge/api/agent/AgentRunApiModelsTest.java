@@ -31,6 +31,7 @@ class AgentRunApiModelsTest {
         "intentforge.prompt.manager.in-memory",
         "PROMPT_MANAGER",
         "In-Memory Prompt Manager",
+        "nightly-SNAPSHOT",
         "cn.intentforge.prompt.local.registry.InMemoryPromptManager",
         Map.of("builtin", "true"));
     AgentRouteStepResponse routeStep = new AgentRouteStepResponse(
@@ -64,6 +65,7 @@ class AgentRunApiModelsTest {
     Assertions.assertEquals("User stopped the run", cancelRequest.reason());
     Assertions.assertEquals("RUN_CREATED", response.events().getFirst().type());
     Assertions.assertEquals("PROMPT_MANAGER", response.selectedRuntimes().getFirst().capability());
+    Assertions.assertEquals("nightly-SNAPSHOT", response.selectedRuntimes().getFirst().version());
     Assertions.assertEquals("intentforge.native.planner", response.selectedRouteSteps().getFirst().agentId());
     Assertions.assertEquals("intentforge.native.coder", response.availableNextActions().getFirst().agentId());
     Assertions.assertEquals("/api/agent-runs/agent-run-1/events", response.eventsPath());

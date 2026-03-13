@@ -22,6 +22,7 @@ public interface ModelManagerProvider {
         getClass().getName(),
         RuntimeCapability.MODEL_MANAGER,
         getClass().getSimpleName(),
+        RuntimeImplementationDescriptor.detectVersion(getClass()),
         getClass().getName(),
         Map.of());
   }

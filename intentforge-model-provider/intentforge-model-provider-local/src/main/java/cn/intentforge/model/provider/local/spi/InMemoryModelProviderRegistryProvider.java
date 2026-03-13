@@ -22,6 +22,7 @@ public final class InMemoryModelProviderRegistryProvider implements ModelProvide
         "intentforge.model-provider.registry.in-memory",
         RuntimeCapability.MODEL_PROVIDER_REGISTRY,
         "In-Memory Model Provider Registry",
+        RuntimeImplementationDescriptor.detectVersion(InMemoryModelProviderRegistry.class),
         InMemoryModelProviderRegistry.class.getName(),
         Map.of("builtin", "true", "default", "true"));
   }

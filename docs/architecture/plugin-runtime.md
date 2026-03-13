@@ -39,6 +39,7 @@ Selection rule:
 
 - SPI only declares which implementations are available
 - bootstrap instantiates discovered implementations and builds `RuntimeCatalog`
+- each `RuntimeImplementationDescriptor` exposes explicit `version` metadata for runtime observability and API responses
 - `SpaceProfile.runtimeBindings` selects the effective prompt/model/provider/tool runtime per run
 - if a capability has only one implementation, or one implementation marked with metadata `default=true`, it can be used as the default fallback when the space does not bind it explicitly
 - bootstrap-scoped capabilities such as the session manager still resolve once at bootstrap and are exposed in run observability data

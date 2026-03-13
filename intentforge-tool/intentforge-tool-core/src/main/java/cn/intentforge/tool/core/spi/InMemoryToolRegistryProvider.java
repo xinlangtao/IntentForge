@@ -21,6 +21,7 @@ public final class InMemoryToolRegistryProvider implements ToolRegistryProvider 
         "intentforge.tool.registry.in-memory",
         RuntimeCapability.TOOL_REGISTRY,
         "In-Memory Tool Registry",
+        RuntimeImplementationDescriptor.detectVersion(InMemoryToolRegistry.class),
         InMemoryToolRegistry.class.getName(),
         Map.of("builtin", "true", "default", "true"));
   }

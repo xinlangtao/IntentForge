@@ -22,6 +22,7 @@ public interface PromptManagerProvider {
         getClass().getName(),
         RuntimeCapability.PROMPT_MANAGER,
         getClass().getSimpleName(),
+        RuntimeImplementationDescriptor.detectVersion(getClass()),
         getClass().getName(),
         Map.of());
   }

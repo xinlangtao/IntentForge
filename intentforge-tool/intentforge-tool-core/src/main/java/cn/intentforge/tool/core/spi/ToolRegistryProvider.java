@@ -19,6 +19,7 @@ public interface ToolRegistryProvider {
         getClass().getName(),
         RuntimeCapability.TOOL_REGISTRY,
         getClass().getSimpleName(),
+        RuntimeImplementationDescriptor.detectVersion(getClass()),
         getClass().getName(),
         Map.of());
   }

@@ -101,6 +101,7 @@ public final class AgentRunController {
                 descriptor.id(),
                 descriptor.capability().name(),
                 descriptor.displayName(),
+                descriptor.version(),
                 descriptor.implementationClass(),
                 descriptor.metadata()))
             .toList(),
