@@ -14,6 +14,9 @@ import cn.intentforge.api.agent.AgentRunFeedbackRequest;
 import cn.intentforge.api.agent.AgentRunResponse;
 import cn.intentforge.api.agent.ErrorResponse;
 import cn.intentforge.api.agent.RuntimeImplementationResponse;
+import cn.intentforge.session.model.Session;
+import cn.intentforge.session.model.SessionDraft;
+import cn.intentforge.session.registry.SessionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sun.net.httpserver.Headers;
@@ -25,16 +28,19 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 
 final class AgentRunHttpApi {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   private final AgentRunGateway agentRunGateway;
+  private final SessionManager sessionManager;
   private final AgentRunEventBroker eventBroker;
 
-  AgentRunHttpApi(AgentRunGateway agentRunGateway, AgentRunEventBroker eventBroker) {
+  AgentRunHttpApi(AgentRunGateway agentRunGateway, SessionManager sessionManager, AgentRunEventBroker eventBroker) {
     this.agentRunGateway = Objects.requireNonNull(agentRunGateway, "agentRunGateway must not be null");
+    this.sessionManager = Objects.requireNonNull(sessionManager, "sessionManager must not be null");
     this.eventBroker = Objects.requireNonNull(eventBroker, "eventBroker must not be null");
   }
 
@@ -45,9 +51,10 @@ final class AgentRunHttpApi {
         return;
       }
       AgentRunCreateRequest request = readJson(exchange, AgentRunCreateRequest.class);
+      String sessionId = resolveSessionId(request);
       AgentTask task = new AgentTask(
           request.taskId(),
-          request.sessionId(),
+          sessionId,
           request.spaceId(),
           Path.of(request.workspaceRoot()),
           TaskMode.valueOf(request.mode()),
@@ -274,5 +281,31 @@ final class AgentRunHttpApi {
 
   private static String messageOrFallback(Throwable throwable, String fallback) {
     return throwable.getMessage() == null || throwable.getMessage().isBlank() ? fallback : throwable.getMessage();
+  }
+
+  private String resolveSessionId(AgentRunCreateRequest request) {
+    if (request.sessionId() != null) {
+      return request.sessionId();
+    }
+    if (request.spaceId() == null) {
+      throw new IllegalArgumentException("spaceId must not be blank when sessionId is absent");
+    }
+    Session session = sessionManager.create(new SessionDraft(
+        generatedSessionId(),
+        sessionTitleFor(request.intent()),
+        request.spaceId(),
+        Map.of(
+            "source", "agent-run-api",
+            "taskId", request.taskId())));
+    return session.id();
+  }
+
+  private static String generatedSessionId() {
+    return "session-" + UUID.randomUUID();
+  }
+
+  private static String sessionTitleFor(String intent) {
+    String normalizedIntent = intent == null || intent.isBlank() ? "Agent Run" : intent.trim();
+    return normalizedIntent.length() <= 80 ? normalizedIntent : normalizedIntent.substring(0, 80);
   }
 }

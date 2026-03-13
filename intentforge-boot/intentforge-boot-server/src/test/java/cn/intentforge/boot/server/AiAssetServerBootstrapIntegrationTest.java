@@ -99,6 +99,66 @@ class AiAssetServerBootstrapIntegrationTest {
   }
 
   @Test
+  void shouldAutoCreateSessionWhenRequestDoesNotProvideSessionId() throws Exception {
+    Path workspace = Files.createTempDirectory("boot-server-auto-session-workspace");
+    Files.writeString(workspace.resolve("README.md"), "agent");
+
+    try (AiAssetServerRuntime runtime = startServer()) {
+      HttpClient client = HttpClient.newHttpClient();
+      HttpResponse<String> response = postJson(
+          client,
+          runtime.baseUri().resolve("/api/agent-runs"),
+          new AgentRunCreateRequest(
+              "task-auto-session",
+              null,
+              "application-alpha",
+              workspace.toString(),
+              "FULL",
+              "Implement event-driven agent runtime",
+              null,
+              Map.of("story", "IF-503")));
+      Assertions.assertEquals(201, response.statusCode());
+
+      AgentRunResponse pausedAfterPlanner = OBJECT_MAPPER.readValue(response.body(), AgentRunResponse.class);
+      Assertions.assertEquals("AWAITING_USER", pausedAfterPlanner.status());
+      Assertions.assertNotNull(pausedAfterPlanner.sessionId());
+      Assertions.assertFalse(pausedAfterPlanner.sessionId().isBlank());
+      Assertions.assertNotEquals("session-1", pausedAfterPlanner.sessionId());
+      Assertions.assertEquals(
+          "application-alpha",
+          runtime.localRuntime().sessionManager().find(pausedAfterPlanner.sessionId()).orElseThrow().spaceId());
+    }
+  }
+
+  @Test
+  void shouldRejectAutoSessionCreationWithoutSpaceId() throws Exception {
+    Path workspace = Files.createTempDirectory("boot-server-missing-space-workspace");
+    Files.writeString(workspace.resolve("README.md"), "agent");
+
+    try (AiAssetServerRuntime runtime = startServer()) {
+      HttpClient client = HttpClient.newHttpClient();
+      HttpResponse<String> response = postJson(
+          client,
+          runtime.baseUri().resolve("/api/agent-runs"),
+          new AgentRunCreateRequest(
+              "task-missing-space",
+              null,
+              null,
+              workspace.toString(),
+              "FULL",
+              "Implement event-driven agent runtime",
+              null,
+              Map.of("story", "IF-504")));
+      Assertions.assertEquals(400, response.statusCode());
+      cn.intentforge.api.agent.ErrorResponse error = OBJECT_MAPPER.readValue(
+          response.body(),
+          cn.intentforge.api.agent.ErrorResponse.class);
+      Assertions.assertEquals("AGENT_RUN_REQUEST_INVALID", error.code());
+      Assertions.assertTrue(error.message().contains("spaceId"));
+    }
+  }
+
+  @Test
   void shouldCancelRunAndPreferVirtualThreadRequestExecutor() throws Exception {
     Path workspace = Files.createTempDirectory("boot-server-cancel-workspace");
     Files.writeString(workspace.resolve("README.md"), "agent");

@@ -6,7 +6,7 @@ import java.util.Map;
  * HTTP request used to create and start one agent run.
  *
  * @param taskId stable task identifier
- * @param sessionId target session identifier
+ * @param sessionId optional target session identifier; when absent the server creates one session for the supplied space
  * @param spaceId optional explicit space identifier
  * @param workspaceRoot workspace root path string
  * @param mode requested execution mode
@@ -29,7 +29,11 @@ public record AgentRunCreateRequest(
    */
   public AgentRunCreateRequest {
     taskId = ApiModelSupport.requireText(taskId, "taskId");
-    sessionId = ApiModelSupport.requireText(sessionId, "sessionId");
+    String normalizedSessionId = ApiModelSupport.normalize(sessionId);
+    if (sessionId != null && normalizedSessionId == null) {
+      throw new IllegalArgumentException("sessionId must not be blank");
+    }
+    sessionId = normalizedSessionId;
     spaceId = ApiModelSupport.normalize(spaceId);
     workspaceRoot = ApiModelSupport.requireText(workspaceRoot, "workspaceRoot");
     mode = ApiModelSupport.requireText(mode, "mode");

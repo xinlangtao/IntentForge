@@ -10,7 +10,7 @@ class AgentRunApiModelsTest {
   void shouldCreateApiTransportModels() {
     AgentRunCreateRequest createRequest = new AgentRunCreateRequest(
         "task-1",
-        "session-1",
+        null,
         null,
         "/tmp/workspace",
         "FULL",
@@ -45,6 +45,7 @@ class AgentRunApiModelsTest {
         List.of(eventResponse));
 
     Assertions.assertEquals("FULL", createRequest.mode());
+    Assertions.assertNull(createRequest.sessionId());
     Assertions.assertEquals("Please add validation", feedbackRequest.content());
     Assertions.assertEquals("User stopped the run", cancelRequest.reason());
     Assertions.assertEquals("RUN_CREATED", response.events().getFirst().type());
@@ -56,5 +57,18 @@ class AgentRunApiModelsTest {
   void shouldRejectBlankFeedbackAndCancelReason() {
     Assertions.assertThrows(IllegalArgumentException.class, () -> new AgentRunFeedbackRequest("   "));
     Assertions.assertThrows(IllegalArgumentException.class, () -> new AgentRunCancelRequest("   "));
+  }
+
+  @Test
+  void shouldRejectBlankSessionIdWhenProvided() {
+    Assertions.assertThrows(IllegalArgumentException.class, () -> new AgentRunCreateRequest(
+        "task-1",
+        "   ",
+        "application-alpha",
+        "/tmp/workspace",
+        "FULL",
+        "Implement event-driven server",
+        null,
+        Map.of()));
   }
 }

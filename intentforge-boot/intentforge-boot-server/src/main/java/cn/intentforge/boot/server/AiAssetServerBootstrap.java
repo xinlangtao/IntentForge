@@ -61,7 +61,10 @@ public final class AiAssetServerBootstrap {
     server.setExecutor(requestExecutor);
 
     AgentRunEventBroker eventBroker = new AgentRunEventBroker();
-    AgentRunHttpApi httpApi = new AgentRunHttpApi(localRuntime.agentRunGateway(), eventBroker);
+    AgentRunHttpApi httpApi = new AgentRunHttpApi(
+        localRuntime.agentRunGateway(),
+        localRuntime.sessionManager(),
+        eventBroker);
     server.createContext("/api/agent-runs", httpApi::handleRunsRoot);
     server.createContext("/api/agent-runs/", httpApi::handleRunResource);
     server.start();
