@@ -6,6 +6,7 @@ Current implementation:
 - JDK `HttpServer`
 - HTTP JSON endpoints + SSE event stream
 - request handling prefers virtual threads
+- thin `HttpExchange` adapters that delegate business logic into `intentforge-api`
 - create-run requests may auto-create one session when `sessionId` is omitted
 - terminal main: `cn.intentforge.boot.server.AiAssetServerMain`
 

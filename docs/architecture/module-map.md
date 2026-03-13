@@ -19,7 +19,7 @@
 | --- | --- |
 | `intentforge-bom` | Unified dependency version alignment for the repository and external consumers |
 | `intentforge-common` | Global shared enums, exceptions, constants, utils, and DTO bases |
-| `intentforge-api` | External protocol contracts, REST DTOs, SSE event payloads, AG-UI events, and request/response objects |
+| `intentforge-api` | External protocol contracts, REST DTOs, transport-neutral API controllers and application services, SSE event payloads, AG-UI events, and request/response objects |
 | `intentforge-governance` | Task orchestration, state machine, routing, strategy, coordination, scheduling, synchronous compatibility gateway, event-driven run orchestration, and per-run runtime resolution |
 | `intentforge-audit` | Run/step/tool-call records, event snapshots, replay, audit services |
 | `intentforge-agent` | Agent abstraction family, routed execution contracts, and runtime integrations |
@@ -120,7 +120,7 @@
 | Module | Role |
 | --- | --- |
 | `intentforge-boot-local` | Local-first bootstrap, SPI runtime catalog discovery, runtime component registry assembly, space-aware per-run runtime selection, native agent gateway assembly, and local exposure of both synchronous and event-driven run entrypoints |
-| `intentforge-boot-server` | Minimal JDK `HttpServer` bootstrap, HTTP/SSE transport wiring, virtual-thread-backed request execution, and terminal server entrypoint |
+| `intentforge-boot-server` | Minimal JDK `HttpServer` bootstrap, route wiring, virtual-thread-backed request execution, thin `HttpExchange` adapters, and terminal server entrypoint |
 
 ### `intentforge-desktop`
 

@@ -17,6 +17,34 @@
 
   <dependencies>
     <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-agent-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-config-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-session-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-space-core</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-tool-core</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>5.12.2</version>

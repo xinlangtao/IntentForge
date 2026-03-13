@@ -1,5 +1,7 @@
 package cn.intentforge.api.agent;
 
+import cn.intentforge.api.util.ApiModelSupport;
+
 /**
  * Minimal error payload returned by the HTTP API.
  *

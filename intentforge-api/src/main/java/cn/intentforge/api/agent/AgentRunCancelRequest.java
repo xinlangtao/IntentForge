@@ -1,5 +1,7 @@
 package cn.intentforge.api.agent;
 
+import cn.intentforge.api.util.ApiModelSupport;
+
 /**
  * HTTP request used to cancel one run.
  *

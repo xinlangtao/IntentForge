@@ -1,5 +1,7 @@
 package cn.intentforge.boot.server;
 
+import cn.intentforge.api.agent.AgentRunApplicationService;
+import cn.intentforge.api.agent.AgentRunController;
 import cn.intentforge.boot.local.AiAssetLocalBootstrap;
 import cn.intentforge.boot.local.AiAssetLocalRuntime;
 import cn.intentforge.space.SpaceRegistry;
@@ -61,12 +63,14 @@ public final class AiAssetServerBootstrap {
     server.setExecutor(requestExecutor);
 
     AgentRunEventBroker eventBroker = new AgentRunEventBroker();
-    AgentRunHttpApi httpApi = new AgentRunHttpApi(
+    AgentRunController controller = new AgentRunController(new AgentRunApplicationService(
         localRuntime.agentRunGateway(),
-        localRuntime.sessionManager(),
+        localRuntime.sessionManager()));
+    AgentRunHttpExchangeHandler httpHandler = new AgentRunHttpExchangeHandler(
+        controller,
         eventBroker);
-    server.createContext("/api/agent-runs", httpApi::handleRunsRoot);
-    server.createContext("/api/agent-runs/", httpApi::handleRunResource);
+    server.createContext("/api/agent-runs", httpHandler::handleRunsRoot);
+    server.createContext("/api/agent-runs/", httpHandler::handleRunResource);
     server.start();
 
     return new AiAssetServerRuntime(localRuntime, server, baseUri(server), requestExecutor);

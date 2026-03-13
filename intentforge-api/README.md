@@ -1,12 +1,17 @@
 # intentforge-api
 
-External API contracts, DTOs, and event models.
+External API contracts, DTOs, transport-neutral controllers, and application services.
 
 Current MVP scope:
 - `POST /api/agent-runs`
 - `GET /api/agent-runs/{runId}/events`
 - `POST /api/agent-runs/{runId}/messages`
 - `POST /api/agent-runs/{runId}/cancel`
+
+Current server-side structure:
+- `AgentRunController` handles DTO mapping and API-facing response shaping
+- `AgentRunApplicationService` owns create/resume/cancel/get use-case logic
+- `boot-server` keeps only JDK `HttpServer` transport adaptation
 
 Create-run contract notes:
 - `sessionId` is optional on `POST /api/agent-runs`
