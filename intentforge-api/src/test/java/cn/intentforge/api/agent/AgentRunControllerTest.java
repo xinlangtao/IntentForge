@@ -5,6 +5,7 @@ import cn.intentforge.agent.core.AgentExecutionState;
 import cn.intentforge.agent.core.AgentRole;
 import cn.intentforge.agent.core.AgentRoute;
 import cn.intentforge.agent.core.AgentRouteStep;
+import cn.intentforge.agent.core.AgentRunAvailableAction;
 import cn.intentforge.agent.core.AgentRunEvent;
 import cn.intentforge.agent.core.AgentRunEventType;
 import cn.intentforge.agent.core.AgentRunGateway;
@@ -12,6 +13,7 @@ import cn.intentforge.agent.core.AgentRunObserver;
 import cn.intentforge.agent.core.AgentRunSnapshot;
 import cn.intentforge.agent.core.AgentRunStatus;
 import cn.intentforge.agent.core.AgentTask;
+import cn.intentforge.agent.core.AgentRunTransition;
 import cn.intentforge.agent.core.ContextPack;
 import cn.intentforge.config.ResolvedRuntimeSelection;
 import cn.intentforge.config.RuntimeCapability;
@@ -68,6 +70,12 @@ class AgentRunControllerTest {
         sessionManager.find(response.sessionId()).orElseThrow().spaceId());
     Assertions.assertEquals("/api/agent-runs/agent-run-1/events", response.eventsPath());
     Assertions.assertEquals("PROMPT_MANAGER", response.selectedRuntimes().getFirst().capability());
+    Assertions.assertEquals("intentforge.native.planner", response.selectedRouteSteps().getFirst().agentId());
+    Assertions.assertEquals("CODER", response.availableNextActions().stream()
+        .filter(action -> "intentforge.native.coder".equals(action.agentId()))
+        .findFirst()
+        .orElseThrow()
+        .role());
     Assertions.assertEquals("RUN_CREATED", response.events().getFirst().type());
   }
 
@@ -97,9 +105,36 @@ class AgentRunControllerTest {
     Assertions.assertTrue(exception.error().message().contains("spaceId"));
   }
 
+  @Test
+  void shouldRequireExplicitNextSelectionWhenResumingRun() {
+    IllegalArgumentException exception = Assertions.assertThrows(
+        IllegalArgumentException.class,
+        () -> new AgentRunFeedbackRequest("continue", null, null, false));
+
+    Assertions.assertTrue(exception.getMessage().contains("nextRole"));
+  }
+
+  @Test
+  void shouldMapSelectedNextActionWhenResumingRun() {
+    InMemorySessionManagerStub sessionManager = new InMemorySessionManagerStub();
+    AgentRunGatewayStub gateway = new AgentRunGatewayStub(sessionManager);
+    AgentRunController controller = new AgentRunController(new AgentRunApplicationService(gateway, sessionManager));
+
+    AgentRunResponse response = controller.resumeRun(
+        "agent-run-1",
+        new AgentRunFeedbackRequest("switch to review", "REVIEWER", null, false),
+        AgentRunObserver.NOOP);
+
+    Assertions.assertEquals("REVIEWER", gateway.resumeTransition.nextRole().name());
+    Assertions.assertEquals(
+        List.of("intentforge.native.planner", "intentforge.native.reviewer"),
+        response.selectedRouteSteps().stream().map(AgentRouteStepResponse::agentId).toList());
+  }
+
   private static final class AgentRunGatewayStub implements AgentRunGateway {
     private final SessionManager sessionManager;
     private AgentTask startedTask;
+    private AgentRunTransition resumeTransition;
 
     private AgentRunGatewayStub(SessionManager sessionManager) {
       this.sessionManager = sessionManager;
@@ -119,7 +154,25 @@ class AgentRunControllerTest {
 
     @Override
     public AgentRunSnapshot resume(String runId, String feedback, AgentRunObserver observer) {
-      throw new UnsupportedOperationException("resume not needed for this test");
+      throw new UnsupportedOperationException("legacy resume not needed for this test");
+    }
+
+    @Override
+    public AgentRunSnapshot resume(String runId, AgentRunTransition transition, AgentRunObserver observer) {
+      this.resumeTransition = transition;
+      Session session = sessionManager.create(new SessionDraft("session-1", "Coding", "application-alpha", Map.of()));
+      AgentTask task = new AgentTask(
+          "task-1",
+          session.id(),
+          "application-alpha",
+          Path.of("/tmp/workspace"),
+          cn.intentforge.agent.core.TaskMode.FULL,
+          "Implement event-driven server",
+          null,
+          Map.of());
+      return snapshot(task, session, List.of(
+          new AgentRouteStep(1, "intentforge.native.planner", AgentRole.PLANNER, "planner step"),
+          new AgentRouteStep(2, "intentforge.native.reviewer", AgentRole.REVIEWER, "user selected reviewer")));
     }
 
     @Override
@@ -128,6 +181,11 @@ class AgentRunControllerTest {
     }
 
     private static AgentRunSnapshot snapshot(AgentTask task, Session session) {
+      return snapshot(task, session, List.of(
+          new AgentRouteStep(1, "intentforge.native.planner", AgentRole.PLANNER, "planner step")));
+    }
+
+    private static AgentRunSnapshot snapshot(AgentTask task, Session session, List<AgentRouteStep> routeSteps) {
       Instant now = Instant.parse("2026-03-13T00:00:00Z");
       RuntimeImplementationDescriptor runtime = new RuntimeImplementationDescriptor(
           "intentforge.prompt.manager.in-memory",
@@ -174,7 +232,7 @@ class AgentRunControllerTest {
           contextPack,
           new AgentRoute(
               "stage-routing",
-              List.of(new AgentRouteStep(1, "intentforge.native.planner", AgentRole.PLANNER, "planner step"))),
+              routeSteps),
           AgentExecutionState.empty(),
           List.of(new AgentRunEvent(
               "agent-run-1",
@@ -186,6 +244,11 @@ class AgentRunControllerTest {
               now)),
           "awaiting user feedback before continuing to CODER",
           1,
+          List.of(
+              new AgentRunAvailableAction("intentforge.native.planner", AgentRole.PLANNER, false, false, "iterate on plan"),
+              new AgentRunAvailableAction("intentforge.native.coder", AgentRole.CODER, true, false, "implement the approved plan"),
+              new AgentRunAvailableAction("intentforge.native.reviewer", AgentRole.REVIEWER, false, false, "review before implementation"),
+              AgentRunAvailableAction.complete(true, "stop after the current checkpoint")),
           now,
           now);
     }

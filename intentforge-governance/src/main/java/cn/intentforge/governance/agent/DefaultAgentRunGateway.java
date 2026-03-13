@@ -4,8 +4,10 @@ import cn.intentforge.agent.core.AgentDescriptor;
 import cn.intentforge.agent.core.AgentExecutionException;
 import cn.intentforge.agent.core.AgentExecutionState;
 import cn.intentforge.agent.core.AgentExecutor;
+import cn.intentforge.agent.core.AgentRole;
 import cn.intentforge.agent.core.AgentRoute;
 import cn.intentforge.agent.core.AgentRouteStep;
+import cn.intentforge.agent.core.AgentRunAvailableAction;
 import cn.intentforge.agent.core.AgentRunEvent;
 import cn.intentforge.agent.core.AgentRunEventType;
 import cn.intentforge.agent.core.AgentRunGateway;
@@ -14,9 +16,11 @@ import cn.intentforge.agent.core.AgentRunMessageRole;
 import cn.intentforge.agent.core.AgentRunObserver;
 import cn.intentforge.agent.core.AgentRunSnapshot;
 import cn.intentforge.agent.core.AgentRunStatus;
+import cn.intentforge.agent.core.AgentRunTransition;
 import cn.intentforge.agent.core.AgentStepResult;
 import cn.intentforge.agent.core.AgentTask;
 import cn.intentforge.agent.core.ContextPack;
+import cn.intentforge.agent.core.TaskMode;
 import cn.intentforge.config.ResolvedRuntimeSelection;
 import cn.intentforge.model.catalog.ModelDescriptor;
 import cn.intentforge.model.provider.ModelProvider;
@@ -149,7 +153,8 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
         resolveTools(resolvedRuntime, resolvedSpaceProfile),
         resolvedRuntime.toolGateway(),
         ToolExecutionContext.create(effectiveTask.workspaceRoot()));
-    AgentRoute route = agentRouter.route(effectiveTask, contextPack, descriptors);
+    AgentRoute initialRoute = agentRouter.route(effectiveTask, contextPack, descriptors);
+    AgentRouteStep firstStep = initialRoute.steps().getFirst();
 
     String runId = "agent-run-" + runSequence.incrementAndGet();
     Instant now = Instant.now(clock);
@@ -157,11 +162,13 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
         runId,
         effectiveTask,
         contextPack,
-        route,
+        initialRoute.strategy(),
+        List.of(firstStep),
         AgentExecutionState.empty(),
         AgentRunStatus.RUNNING,
         null,
         0,
+        List.of(),
         now,
         now);
     runsById.put(runId, run);
@@ -176,8 +183,10 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
         "toolCount", String.valueOf(contextPack.tools().size()),
         "selectedRuntimeIds", contextPack.runtimeSelection().selectedImplementationIds()));
     emit(run, nonNullObserver, AgentRunEventType.ROUTE_SELECTED, AgentRunStatus.RUNNING, "route selected", Map.of(
-        "strategy", route.strategy(),
-        "steps", String.valueOf(route.steps().size())));
+        "strategy", initialRoute.strategy(),
+        "steps", String.valueOf(run.routeSteps.size()),
+        "selectedAgentId", firstStep.agentId(),
+        "selectedRole", firstStep.role().name()));
     return executeUntilCheckpoint(run, nonNullObserver);
   }
 
@@ -193,6 +202,51 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
   }
 
   /**
+   * Resumes one paused run with an explicit user-selected transition.
+   *
+   * @param runId run identifier
+   * @param transition explicit transition selection
+   * @param observer run observer
+   * @return latest run snapshot
+   */
+  @Override
+  public synchronized AgentRunSnapshot resume(String runId, AgentRunTransition transition, AgentRunObserver observer) {
+    StoredRun run = requireRun(runId);
+    AgentRunObserver nonNullObserver = observer == null ? AgentRunObserver.NOOP : observer;
+    AgentRunTransition nonNullTransition = Objects.requireNonNull(transition, "transition must not be null");
+    requireAwaiting(runId, run);
+    AgentRunAvailableAction action = nonNullTransition.complete() ? null : selectAction(run, nonNullTransition);
+
+    if (nonNullTransition.complete()) {
+      appendFeedback(run, nonNullTransition.feedback(), nonNullObserver);
+      run.availableNextActions = List.of();
+      run.status = AgentRunStatus.RUNNING;
+      run.awaitingReason = null;
+      emit(run, nonNullObserver, AgentRunEventType.RUN_RESUMED, AgentRunStatus.RUNNING, "run resumed", Map.of(
+          "nextStepIndex", String.valueOf(run.nextStepIndex),
+          "selectedComplete", "true"));
+      return completeRun(run, nonNullObserver);
+    }
+
+    appendFeedback(run, nonNullTransition.feedback(), nonNullObserver);
+    run.availableNextActions = List.of();
+    AgentRouteStep selectedStep = new AgentRouteStep(
+        run.routeSteps.size() + 1,
+        action.agentId(),
+        action.role(),
+        transitionReason(nonNullTransition, action));
+    run.routeSteps.add(selectedStep);
+    run.status = AgentRunStatus.RUNNING;
+    run.awaitingReason = null;
+    emit(run, nonNullObserver, AgentRunEventType.RUN_RESUMED, AgentRunStatus.RUNNING, "run resumed", Map.of(
+        "nextStepIndex", String.valueOf(run.nextStepIndex),
+        "selectedAgentId", selectedStep.agentId(),
+        "selectedRole", selectedStep.role().name(),
+        "selectedComplete", "false"));
+    return executeUntilCheckpoint(run, nonNullObserver);
+  }
+
+  /**
    * Resumes one paused run and forwards emitted events to the observer.
    *
    * @param runId run identifier
@@ -203,27 +257,12 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
   @Override
   public synchronized AgentRunSnapshot resume(String runId, String feedback, AgentRunObserver observer) {
     StoredRun run = requireRun(runId);
-    AgentRunObserver nonNullObserver = observer == null ? AgentRunObserver.NOOP : observer;
-    if (run.status != AgentRunStatus.AWAITING_USER) {
-      throw new AgentExecutionException("run is not awaiting user input: " + runId);
-    }
-    String normalizedFeedback = normalize(feedback);
-    if (normalizedFeedback != null) {
-      AgentRunMessage message = new AgentRunMessage(
-          run.runId + "-message-" + (run.state.messages().size() + 1),
-          AgentRunMessageRole.USER,
-          normalizedFeedback,
-          Instant.now(clock),
-          Map.of("turn", String.valueOf(run.state.messages().size() + 1)));
-      run.state = run.state.appendMessage(message);
-      emit(run, nonNullObserver, AgentRunEventType.USER_FEEDBACK_RECEIVED, AgentRunStatus.RUNNING, "user feedback received", Map.of(
-          "messageId", message.id()));
-    }
-    run.status = AgentRunStatus.RUNNING;
-    run.awaitingReason = null;
-    emit(run, nonNullObserver, AgentRunEventType.RUN_RESUMED, AgentRunStatus.RUNNING, "run resumed", Map.of(
-        "nextStepIndex", String.valueOf(run.nextStepIndex)));
-    return executeUntilCheckpoint(run, nonNullObserver);
+    requireAwaiting(runId, run);
+    AgentRunAvailableAction preferred = selectLegacyPreferredAction(run);
+    AgentRunTransition transition = preferred.complete()
+        ? new AgentRunTransition(feedback, null, null, true)
+        : new AgentRunTransition(feedback, preferred.agentId(), preferred.role(), false);
+    return resume(runId, transition, observer);
   }
 
   /**
@@ -250,8 +289,8 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
   }
 
   private AgentRunSnapshot executeUntilCheckpoint(StoredRun run, AgentRunObserver observer) {
-    while (run.nextStepIndex < run.route.steps().size()) {
-      AgentRouteStep step = run.route.steps().get(run.nextStepIndex);
+    while (run.nextStepIndex < run.routeSteps.size()) {
+      AgentRouteStep step = run.routeSteps.get(run.nextStepIndex);
       emit(run, observer, AgentRunEventType.STAGE_STARTED, AgentRunStatus.RUNNING, "stage started", Map.of(
           "agentId", step.agentId(),
           "role", step.role().name(),
@@ -284,23 +323,16 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
           "toolCallCount", String.valueOf(run.state.toolCalls().size())));
 
       run.nextStepIndex++;
-      if (run.nextStepIndex < run.route.steps().size()) {
-        AgentRouteStep nextStep = run.route.steps().get(run.nextStepIndex);
+      if (run.nextStepIndex == run.routeSteps.size()) {
+        run.availableNextActions = determineAvailableActions(run);
         run.status = AgentRunStatus.AWAITING_USER;
-        run.awaitingReason = "awaiting user feedback before continuing to " + nextStep.role();
+        run.awaitingReason = "awaiting user selection before continuing";
         emit(run, observer, AgentRunEventType.AWAITING_USER, AgentRunStatus.AWAITING_USER, run.awaitingReason, Map.of(
-            "nextAgentId", nextStep.agentId(),
-            "nextRole", nextStep.role().name()));
+            "availableNextActions", actionMetadata(run.availableNextActions)));
         return run.snapshot();
       }
     }
-
-    run.status = AgentRunStatus.COMPLETED;
-    run.awaitingReason = null;
-    emit(run, observer, AgentRunEventType.RUN_COMPLETED, AgentRunStatus.COMPLETED, "run completed", Map.of(
-        "decisionCount", String.valueOf(run.state.decisions().size()),
-        "artifactCount", String.valueOf(run.state.artifacts().size())));
-    return run.snapshot();
+    return completeRun(run, observer);
   }
 
   private void emit(
@@ -331,6 +363,183 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
       throw new AgentExecutionException("run not found: " + runId);
     }
     return run;
+  }
+
+  private void requireAwaiting(String runId, StoredRun run) {
+    if (run.status != AgentRunStatus.AWAITING_USER) {
+      throw new AgentExecutionException("run is not awaiting user input: " + runId);
+    }
+  }
+
+  private void appendFeedback(StoredRun run, String feedback, AgentRunObserver observer) {
+    String normalizedFeedback = normalize(feedback);
+    if (normalizedFeedback == null) {
+      return;
+    }
+    AgentRunMessage message = new AgentRunMessage(
+        run.runId + "-message-" + (run.state.messages().size() + 1),
+        AgentRunMessageRole.USER,
+        normalizedFeedback,
+        Instant.now(clock),
+        Map.of("turn", String.valueOf(run.state.messages().size() + 1)));
+    run.state = run.state.appendMessage(message);
+    emit(run, observer, AgentRunEventType.USER_FEEDBACK_RECEIVED, AgentRunStatus.RUNNING, "user feedback received", Map.of(
+        "messageId", message.id()));
+  }
+
+  private AgentRunSnapshot completeRun(StoredRun run, AgentRunObserver observer) {
+    run.status = AgentRunStatus.COMPLETED;
+    run.awaitingReason = null;
+    run.availableNextActions = List.of();
+    emit(run, observer, AgentRunEventType.RUN_COMPLETED, AgentRunStatus.COMPLETED, "run completed", Map.of(
+        "decisionCount", String.valueOf(run.state.decisions().size()),
+        "artifactCount", String.valueOf(run.state.artifacts().size())));
+    return run.snapshot();
+  }
+
+  private AgentRunAvailableAction selectAction(StoredRun run, AgentRunTransition transition) {
+    List<AgentRunAvailableAction> available = run.availableNextActions;
+    if (available.isEmpty()) {
+      throw new AgentExecutionException("run has no available next actions: " + run.runId);
+    }
+    AgentRunAvailableAction action = transition.nextAgentId() != null
+        ? selectByAgentId(available, transition.nextAgentId())
+        : selectByRole(available, Objects.requireNonNull(transition.nextRole(), "nextRole must not be null"));
+    if (transition.nextRole() != null && !transition.nextRole().equals(action.role())) {
+      throw new AgentExecutionException("selected agent does not match requested role: " + transition.nextAgentId());
+    }
+    return action;
+  }
+
+  private AgentRunAvailableAction selectByAgentId(List<AgentRunAvailableAction> actions, String agentId) {
+    for (AgentRunAvailableAction action : actions) {
+      if (!action.complete() && action.agentId().equals(agentId)) {
+        return action;
+      }
+    }
+    throw new AgentExecutionException("selected agent is not allowed by the resolved space: " + agentId);
+  }
+
+  private AgentRunAvailableAction selectByRole(List<AgentRunAvailableAction> actions, AgentRole role) {
+    AgentRunAvailableAction preferred = null;
+    AgentRunAvailableAction firstMatch = null;
+    for (AgentRunAvailableAction action : actions) {
+      if (action.complete() || action.role() != role) {
+        continue;
+      }
+      if (firstMatch == null) {
+        firstMatch = action;
+      }
+      if (action.preferred()) {
+        preferred = action;
+        break;
+      }
+    }
+    if (preferred != null) {
+      return preferred;
+    }
+    if (firstMatch != null) {
+      return firstMatch;
+    }
+    throw new AgentExecutionException("selected role is not available at the current checkpoint: " + role);
+  }
+
+  private AgentRunAvailableAction selectLegacyPreferredAction(StoredRun run) {
+    AgentRunAvailableAction preferred = run.availableNextActions.stream().filter(AgentRunAvailableAction::preferred).findFirst().orElse(null);
+    if (preferred != null) {
+      return preferred;
+    }
+    AgentRole lastRole = run.routeSteps.getLast().role();
+    AgentRole preferredRole = switch (run.task.mode()) {
+      case PLAN_ONLY -> null;
+      case IMPLEMENT_ONLY -> lastRole == AgentRole.PLANNER ? AgentRole.CODER : null;
+      case REVIEW_ONLY -> null;
+      case FULL -> switch (lastRole) {
+        case PLANNER -> AgentRole.CODER;
+        case CODER -> AgentRole.REVIEWER;
+        case REVIEWER, JUDGE -> null;
+      };
+    };
+    if (preferredRole == null) {
+      return run.availableNextActions.stream()
+          .filter(AgentRunAvailableAction::complete)
+          .findFirst()
+          .orElseThrow(() -> new AgentExecutionException("run has no completion action: " + run.runId));
+    }
+    for (AgentRunAvailableAction action : run.availableNextActions) {
+      if (!action.complete() && action.role() == preferredRole) {
+        return action;
+      }
+    }
+    throw new AgentExecutionException("run has no available action for role: " + preferredRole);
+  }
+
+  private List<AgentRunAvailableAction> determineAvailableActions(StoredRun run) {
+    List<AgentDescriptor> candidates = allowedDescriptors(run.contextPack.resolvedSpaceProfile());
+    AgentRole preferredRole = preferredRoleFor(run.task.mode(), run.routeSteps.getLast().role());
+    List<AgentRunAvailableAction> actions = new ArrayList<>(candidates.size() + 1);
+    boolean preferredAssigned = false;
+    for (AgentDescriptor descriptor : candidates) {
+      boolean preferred = !preferredAssigned && preferredRole != null && descriptor.role() == preferredRole;
+      actions.add(new AgentRunAvailableAction(
+          descriptor.id(),
+          descriptor.role(),
+          preferred,
+          false,
+          preferred
+              ? "preferred next action for task mode " + run.task.mode()
+              : "available by resolved space binding"));
+      preferredAssigned = preferredAssigned || preferred;
+    }
+    actions.add(AgentRunAvailableAction.complete(preferredRole == null, "finish the run at the current checkpoint"));
+    return List.copyOf(actions);
+  }
+
+  private List<AgentDescriptor> allowedDescriptors(ResolvedSpaceProfile resolvedSpaceProfile) {
+    Set<String> allowedAgentIds = new LinkedHashSet<>(resolvedSpaceProfile.agentIds());
+    if (allowedAgentIds.isEmpty()) {
+      return descriptors;
+    }
+    List<AgentDescriptor> allowed = new ArrayList<>();
+    for (AgentDescriptor descriptor : descriptors) {
+      if (allowedAgentIds.contains(descriptor.id())) {
+        allowed.add(descriptor);
+      }
+    }
+    return List.copyOf(allowed);
+  }
+
+  private AgentRole preferredRoleFor(TaskMode mode, AgentRole lastRole) {
+    return switch (mode) {
+      case PLAN_ONLY -> null;
+      case IMPLEMENT_ONLY -> lastRole == AgentRole.PLANNER ? AgentRole.CODER : null;
+      case REVIEW_ONLY -> null;
+      case FULL -> switch (lastRole) {
+        case PLANNER -> AgentRole.CODER;
+        case CODER -> AgentRole.REVIEWER;
+        case REVIEWER, JUDGE -> null;
+      };
+    };
+  }
+
+  private String transitionReason(AgentRunTransition transition, AgentRunAvailableAction action) {
+    if (transition.nextAgentId() != null) {
+      return "user selected agent " + action.agentId();
+    }
+    return "user selected role " + action.role();
+  }
+
+  private List<Map<String, Object>> actionMetadata(List<AgentRunAvailableAction> actions) {
+    List<Map<String, Object>> metadata = new ArrayList<>(actions.size());
+    for (AgentRunAvailableAction action : actions) {
+      metadata.add(Map.of(
+          "agentId", action.agentId() == null ? "COMPLETE" : action.agentId(),
+          "role", action.role() == null ? "COMPLETE" : action.role().name(),
+          "preferred", String.valueOf(action.preferred()),
+          "complete", String.valueOf(action.complete()),
+          "reason", action.reason()));
+    }
+    return List.copyOf(metadata);
   }
 
   private List<PromptDefinition> resolvePrompts(ResolvedAgentRuntime resolvedRuntime, ResolvedSpaceProfile resolvedSpaceProfile) {
@@ -435,12 +644,14 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
     private final String runId;
     private final AgentTask task;
     private final ContextPack contextPack;
-    private final AgentRoute route;
+    private final String routeStrategy;
+    private final List<AgentRouteStep> routeSteps = new ArrayList<>();
     private final List<AgentRunEvent> events = new ArrayList<>();
     private AgentExecutionState state;
     private AgentRunStatus status;
     private String awaitingReason;
     private int nextStepIndex;
+    private List<AgentRunAvailableAction> availableNextActions;
     private final Instant createdAt;
     private Instant updatedAt;
 
@@ -448,22 +659,26 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
         String runId,
         AgentTask task,
         ContextPack contextPack,
-        AgentRoute route,
+        String routeStrategy,
+        List<AgentRouteStep> routeSteps,
         AgentExecutionState state,
         AgentRunStatus status,
         String awaitingReason,
         int nextStepIndex,
+        List<AgentRunAvailableAction> availableNextActions,
         Instant createdAt,
         Instant updatedAt
     ) {
       this.runId = runId;
       this.task = task;
       this.contextPack = contextPack;
-      this.route = route;
+      this.routeStrategy = routeStrategy;
+      this.routeSteps.addAll(routeSteps);
       this.state = state;
       this.status = status;
       this.awaitingReason = awaitingReason;
       this.nextStepIndex = nextStepIndex;
+      this.availableNextActions = List.copyOf(availableNextActions);
       this.createdAt = createdAt;
       this.updatedAt = updatedAt;
     }
@@ -474,11 +689,12 @@ public final class DefaultAgentRunGateway implements AgentRunGateway {
           task,
           status,
           contextPack,
-          route,
+          new AgentRoute(routeStrategy, routeSteps),
           state,
           List.copyOf(events),
           awaitingReason,
           nextStepIndex,
+          availableNextActions,
           createdAt,
           updatedAt);
     }

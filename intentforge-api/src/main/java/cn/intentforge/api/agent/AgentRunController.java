@@ -1,8 +1,10 @@
 package cn.intentforge.api.agent;
 
 import cn.intentforge.agent.core.AgentRunEvent;
+import cn.intentforge.agent.core.AgentRunAvailableAction;
 import cn.intentforge.agent.core.AgentRunObserver;
 import cn.intentforge.agent.core.AgentRunSnapshot;
+import cn.intentforge.agent.core.AgentRouteStep;
 import java.util.List;
 import java.util.Objects;
 
@@ -102,12 +104,35 @@ public final class AgentRunController {
                 descriptor.implementationClass(),
                 descriptor.metadata()))
             .toList(),
+        toRouteStepResponses(nonNullSnapshot.route().steps()),
+        toActionResponses(nonNullSnapshot.availableNextActions()),
         toEventResponses(nonNullSnapshot.events()));
   }
 
   private List<AgentRunEventResponse> toEventResponses(List<AgentRunEvent> events) {
     return Objects.requireNonNull(events, "events must not be null").stream()
         .map(this::toEventResponse)
+        .toList();
+  }
+
+  private List<AgentRouteStepResponse> toRouteStepResponses(List<AgentRouteStep> steps) {
+    return Objects.requireNonNull(steps, "steps must not be null").stream()
+        .map(step -> new AgentRouteStepResponse(
+            step.order(),
+            step.agentId(),
+            step.role().name(),
+            step.reason()))
+        .toList();
+  }
+
+  private List<AgentRunActionResponse> toActionResponses(List<AgentRunAvailableAction> actions) {
+    return Objects.requireNonNull(actions, "actions must not be null").stream()
+        .map(action -> new AgentRunActionResponse(
+            action.agentId(),
+            action.role() == null ? null : action.role().name(),
+            action.preferred(),
+            action.complete(),
+            action.reason()))
         .toList();
   }
 }

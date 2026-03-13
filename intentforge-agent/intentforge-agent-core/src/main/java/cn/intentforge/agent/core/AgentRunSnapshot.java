@@ -16,6 +16,7 @@ import java.util.Objects;
  * @param events ordered emitted events
  * @param awaitingReason optional reason shown while awaiting user input
  * @param nextStepIndex zero-based index of the next route step to execute
+ * @param availableNextActions user-selectable next actions visible at the current checkpoint
  * @param createdAt run creation timestamp
  * @param updatedAt latest run update timestamp
  */
@@ -29,6 +30,7 @@ public record AgentRunSnapshot(
     List<AgentRunEvent> events,
     String awaitingReason,
     int nextStepIndex,
+    List<AgentRunAvailableAction> availableNextActions,
     Instant createdAt,
     Instant updatedAt
 ) {
@@ -47,6 +49,7 @@ public record AgentRunSnapshot(
     if (nextStepIndex < 0) {
       throw new IllegalArgumentException("nextStepIndex must not be negative");
     }
+    availableNextActions = AgentModelSupport.immutableList(availableNextActions, "availableNextActions");
     createdAt = Objects.requireNonNull(createdAt, "createdAt must not be null");
     updatedAt = Objects.requireNonNull(updatedAt, "updatedAt must not be null");
     if (updatedAt.isBefore(createdAt)) {

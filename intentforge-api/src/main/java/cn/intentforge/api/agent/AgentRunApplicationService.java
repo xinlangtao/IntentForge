@@ -5,6 +5,8 @@ import cn.intentforge.agent.core.AgentRunGateway;
 import cn.intentforge.agent.core.AgentRunObserver;
 import cn.intentforge.agent.core.AgentRunSnapshot;
 import cn.intentforge.agent.core.AgentTask;
+import cn.intentforge.agent.core.AgentRunTransition;
+import cn.intentforge.agent.core.AgentRole;
 import cn.intentforge.agent.core.TaskMode;
 import cn.intentforge.api.util.ApiModelSupport;
 import cn.intentforge.session.model.Session;
@@ -94,7 +96,7 @@ public final class AgentRunApplicationService {
       AgentRunObserver nonNullObserver = observer == null ? AgentRunObserver.NOOP : observer;
       return agentRunGateway.resume(
           ApiModelSupport.requireText(runId, "runId"),
-          Objects.requireNonNull(request, "request must not be null").content(),
+          toTransition(Objects.requireNonNull(request, "request must not be null")),
           nonNullObserver);
     } catch (IllegalArgumentException ex) {
       throw invalidRequest(messageOrFallback(ex, "invalid feedback request"), ex);
@@ -164,6 +166,18 @@ public final class AgentRunApplicationService {
 
   private static AgentApiException invalidRequest(String message, Throwable cause) {
     return new AgentApiException(400, new ErrorResponse("AGENT_RUN_REQUEST_INVALID", message), cause);
+  }
+
+  private static AgentRunTransition toTransition(AgentRunFeedbackRequest request) {
+    return new AgentRunTransition(
+        request.content(),
+        request.nextAgentId(),
+        parseRole(request.nextRole()),
+        request.complete());
+  }
+
+  private static AgentRole parseRole(String value) {
+    return value == null ? null : AgentRole.valueOf(value);
   }
 
   private static String messageOrFallback(Throwable throwable, String fallback) {

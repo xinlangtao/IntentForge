@@ -43,6 +43,17 @@ public interface AgentRunGateway {
   }
 
   /**
+   * Resumes one paused run with an explicit transition selection and without an external observer.
+   *
+   * @param runId run identifier
+   * @param transition explicit transition selection
+   * @return latest run snapshot
+   */
+  default AgentRunSnapshot resume(String runId, AgentRunTransition transition) {
+    return resume(runId, transition, AgentRunObserver.NOOP);
+  }
+
+  /**
    * Resumes one paused run and forwards emitted events to the observer.
    *
    * @param runId run identifier
@@ -51,6 +62,16 @@ public interface AgentRunGateway {
    * @return latest run snapshot
    */
   AgentRunSnapshot resume(String runId, String feedback, AgentRunObserver observer);
+
+  /**
+   * Resumes one paused run with an explicit transition selection and forwards emitted events to the observer.
+   *
+   * @param runId run identifier
+   * @param transition explicit transition selection
+   * @param observer run observer
+   * @return latest run snapshot
+   */
+  AgentRunSnapshot resume(String runId, AgentRunTransition transition, AgentRunObserver observer);
 
   /**
    * Cancels one run without an external observer.

@@ -15,6 +15,8 @@ import java.util.List;
  * @param awaitingReason optional waiting reason
  * @param eventsPath relative SSE path for run events
  * @param selectedRuntimes runtime implementations selected for the current run
+ * @param selectedRouteSteps selected route steps already chosen for this run
+ * @param availableNextActions user-selectable next actions visible at the current checkpoint
  * @param events ordered run events known at response time
  */
 public record AgentRunResponse(
@@ -26,6 +28,8 @@ public record AgentRunResponse(
     String awaitingReason,
     String eventsPath,
     List<RuntimeImplementationResponse> selectedRuntimes,
+    List<AgentRouteStepResponse> selectedRouteSteps,
+    List<AgentRunActionResponse> availableNextActions,
     List<AgentRunEventResponse> events
 ) {
   /**
@@ -42,6 +46,8 @@ public record AgentRunResponse(
     awaitingReason = ApiModelSupport.normalize(awaitingReason);
     eventsPath = ApiModelSupport.requireText(eventsPath, "eventsPath");
     selectedRuntimes = ApiModelSupport.immutableList(selectedRuntimes, "selectedRuntimes");
+    selectedRouteSteps = ApiModelSupport.immutableList(selectedRouteSteps, "selectedRouteSteps");
+    availableNextActions = ApiModelSupport.immutableList(availableNextActions, "availableNextActions");
     events = ApiModelSupport.immutableList(events, "events");
   }
 }

@@ -17,7 +17,7 @@ class AgentRunApiModelsTest {
         "Implement event-driven server",
         null,
         Map.of("story", "IF-401"));
-    AgentRunFeedbackRequest feedbackRequest = new AgentRunFeedbackRequest("Please add validation");
+    AgentRunFeedbackRequest feedbackRequest = new AgentRunFeedbackRequest("Please add validation", "CODER", null, false);
     AgentRunCancelRequest cancelRequest = new AgentRunCancelRequest("User stopped the run");
     AgentRunEventResponse eventResponse = new AgentRunEventResponse(
         "agent-run-1",
@@ -33,6 +33,17 @@ class AgentRunApiModelsTest {
         "In-Memory Prompt Manager",
         "cn.intentforge.prompt.local.registry.InMemoryPromptManager",
         Map.of("builtin", "true"));
+    AgentRouteStepResponse routeStep = new AgentRouteStepResponse(
+        1,
+        "intentforge.native.planner",
+        "PLANNER",
+        "initial planner");
+    AgentRunActionResponse actionResponse = new AgentRunActionResponse(
+        "intentforge.native.coder",
+        "CODER",
+        true,
+        false,
+        "implement the approved plan");
     AgentRunResponse response = new AgentRunResponse(
         "agent-run-1",
         "task-1",
@@ -42,20 +53,26 @@ class AgentRunApiModelsTest {
         "awaiting user feedback before continuing to CODER",
         "/api/agent-runs/agent-run-1/events",
         List.of(selectedRuntime),
+        List.of(routeStep),
+        List.of(actionResponse),
         List.of(eventResponse));
 
     Assertions.assertEquals("FULL", createRequest.mode());
     Assertions.assertNull(createRequest.sessionId());
     Assertions.assertEquals("Please add validation", feedbackRequest.content());
+    Assertions.assertEquals("CODER", feedbackRequest.nextRole());
     Assertions.assertEquals("User stopped the run", cancelRequest.reason());
     Assertions.assertEquals("RUN_CREATED", response.events().getFirst().type());
     Assertions.assertEquals("PROMPT_MANAGER", response.selectedRuntimes().getFirst().capability());
+    Assertions.assertEquals("intentforge.native.planner", response.selectedRouteSteps().getFirst().agentId());
+    Assertions.assertEquals("intentforge.native.coder", response.availableNextActions().getFirst().agentId());
     Assertions.assertEquals("/api/agent-runs/agent-run-1/events", response.eventsPath());
   }
 
   @Test
   void shouldRejectBlankFeedbackAndCancelReason() {
-    Assertions.assertThrows(IllegalArgumentException.class, () -> new AgentRunFeedbackRequest("   "));
+    Assertions.assertThrows(IllegalArgumentException.class, () -> new AgentRunFeedbackRequest("   ", null, null, false));
+    Assertions.assertThrows(IllegalArgumentException.class, () -> new AgentRunFeedbackRequest("done", "CODER", null, true));
     Assertions.assertThrows(IllegalArgumentException.class, () -> new AgentRunCancelRequest("   "));
   }
 

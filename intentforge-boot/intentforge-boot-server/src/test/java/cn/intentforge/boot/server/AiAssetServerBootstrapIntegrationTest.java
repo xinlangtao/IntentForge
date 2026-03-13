@@ -4,6 +4,7 @@ import cn.intentforge.api.agent.AgentRunCancelRequest;
 import cn.intentforge.api.agent.AgentRunCreateRequest;
 import cn.intentforge.api.agent.AgentRunEventResponse;
 import cn.intentforge.api.agent.AgentRunFeedbackRequest;
+import cn.intentforge.api.agent.AgentRunActionResponse;
 import cn.intentforge.api.agent.AgentRunResponse;
 import cn.intentforge.boot.local.AiAssetLocalRuntime;
 import cn.intentforge.model.catalog.ModelCapability;
@@ -73,26 +74,33 @@ class AiAssetServerBootstrapIntegrationTest {
                 "TOOL_REGISTRY", "intentforge.tool.registry.in-memory",
                 "SESSION_MANAGER", "intentforge.session.manager.in-memory"),
             recorder.awaitEvent("CONTEXT_RESOLVED").metadata().get("selectedRuntimeIds"));
-        Assertions.assertEquals("AWAITING_USER", recorder.awaitEvent("AWAITING_USER").type());
+        AgentRunEventResponse awaitingPlanner = recorder.awaitEvent("AWAITING_USER");
+        Assertions.assertEquals("AWAITING_USER", awaitingPlanner.type());
+        Assertions.assertTrue(((List<?>) awaitingPlanner.metadata().get("availableNextActions")).size() >= 4);
 
         HttpResponse<String> firstResumeResponse = postJson(
             client,
             runtime.baseUri().resolve("/api/agent-runs/" + pausedAfterPlanner.runId() + "/messages"),
-            new AgentRunFeedbackRequest("Please add validation details"));
+            new AgentRunFeedbackRequest("Review before implementation", "REVIEWER", null, false));
         Assertions.assertEquals(200, firstResumeResponse.statusCode());
-        AgentRunResponse pausedAfterCoder = OBJECT_MAPPER.readValue(firstResumeResponse.body(), AgentRunResponse.class);
-        Assertions.assertEquals("AWAITING_USER", pausedAfterCoder.status());
-        Assertions.assertEquals(2, pausedAfterCoder.nextStepIndex());
+        AgentRunResponse pausedAfterReview = OBJECT_MAPPER.readValue(firstResumeResponse.body(), AgentRunResponse.class);
+        Assertions.assertEquals("AWAITING_USER", pausedAfterReview.status());
+        Assertions.assertEquals(
+            List.of("intentforge.native.planner", "intentforge.native.reviewer"),
+            pausedAfterReview.selectedRouteSteps().stream().map(step -> step.agentId()).toList());
         Assertions.assertEquals("USER_FEEDBACK_RECEIVED", recorder.awaitEvent("USER_FEEDBACK_RECEIVED").type());
-        Assertions.assertEquals("AWAITING_USER", recorder.awaitEvent("AWAITING_USER").type());
+        AgentRunEventResponse awaitingReview = recorder.awaitEvent("AWAITING_USER");
+        Assertions.assertEquals("AWAITING_USER", awaitingReview.type());
+        Assertions.assertTrue(pausedAfterReview.availableNextActions().stream().anyMatch(AgentRunActionResponse::complete));
 
         HttpResponse<String> secondResumeResponse = postJson(
             client,
             runtime.baseUri().resolve("/api/agent-runs/" + pausedAfterPlanner.runId() + "/messages"),
-            new AgentRunFeedbackRequest("Please finish the final review"));
+            new AgentRunFeedbackRequest("The plan is approved", null, null, true));
         Assertions.assertEquals(200, secondResumeResponse.statusCode());
         AgentRunResponse completed = OBJECT_MAPPER.readValue(secondResumeResponse.body(), AgentRunResponse.class);
         Assertions.assertEquals("COMPLETED", completed.status());
+        Assertions.assertTrue(completed.availableNextActions().isEmpty());
         Assertions.assertEquals("RUN_COMPLETED", recorder.awaitEvent("RUN_COMPLETED").type());
       }
     }

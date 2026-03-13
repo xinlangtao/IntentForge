@@ -4,6 +4,7 @@ import cn.intentforge.agent.core.AgentRunEventType;
 import cn.intentforge.agent.core.AgentRunSnapshot;
 import cn.intentforge.agent.core.AgentRunStatus;
 import cn.intentforge.agent.core.AgentTask;
+import cn.intentforge.agent.core.AgentRunTransition;
 import cn.intentforge.agent.core.TaskMode;
 import cn.intentforge.config.RuntimeCapability;
 import cn.intentforge.model.catalog.ModelCapability;
@@ -94,6 +95,8 @@ class AiAssetLocalBootstrapAgentRunIntegrationTest {
 
     Assertions.assertEquals(AgentRunStatus.AWAITING_USER, pausedAfterPlanner.status());
     Assertions.assertEquals(1, pausedAfterPlanner.nextStepIndex());
+    Assertions.assertEquals(1, pausedAfterPlanner.route().steps().size());
+    Assertions.assertTrue(pausedAfterPlanner.availableNextActions().stream().anyMatch(action -> action.complete()));
     Assertions.assertTrue(observedEventTypes.contains(AgentRunEventType.AWAITING_USER.name()));
     Assertions.assertEquals(
         "intentforge.prompt.manager.in-memory",
@@ -101,17 +104,20 @@ class AiAssetLocalBootstrapAgentRunIntegrationTest {
 
     AgentRunSnapshot pausedAfterCoder = runtime.agentRunGateway().resume(
         pausedAfterPlanner.runId(),
-        "Please add validation details",
+        new AgentRunTransition("Please review before coding", null, cn.intentforge.agent.core.AgentRole.REVIEWER, false),
         event -> observedEventTypes.add(event.type().name()));
     Assertions.assertEquals(AgentRunStatus.AWAITING_USER, pausedAfterCoder.status());
+    Assertions.assertEquals(
+        List.of(cn.intentforge.agent.core.AgentRole.PLANNER, cn.intentforge.agent.core.AgentRole.REVIEWER),
+        pausedAfterCoder.route().steps().stream().map(step -> step.role()).toList());
 
     AgentRunSnapshot completed = runtime.agentRunGateway().resume(
         pausedAfterPlanner.runId(),
-        "Please finish the final review",
+        new AgentRunTransition("The plan is approved", null, null, true),
         event -> observedEventTypes.add(event.type().name()));
 
     Assertions.assertEquals(AgentRunStatus.COMPLETED, completed.status());
-    Assertions.assertEquals(3, completed.state().decisions().size());
+    Assertions.assertEquals(2, completed.state().decisions().size());
     Assertions.assertTrue(observedEventTypes.contains(AgentRunEventType.RUN_COMPLETED.name()));
     Assertions.assertEquals(
         Map.of(

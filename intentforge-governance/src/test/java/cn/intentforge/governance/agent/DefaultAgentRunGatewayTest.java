@@ -5,12 +5,14 @@ import cn.intentforge.agent.core.AgentExecutionException;
 import cn.intentforge.agent.core.AgentExecutionState;
 import cn.intentforge.agent.core.AgentExecutor;
 import cn.intentforge.agent.core.AgentRole;
+import cn.intentforge.agent.core.AgentRunAvailableAction;
 import cn.intentforge.agent.core.AgentRunEvent;
 import cn.intentforge.agent.core.AgentRunEventType;
 import cn.intentforge.agent.core.AgentRunGateway;
 import cn.intentforge.agent.core.AgentRunMessage;
 import cn.intentforge.agent.core.AgentRunSnapshot;
 import cn.intentforge.agent.core.AgentRunStatus;
+import cn.intentforge.agent.core.AgentRunTransition;
 import cn.intentforge.agent.core.AgentStepResult;
 import cn.intentforge.agent.core.AgentTask;
 import cn.intentforge.agent.core.Artifact;
@@ -69,6 +71,15 @@ class DefaultAgentRunGatewayTest {
     Assertions.assertEquals(1, snapshot.nextStepIndex());
     Assertions.assertEquals(1, snapshot.state().decisions().size());
     Assertions.assertNotNull(snapshot.state().plan());
+    Assertions.assertEquals(1, snapshot.route().steps().size());
+    Assertions.assertEquals(
+        List.of(AgentRole.PLANNER, AgentRole.CODER, AgentRole.REVIEWER),
+        snapshot.availableNextActions().stream()
+            .filter(action -> !action.complete())
+            .map(AgentRunAvailableAction::role)
+            .distinct()
+            .toList());
+    Assertions.assertTrue(snapshot.availableNextActions().stream().anyMatch(AgentRunAvailableAction::complete));
     Assertions.assertEquals(snapshot.events(), observedEvents);
     Assertions.assertEquals(
         "intentforge.prompt.manager.in-memory",
@@ -113,6 +124,129 @@ class DefaultAgentRunGatewayTest {
         null,
         Map.of()), event -> {
     });
+    AgentRunSnapshot pausedAfterReview = gateway.resume(
+        pausedAfterPlanner.runId(),
+        new AgentRunTransition("Review the plan before coding", null, AgentRole.REVIEWER, false),
+        event -> {
+        });
+
+    Assertions.assertEquals(AgentRunStatus.AWAITING_USER, pausedAfterReview.status());
+    Assertions.assertEquals(2, pausedAfterReview.nextStepIndex());
+    Assertions.assertEquals(
+        List.of(AgentRole.PLANNER, AgentRole.REVIEWER),
+        pausedAfterReview.route().steps().stream().map(step -> step.role()).toList());
+    Assertions.assertTrue(pausedAfterReview.state().messages().stream()
+        .map(AgentRunMessage::content)
+        .toList()
+        .contains("Review the plan before coding"));
+    Assertions.assertTrue(pausedAfterReview.events().stream().anyMatch(event ->
+        event.type() == AgentRunEventType.RUN_RESUMED
+            && AgentRole.REVIEWER.name().equals(event.metadata().get("selectedRole"))));
+
+    AgentRunSnapshot completed = gateway.resume(
+        pausedAfterPlanner.runId(),
+        new AgentRunTransition("Plan looks good, stop here", null, null, true),
+        event -> {
+        });
+
+    Assertions.assertEquals(AgentRunStatus.COMPLETED, completed.status());
+    Assertions.assertEquals(2, completed.state().messages().size());
+    Assertions.assertEquals(AgentRunEventType.RUN_COMPLETED, completed.events().getLast().type());
+  }
+
+  @Test
+  void shouldAllowUserToSwitchToSpecificAllowedAgent() throws Exception {
+    AgentRunGateway gateway = createGateway();
+
+    AgentRunSnapshot pausedAfterPlanner = gateway.start(new AgentTask(
+        "task-1",
+        "session-1",
+        null,
+        Files.createTempDirectory("agent-run-switch-agent"),
+        TaskMode.FULL,
+        "Implement event-driven run model",
+        null,
+        Map.of()), event -> {
+    });
+
+    AgentRunSnapshot pausedAfterAlternateCoder = gateway.resume(
+        pausedAfterPlanner.runId(),
+        new AgentRunTransition("Use the alternate coder", "intentforge.native.coder.alt", null, false),
+        event -> {
+        });
+
+    Assertions.assertEquals(AgentRunStatus.AWAITING_USER, pausedAfterAlternateCoder.status());
+    Assertions.assertEquals(
+        "intentforge.native.coder.alt",
+        pausedAfterAlternateCoder.route().steps().getLast().agentId());
+    Assertions.assertTrue(pausedAfterAlternateCoder.events().stream().anyMatch(event ->
+        event.type() == AgentRunEventType.RUN_RESUMED
+            && "intentforge.native.coder.alt".equals(event.metadata().get("selectedAgentId"))));
+  }
+
+  @Test
+  void shouldRejectSelectingDisallowedAgent() throws Exception {
+    AgentRunGateway gateway = createGateway();
+
+    AgentRunSnapshot pausedAfterPlanner = gateway.start(new AgentTask(
+        "task-1",
+        "session-1",
+        null,
+        Files.createTempDirectory("agent-run-disallowed-agent"),
+        TaskMode.FULL,
+        "Implement event-driven run model",
+        null,
+        Map.of()), event -> {
+    });
+
+    AgentExecutionException exception = Assertions.assertThrows(
+        AgentExecutionException.class,
+        () -> gateway.resume(
+            pausedAfterPlanner.runId(),
+            new AgentRunTransition("Use a forbidden agent", "intentforge.native.judge", null, false),
+            event -> {
+            }));
+
+    Assertions.assertTrue(exception.getMessage().contains("allowed"));
+  }
+
+  @Test
+  void shouldRejectTransitionWithoutSelectionWhenPaused() throws Exception {
+    AgentRunGateway gateway = createGateway();
+
+    AgentRunSnapshot pausedAfterPlanner = gateway.start(new AgentTask(
+        "task-1",
+        "session-1",
+        null,
+        Files.createTempDirectory("agent-run-missing-selection"),
+        TaskMode.FULL,
+        "Implement event-driven run model",
+        null,
+        Map.of()), event -> {
+    });
+
+    IllegalArgumentException exception = Assertions.assertThrows(
+        IllegalArgumentException.class,
+        () -> gateway.resume(pausedAfterPlanner.runId(), new AgentRunTransition("continue", null, null, false), event -> {
+        }));
+
+    Assertions.assertTrue(exception.getMessage().contains("nextRole"));
+  }
+
+  @Test
+  void shouldStillSupportLegacyAutoResumeForSynchronousCompatibility() throws Exception {
+    AgentRunGateway gateway = createGateway();
+
+    AgentRunSnapshot pausedAfterPlanner = gateway.start(new AgentTask(
+        "task-1",
+        "session-1",
+        null,
+        Files.createTempDirectory("agent-run-legacy-auto"),
+        TaskMode.FULL,
+        "Implement event-driven run model",
+        null,
+        Map.of()), event -> {
+    });
     AgentRunSnapshot pausedAfterCoder = gateway.resume(pausedAfterPlanner.runId(), "Need stronger validation", event -> {
     });
 
@@ -124,14 +258,16 @@ class DefaultAgentRunGatewayTest {
         .contains("Need stronger validation"));
     Assertions.assertTrue(pausedAfterCoder.events().stream().anyMatch(event ->
         event.type() == AgentRunEventType.USER_FEEDBACK_RECEIVED));
-
     AgentRunSnapshot completed = gateway.resume(pausedAfterPlanner.runId(), "Focus review on edge cases", event -> {
     });
 
-    Assertions.assertEquals(AgentRunStatus.COMPLETED, completed.status());
+    Assertions.assertEquals(AgentRunStatus.AWAITING_USER, completed.status());
     Assertions.assertEquals(3, completed.state().decisions().size());
     Assertions.assertEquals(2, completed.state().messages().size());
-    Assertions.assertEquals(AgentRunEventType.RUN_COMPLETED, completed.events().getLast().type());
+    AgentRunSnapshot finished = gateway.resume(pausedAfterPlanner.runId(), "Ship it", event -> {
+    });
+    Assertions.assertEquals(AgentRunStatus.COMPLETED, finished.status());
+    Assertions.assertEquals(AgentRunEventType.RUN_COMPLETED, finished.events().getLast().type());
   }
 
   @Test
@@ -159,7 +295,7 @@ class DefaultAgentRunGatewayTest {
   @Test
   void shouldRejectResumeWhenRunIsNotAwaitingUser() throws Exception {
     AgentRunGateway gateway = createGateway();
-    AgentRunSnapshot completed = gateway.start(new AgentTask(
+    AgentRunSnapshot pausedAfterPlanner = gateway.start(new AgentTask(
         "task-1",
         "session-1",
         null,
@@ -169,6 +305,13 @@ class DefaultAgentRunGatewayTest {
         null,
         Map.of()), event -> {
     });
+    Assertions.assertEquals(AgentRunStatus.AWAITING_USER, pausedAfterPlanner.status());
+
+    AgentRunSnapshot completed = gateway.resume(
+        pausedAfterPlanner.runId(),
+        new AgentRunTransition("Plan is enough", null, null, true),
+        event -> {
+        });
     Assertions.assertEquals(AgentRunStatus.COMPLETED, completed.status());
 
     AgentExecutionException exception = Assertions.assertThrows(
@@ -226,7 +369,7 @@ class DefaultAgentRunGatewayTest {
         SpaceType.APPLICATION,
         List.of("company-root", "project-alpha", "product-alpha", spaceId),
         List.of(),
-        List.of("intentforge.native.planner", "intentforge.native.coder", "intentforge.native.reviewer"),
+        List.of("intentforge.native.planner", "intentforge.native.coder", "intentforge.native.coder.alt", "intentforge.native.reviewer"),
         List.of("prompt-1"),
         List.of("intentforge.fs.list"),
         List.of("model-1"),
@@ -246,6 +389,7 @@ class DefaultAgentRunGatewayTest {
         List.of(
             new StubExecutor("intentforge.native.planner", AgentRole.PLANNER, true),
             new StubExecutor("intentforge.native.coder", AgentRole.CODER, false),
+            new StubExecutor("intentforge.native.coder.alt", AgentRole.CODER, false),
             new StubExecutor("intentforge.native.reviewer", AgentRole.REVIEWER, false)));
   }
 
