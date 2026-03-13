@@ -50,7 +50,7 @@ Starting from the completed event-driven native Java coding agent runtime and mi
 | 15 | Implement config-core models, space/runtime binding resolution, and bootstrap runtime catalog assembly without global hardcoded implementation winners | finished | commit: 7d3afc7 |
 | 16 | Propagate selected runtime bindings into governance, context pack, run snapshot, events, and API-facing observability models | finished | commit: 7d3afc7 |
 | 17 | Update architecture/docs, run full verification, sync task bookkeeping, and finalize the configuration-driven runtime-selection architecture | finished | commits: 70f3799, c48aff9, baf1f07 |
-| 18 | Re-scope the finished configuration-driven runtime task to the real user-directed transition model and preserve the latest recovery baseline | finished | commit: pending |
+| 18 | Re-scope the finished configuration-driven runtime task to the real user-directed transition model and preserve the latest recovery baseline | finished | commit: b36a76a |
 | 19 | Add red tests and API contract changes for selectable next actions, planner confirmation, mode switching, target-agent switching, and invalid transition handling | notrun | commit: pending |
 | 20 | Extend agent-core and governance contracts to support user-directed transitions, dynamic next-step selection, and allowed-agent validation at checkpoints | notrun | commit: pending |
 | 21 | Implement API and boot-server transport changes so clients can select planner, coder, reviewer, or a specific allowed agent from checkpoint state and observe those options over SSE | notrun | commit: pending |
