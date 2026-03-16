@@ -1,1 +1,3 @@
 cn.intentforge.channel.connectors.LoopbackChannelPlugin
+cn.intentforge.channel.connectors.telegram.TelegramChannelPlugin
+cn.intentforge.channel.connectors.wecom.WeComChannelPlugin

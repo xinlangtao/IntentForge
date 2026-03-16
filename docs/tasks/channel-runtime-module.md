@@ -20,8 +20,8 @@ inside `intentforge-channel-connectors`.
 
 ## Overall Status
 - status: running
-- process: 20%
-- current_step: 6
+- process: 80%
+- current_step: 8
 
 ## Steps
 | step | description | status | note |
@@ -30,10 +30,10 @@ inside `intentforge-channel-connectors`.
 | 2 | Add channel aggregate Maven structure and TDD coverage for core SPI, Spring discovery, and bootstrap integration. | finished | commit: ed74035 |
 | 3 | Implement channel core/local/spring/connectors modules and runtime wiring. | finished | commit: c454ec2 |
 | 4 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping. | finished | commit: 6fd8555 |
-| 5 | Refresh task scope for phase two, add red tests for Telegram and WeCom connectors, and verify the expected failing state. | finished | commit: pending |
-| 6 | Implement Telegram connector plugin, driver, session, and request mapping. | running | commit: pending |
-| 7 | Implement WeCom connector plugin, driver, session, and token-aware outbound delivery support. | notrun | commit: pending |
-| 8 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for connector delivery. | notrun | commit: pending |
+| 5 | Refresh task scope for phase two, add red tests for Telegram and WeCom connectors, and verify the expected failing state. | finished | commit: 11196e4 |
+| 6 | Implement Telegram connector plugin, driver, session, and request mapping. | finished | commit: pending |
+| 7 | Implement WeCom connector plugin, driver, session, and token-aware outbound delivery support. | finished | commit: pending |
+| 8 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for connector delivery. | running | commit: pending |
 
 ## Update Log
 | time | status | process | update |
@@ -46,6 +46,7 @@ inside `intentforge-channel-connectors`.
 | 2026-03-13 15:45:25 +0800 | finished | 100% | recorded the final checkpoint commit, completed task bookkeeping, and documented the bootstrap plus plugin-discovery flow with Mermaid diagrams |
 | 2026-03-16 08:55:31 +0800 | running | 5% | scope expanded to phase two connector delivery; reopened the task, added Telegram and WeCom connector acceptance criteria, and started the red-test phase |
 | 2026-03-16 08:57:54 +0800 | running | 20% | added red tests for Telegram and WeCom connector plugins plus bootstrap exposure, then verified the expected failing state because the concrete connector classes do not exist yet |
+| 2026-03-16 09:01:11 +0800 | running | 80% | implemented builtin Telegram and WeCom connector plugins, outbound session mapping, HTTP API clients, classpath SPI exposure, and verified the targeted connector plus boot-local tests passed |
 
 ## Sequence Diagram
 
