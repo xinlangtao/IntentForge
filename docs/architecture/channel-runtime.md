@@ -9,8 +9,8 @@ It is designed for pluggable multi-channel integrations such as Telegram and WeC
 
 | Module | Responsibility |
 | --- | --- |
-| `intentforge-channel-core` | Shared channel descriptors, account/target/message models, routing contracts, and manager/plugin SPI |
-| `intentforge-channel-local` | In-memory `ChannelManager`, classpath plugin loading, and external plugin directory loading |
+| `intentforge-channel-core` | Shared channel descriptors, account/target/message/webhook models, inbound processing contracts, routing contracts, and manager/plugin SPI |
+| `intentforge-channel-local` | In-memory `ChannelManager`, inbound processing pipeline, classpath plugin loading, and external plugin directory loading |
 | `intentforge-channel-spring` | Spring `spring.factories` discovery bridge that contributes `ChannelPlugin` instances through a dedicated SPI strategy |
 | `intentforge-channel-connectors` | Loopback and generic connector support entrypoints |
 | `intentforge-channel-telegram` | Telegram Bot API outbound connector |
@@ -30,6 +30,9 @@ The shared runtime model is intentionally transport-neutral:
 - `ChannelWebhookResponse`: normalized webhook acknowledgement response
 - `ChannelWebhookResult`: normalized webhook parsing output
 - `ChannelWebhookHandler`: account-bound inbound webhook adapter
+- `ChannelInboundDispatch`: per-message access and route evaluation result
+- `ChannelInboundProcessingResult`: aggregated inbound pipeline result
+- `ChannelInboundProcessor`: runtime entrypoint that chains webhook parsing, access policy, and route resolution
 - `ChannelRouteResolver`: resolves inbound messages into `space/session/agent`
 - `ChannelAccessPolicy`: evaluates whether one inbound event may enter the runtime
 
@@ -59,6 +62,20 @@ There are three extension layers:
 - direct classpath `ChannelPlugin` providers
 - additional `ChannelPluginDiscoveryStrategy` providers
 
+`DefaultChannelInboundProcessor` in `intentforge-channel-local` chains:
+
+- `ChannelManager.openWebhookHandler(accountProfile)`
+- ordered `ChannelAccessPolicy` implementations loaded from classpath `ServiceLoader`
+- ordered `ChannelRouteResolver` implementations loaded from classpath `ServiceLoader`
+
+Fallback behavior:
+
+- when no access policy is discovered, the processor uses an allow-all policy
+- when no route resolver matches, the local default route resolver maps:
+  - `spaceId` -> `ChannelInboundMessage.accountId()`
+  - `sessionId` -> `<channelType>:<conversationId>[:<threadId>]`
+  - `agentId` -> optional `metadata.agentId`
+
 `DirectoryChannelPluginManager` mirrors the existing plugin runtime pattern and loads external channel plugin jars from `plugins/`.
 
 ## Spring SPI Bridge
@@ -80,6 +97,12 @@ The selected channel manager is exposed through:
 - `RuntimeCapability.CHANNEL_MANAGER`
 - `LocalRuntimeComponentRegistry`
 - `AiAssetLocalRuntime`
+
+The local runtime also exposes one `ChannelInboundProcessor` that executes:
+
+- webhook normalization inside the selected connector module
+- access-policy evaluation
+- route resolution with fallback behavior
 
 The channel manager is currently bootstrap-scoped, similar to the session manager.
 
@@ -151,6 +174,8 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
 ### Current Limits
 
 - inbound parsing currently stops at connector-local normalization and does not yet invoke `ChannelAccessPolicy` or `ChannelRouteResolver`
+- inbound processing currently stops after `ChannelAccessPolicy` and `ChannelRouteResolver`; it does not yet create or resume agent runs
+- inbound processing does not yet persist routed user messages into `SessionManager`
 - Telegram inbound support currently focuses on text-bearing updates only
 - WeCom inbound support currently focuses on verification echo and plaintext XML text callbacks only
 - WeCom signature verification, message decryption, and encrypted callback responses are still future work

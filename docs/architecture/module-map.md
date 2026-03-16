@@ -52,7 +52,7 @@
 | Module | Role |
 | --- | --- |
 | `intentforge-channel-core` | Channel descriptors, account/target/message/webhook models, routing contracts, and manager/plugin SPI |
-| `intentforge-channel-local` | In-memory channel manager provider, classpath SPI loading, and local plugin directory loading |
+| `intentforge-channel-local` | In-memory channel manager provider, inbound processing pipeline, classpath SPI loading, and local plugin directory loading |
 | `intentforge-channel-spring` | Spring `spring.factories` bridge for channel plugin discovery |
 | `intentforge-channel-connectors` | Loopback and generic connector support entrypoints |
 | `intentforge-channel-telegram` | Telegram Bot API connector implementation |
