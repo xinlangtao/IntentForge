@@ -5,6 +5,7 @@
 - `governance` 负责管
 - `agent` 负责想
 - `channel` 负责连接外部消息渠道、账号实例、会话目标与路由入口
+- `hook` 负责对外回调入口、协议适配与 hook 账号解析
 - `prompt/model/model-provider` 负责定义提示词、模型目录与模型提供方能力面
 - `tool` 负责做
 - `memory/config` 负责提供上下文
@@ -25,6 +26,7 @@
 | `intentforge-audit` | Run/step/tool-call records, event snapshots, replay, audit services |
 | `intentforge-agent` | Agent abstraction family, routed execution contracts, and runtime integrations |
 | `intentforge-channel` | Channel abstractions, runtime managers, Spring SPI bridge, and pluggable connector adapters |
+| `intentforge-hook` | External hook ingress, generic webhook route adapters, and hook-visible channel account resolution |
 | `intentforge-prompt` | Prompt definitions, registries, and pluggable prompt runtime |
 | `intentforge-model` | Model catalogs, capability metadata, and pluggable model runtime |
 | `intentforge-model-provider` | Model provider SPI, provider registries, and pluggable provider adapters |
@@ -57,6 +59,12 @@
 | `intentforge-channel-connectors` | Loopback and generic connector support entrypoints |
 | `intentforge-channel-telegram` | Telegram Bot API connector implementation |
 | `intentforge-channel-wecom` | WeCom application messaging connector implementation |
+
+### `intentforge-hook`
+
+| Module | Role |
+| --- | --- |
+| `intentforge-hook` | Generic external hook ingress, hook-account registry, and HTTP route adapters that delegate into `ChannelInboundProcessor` |
 
 ### `intentforge-governance`
 
@@ -133,7 +141,7 @@
 | Module | Role |
 | --- | --- |
 | `intentforge-boot-local` | Local-first bootstrap, SPI runtime catalog discovery, runtime component registry assembly, space-aware per-run runtime selection, native agent gateway assembly, local exposure of both synchronous and event-driven run entrypoints, and boot-local channel inbound session persistence wiring |
-| `intentforge-boot-server` | Minimal JDK `HttpServer` bootstrap, route wiring, virtual-thread-backed request execution, thin `HttpExchange` adapters, SSE event fan-out, and terminal server entrypoint |
+| `intentforge-boot-server` | Minimal JDK `HttpServer` bootstrap, route wiring, virtual-thread-backed request execution, thin `HttpExchange` adapters, delegated hook-route registration, SSE event fan-out, and terminal server entrypoint |
 
 ### `intentforge-desktop`
 

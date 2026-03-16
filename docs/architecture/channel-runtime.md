@@ -117,6 +117,25 @@ Session persistence behavior:
 
 The channel manager is currently bootstrap-scoped, similar to the session manager.
 
+## Hook HTTP Ingress
+
+`intentforge-hook` owns the externally exposed hook endpoint family that feeds channel inbound processing.
+This keeps connector modules transport-agnostic while centralizing request-path parsing and account resolution in one module.
+
+Current generic route:
+
+- `/open-api/hooks/channels/{channelType}/accounts/{accountId}/webhook`
+
+Ingress behavior:
+
+- `HookHttpRouteRegistrar` registers the shared hook prefix on the JDK `HttpServer`
+- `ChannelWebhookHttpExchangeHandler` converts `HttpExchange` into `ChannelWebhookRequest`
+- `ChannelWebhookEndpointController` resolves the target `ChannelAccountProfile` through `HookAccountRegistry`
+- the resolved account and normalized request are delegated into `ChannelInboundProcessor`
+- `AiAssetServerBootstrap` seeds hook-visible accounts through the `hookConfigurer` callback before the server starts
+- unknown hook paths and unregistered hook accounts return `404`
+- unexpected ingress failures return `500`
+
 ## Future Connector Guidance
 
 Telegram and WeCom adapters should follow these rules:
