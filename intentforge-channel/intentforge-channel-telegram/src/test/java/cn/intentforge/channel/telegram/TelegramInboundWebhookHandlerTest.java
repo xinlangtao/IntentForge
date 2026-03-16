@@ -105,6 +105,182 @@ class TelegramInboundWebhookHandlerTest {
   }
 
   @Test
+  void shouldParseCallbackQueryIntoChannelInboundMessage() {
+    TelegramChannelDriver driver = new TelegramChannelDriver(new NoOpTelegramBotApiClient());
+    ChannelAccountProfile accountProfile = new ChannelAccountProfile(
+        "telegram-account",
+        ChannelType.TELEGRAM,
+        "Telegram Bot",
+        Map.of("botToken", "bot-token"));
+
+    ChannelWebhookHandler webhookHandler = driver.openWebhookHandler(accountProfile).orElseThrow();
+    ChannelWebhookResult result = webhookHandler.handle(new ChannelWebhookRequest(
+        "POST",
+        Map.of(),
+        Map.of(),
+        """
+            {
+              "update_id": 9010,
+              "callback_query": {
+                "id": "callback-1",
+                "data": "approve",
+                "from": {
+                  "id": 99,
+                  "is_bot": false,
+                  "first_name": "Ada",
+                  "last_name": "Lovelace",
+                  "username": "ada"
+                },
+                "message": {
+                  "message_id": 42,
+                  "message_thread_id": 7,
+                  "date": 1700000000,
+                  "chat": {
+                    "id": -100123,
+                    "type": "supergroup",
+                    "title": "Dev Group"
+                  }
+                }
+              }
+            }
+            """));
+
+    Assertions.assertEquals(200, result.response().statusCode());
+    Assertions.assertEquals("OK", result.response().body());
+    Assertions.assertEquals(1, result.messages().size());
+    ChannelInboundMessage message = result.messages().getFirst();
+    Assertions.assertEquals("callback:callback-1", message.messageId());
+    Assertions.assertEquals("-100123", message.target().conversationId());
+    Assertions.assertEquals("7", message.target().threadId());
+    Assertions.assertEquals("99", message.sender().id());
+    Assertions.assertEquals("Ada Lovelace", message.sender().displayName());
+    Assertions.assertEquals("approve", message.text());
+    Assertions.assertEquals("callback_query", message.metadata().get("updateKind"));
+    Assertions.assertEquals("callback-1", message.metadata().get("callbackQueryId"));
+    Assertions.assertEquals("42", message.metadata().get("messageId"));
+  }
+
+  @Test
+  void shouldAcceptMatchingWebhookSecretToken() {
+    TelegramChannelDriver driver = new TelegramChannelDriver(new NoOpTelegramBotApiClient());
+    ChannelAccountProfile accountProfile = new ChannelAccountProfile(
+        "telegram-account",
+        ChannelType.TELEGRAM,
+        "Telegram Bot",
+        Map.of(
+            "botToken", "bot-token",
+            "webhookSecretToken", "secret-1"));
+
+    ChannelWebhookHandler webhookHandler = driver.openWebhookHandler(accountProfile).orElseThrow();
+    ChannelWebhookResult result = webhookHandler.handle(new ChannelWebhookRequest(
+        "POST",
+        Map.of("X-Telegram-Bot-Api-Secret-Token", List.of("secret-1")),
+        Map.of(),
+        """
+            {
+              "update_id": 9001,
+              "message": {
+                "message_id": 42,
+                "date": 1700000000,
+                "text": "/hello",
+                "chat": {
+                  "id": -100123,
+                  "type": "private"
+                },
+                "from": {
+                  "id": 99,
+                  "is_bot": false,
+                  "first_name": "Ada"
+                }
+              }
+            }
+            """));
+
+    Assertions.assertEquals(200, result.response().statusCode());
+    Assertions.assertEquals(1, result.messages().size());
+  }
+
+  @Test
+  void shouldRejectMissingWebhookSecretTokenWhenConfigured() {
+    TelegramChannelDriver driver = new TelegramChannelDriver(new NoOpTelegramBotApiClient());
+    ChannelAccountProfile accountProfile = new ChannelAccountProfile(
+        "telegram-account",
+        ChannelType.TELEGRAM,
+        "Telegram Bot",
+        Map.of(
+            "botToken", "bot-token",
+            "webhookSecretToken", "secret-1"));
+
+    ChannelWebhookHandler webhookHandler = driver.openWebhookHandler(accountProfile).orElseThrow();
+    ChannelWebhookResult result = webhookHandler.handle(new ChannelWebhookRequest(
+        "POST",
+        Map.of(),
+        Map.of(),
+        """
+            {
+              "update_id": 9001,
+              "message": {
+                "message_id": 42,
+                "date": 1700000000,
+                "text": "/hello",
+                "chat": {
+                  "id": -100123,
+                  "type": "private"
+                },
+                "from": {
+                  "id": 99,
+                  "is_bot": false,
+                  "first_name": "Ada"
+                }
+              }
+            }
+            """));
+
+    Assertions.assertEquals(401, result.response().statusCode());
+    Assertions.assertTrue(result.messages().isEmpty());
+  }
+
+  @Test
+  void shouldRejectInvalidWebhookSecretTokenWhenConfigured() {
+    TelegramChannelDriver driver = new TelegramChannelDriver(new NoOpTelegramBotApiClient());
+    ChannelAccountProfile accountProfile = new ChannelAccountProfile(
+        "telegram-account",
+        ChannelType.TELEGRAM,
+        "Telegram Bot",
+        Map.of(
+            "botToken", "bot-token",
+            "webhookSecretToken", "secret-1"));
+
+    ChannelWebhookHandler webhookHandler = driver.openWebhookHandler(accountProfile).orElseThrow();
+    ChannelWebhookResult result = webhookHandler.handle(new ChannelWebhookRequest(
+        "POST",
+        Map.of("X-Telegram-Bot-Api-Secret-Token", List.of("wrong-secret")),
+        Map.of(),
+        """
+            {
+              "update_id": 9001,
+              "message": {
+                "message_id": 42,
+                "date": 1700000000,
+                "text": "/hello",
+                "chat": {
+                  "id": -100123,
+                  "type": "private"
+                },
+                "from": {
+                  "id": 99,
+                  "is_bot": false,
+                  "first_name": "Ada"
+                }
+              }
+            }
+            """));
+
+    Assertions.assertEquals(401, result.response().statusCode());
+    Assertions.assertTrue(result.messages().isEmpty());
+  }
+
+  @Test
   void shouldRejectMalformedWebhookPayload() {
     TelegramChannelDriver driver = new TelegramChannelDriver(new NoOpTelegramBotApiClient());
     ChannelAccountProfile accountProfile = new ChannelAccountProfile(
