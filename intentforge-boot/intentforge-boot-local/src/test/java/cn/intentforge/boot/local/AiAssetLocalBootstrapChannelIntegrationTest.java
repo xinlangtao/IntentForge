@@ -15,5 +15,7 @@ class AiAssetLocalBootstrapChannelIntegrationTest {
         List.of("intentforge.channel.manager.in-memory"),
         runtime.runtimeCatalog().list(RuntimeCapability.CHANNEL_MANAGER).stream().map(descriptor -> descriptor.id()).toList());
     Assertions.assertTrue(runtime.channelManager().find("intentforge.channel.loopback").isPresent());
+    Assertions.assertTrue(runtime.channelManager().find("intentforge.channel.telegram").isPresent());
+    Assertions.assertTrue(runtime.channelManager().find("intentforge.channel.wecom").isPresent());
   }
 }
