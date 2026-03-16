@@ -13,8 +13,8 @@ It is designed for pluggable multi-channel integrations such as Telegram and WeC
 | `intentforge-channel-local` | In-memory `ChannelManager`, inbound processing pipeline, classpath plugin loading, and external plugin directory loading |
 | `intentforge-channel-spring` | Spring `spring.factories` discovery bridge that contributes `ChannelPlugin` instances through a dedicated SPI strategy |
 | `intentforge-channel-connectors` | Loopback and generic connector support entrypoints |
-| `intentforge-channel-telegram` | Telegram Bot API outbound connector |
-| `intentforge-channel-wecom` | WeCom application messaging outbound connector |
+| `intentforge-channel-telegram` | Telegram Bot API outbound connector and inbound webhook normalization |
+| `intentforge-channel-wecom` | WeCom application messaging outbound connector and inbound callback normalization |
 
 ## Core Model
 
@@ -78,6 +78,9 @@ Fallback behavior:
 
 `DirectoryChannelPluginManager` mirrors the existing plugin runtime pattern and loads external channel plugin jars from `plugins/`.
 
+`intentforge-channel-local` intentionally stops at webhook parsing, access evaluation, and route resolution.
+Session persistence remains outside the channel runtime module so the channel layer stays storage-agnostic.
+
 ## Spring SPI Bridge
 
 Spring support is intentionally isolated in `intentforge-channel-spring`.
@@ -103,6 +106,14 @@ The local runtime also exposes one `ChannelInboundProcessor` that executes:
 - webhook normalization inside the selected connector module
 - access-policy evaluation
 - route resolution with fallback behavior
+- session persistence into `SessionManager` for allowed and routed inbound text messages
+
+Session persistence behavior:
+
+- the local runtime creates the routed session when `sessionId` does not exist yet
+- persisted inbound messages are stored as `SessionMessageRole.USER`
+- duplicate inbound message ids are skipped to reduce retry-driven duplication
+- session persistence is added by `PersistingChannelInboundProcessor` in `intentforge-boot-local`, not by `intentforge-channel-local`
 
 The channel manager is currently bootstrap-scoped, similar to the session manager.
 
@@ -173,9 +184,9 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
 
 ### Current Limits
 
-- inbound parsing currently stops at connector-local normalization and does not yet invoke `ChannelAccessPolicy` or `ChannelRouteResolver`
 - inbound processing currently stops after `ChannelAccessPolicy` and `ChannelRouteResolver`; it does not yet create or resume agent runs
-- inbound processing does not yet persist routed user messages into `SessionManager`
+- inbound processing currently persists only text-bearing user messages into `SessionManager`
+- inbound processing does not yet trigger `AgentRunGateway` automatically after session persistence
 - Telegram inbound support currently focuses on text-bearing updates only
 - WeCom inbound support currently focuses on verification echo and plaintext XML text callbacks only
 - WeCom signature verification, message decryption, and encrypted callback responses are still future work
