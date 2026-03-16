@@ -19,9 +19,9 @@ inside `intentforge-channel-connectors`.
 - [x] Pass `make test` without errors before delivery.
 
 ## Overall Status
-- status: running
-- process: 95%
-- current_step: 8
+- status: finished
+- process: 100%
+- current_step: completed
 
 ## Steps
 | step | description | status | note |
@@ -33,7 +33,7 @@ inside `intentforge-channel-connectors`.
 | 5 | Refresh task scope for phase two, add red tests for Telegram and WeCom connectors, and verify the expected failing state. | finished | commit: 11196e4 |
 | 6 | Implement Telegram connector plugin, driver, session, and request mapping. | finished | commit: dd81ac9 |
 | 7 | Implement WeCom connector plugin, driver, session, and token-aware outbound delivery support. | finished | commit: dd81ac9 |
-| 8 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for connector delivery. | running | commit: pending |
+| 8 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for connector delivery. | finished | commit: f724f0c |
 
 ## Update Log
 | time | status | process | update |
@@ -48,30 +48,25 @@ inside `intentforge-channel-connectors`.
 | 2026-03-16 08:57:54 +0800 | running | 20% | added red tests for Telegram and WeCom connector plugins plus bootstrap exposure, then verified the expected failing state because the concrete connector classes do not exist yet |
 | 2026-03-16 09:01:11 +0800 | running | 80% | implemented builtin Telegram and WeCom connector plugins, outbound session mapping, HTTP API clients, classpath SPI exposure, and verified the targeted connector plus boot-local tests passed |
 | 2026-03-16 09:02:11 +0800 | running | 95% | documented connector-specific account properties and target mapping, reran full `make test` outside the sandbox, and confirmed the full Maven reactor test suite passed with the new Telegram and WeCom connectors |
+| 2026-03-16 09:03:27 +0800 | finished | 100% | recorded the connector delivery checkpoint commit, completed task bookkeeping, and refreshed the Mermaid diagrams to show the concrete Telegram and WeCom outbound flow |
 
 ## Sequence Diagram
 
 ```mermaid
 sequenceDiagram
-    participant Bootstrap as AiAssetLocalBootstrap
-    participant Provider as ChannelManagerProvider
-    participant Manager as InMemoryChannelManager
-    participant Discovery as ChannelPluginDiscoveryStrategy
-    participant Plugin as ChannelPlugin
-    participant Directory as DirectoryChannelPluginManager
-    participant Catalog as RuntimeCatalog
     participant Runtime as AiAssetLocalRuntime
-    Bootstrap->>Provider: load via ServiceLoader
-    Provider-->>Bootstrap: create manager
-    Bootstrap->>Discovery: discover classpath plugins
-    Discovery-->>Bootstrap: ChannelPlugin instances
-    Bootstrap->>Plugin: collect ChannelDriver descriptors
-    Bootstrap->>Manager: register drivers
-    Bootstrap->>Directory: sync plugins/ channel jars
-    Directory-->>Bootstrap: external ChannelPlugin instances
-    Bootstrap->>Manager: register external drivers
-    Bootstrap->>Catalog: publish CHANNEL_MANAGER implementation
-    Bootstrap-->>Runtime: expose default ChannelManager
+    participant Manager as ChannelManager
+    participant Driver as Telegram/WeComChannelDriver
+    participant Session as ChannelSession
+    participant Vendor as Vendor HTTP API
+    Runtime->>Manager: openSession(accountProfile)
+    Manager->>Driver: match account type and open session
+    Driver-->>Runtime: account-bound ChannelSession
+    Runtime->>Session: send(ChannelOutboundRequest)
+    Session->>Vendor: map target and metadata to Bot API / WeCom API
+    Note over Session,Vendor: WeCom fetches and caches access token before send
+    Vendor-->>Session: platform message id and accepted timestamp
+    Session-->>Runtime: ChannelDeliveryResult
 ```
 
 ## Module Relationship Diagram
@@ -81,8 +76,10 @@ flowchart LR
     Core["intentforge-channel-core"] --> Local["intentforge-channel-local"]
     Core --> Spring["intentforge-channel-spring"]
     Core --> Connectors["intentforge-channel-connectors"]
+    Connectors --> Telegram["telegram package"]
+    Connectors --> WeCom["wecom package"]
     Spring -.discovery strategy.-> Local
-    Connectors -.built-in plugins.-> Local
+    Connectors -.builtin ChannelPlugin SPI.-> Local
     Plugins["plugins/*.jar"] --> Local
     Local --> Boot["intentforge-boot-local"]
     Connectors --> Boot
