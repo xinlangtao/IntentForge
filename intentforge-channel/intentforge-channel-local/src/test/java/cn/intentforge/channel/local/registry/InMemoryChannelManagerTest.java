@@ -4,12 +4,17 @@ import cn.intentforge.channel.ChannelAccountProfile;
 import cn.intentforge.channel.ChannelDeliveryResult;
 import cn.intentforge.channel.ChannelDescriptor;
 import cn.intentforge.channel.ChannelDriver;
+import cn.intentforge.channel.ChannelWebhookHandler;
 import cn.intentforge.channel.ChannelOutboundRequest;
 import cn.intentforge.channel.ChannelSession;
 import cn.intentforge.channel.ChannelTarget;
 import cn.intentforge.channel.ChannelType;
+import cn.intentforge.channel.ChannelWebhookRequest;
+import cn.intentforge.channel.ChannelWebhookResponse;
+import cn.intentforge.channel.ChannelWebhookResult;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -42,6 +47,21 @@ class InMemoryChannelManagerTest {
     Assertions.assertTrue(manager.find("strategy-test").isPresent());
   }
 
+  @Test
+  void shouldOpenWebhookHandlerForSupportedAccount() {
+    InMemoryChannelManager manager = new InMemoryChannelManager();
+    manager.register(new StaticTestChannelDriver("manual-driver", ChannelType.TELEGRAM));
+
+    ChannelAccountProfile accountProfile =
+        new ChannelAccountProfile("telegram-account", ChannelType.TELEGRAM, "Telegram Bot", Map.of("token", "demo"));
+
+    ChannelWebhookHandler webhookHandler = manager.openWebhookHandler(accountProfile).orElseThrow();
+    ChannelWebhookResult result = webhookHandler.handle(new ChannelWebhookRequest("POST", Map.of(), Map.of(), "hello"));
+
+    Assertions.assertEquals(200, result.response().statusCode());
+    Assertions.assertEquals("hello", result.messages().getFirst().text());
+  }
+
   private static final class StaticTestChannelDriver implements ChannelDriver {
     private final ChannelDescriptor descriptor;
 
@@ -67,6 +87,20 @@ class InMemoryChannelManagerTest {
           return new ChannelDeliveryResult(descriptor.id() + ":" + request.text(), "test", java.time.Instant.EPOCH, Map.of());
         }
       };
+    }
+
+    @Override
+    public Optional<ChannelWebhookHandler> openWebhookHandler(ChannelAccountProfile accountProfile) {
+      return Optional.of(request -> new ChannelWebhookResult(
+          List.of(new cn.intentforge.channel.ChannelInboundMessage(
+              "manual-message",
+              accountProfile.id(),
+              accountProfile.type(),
+              new ChannelTarget(accountProfile.id(), "chat-1", null, null, Map.of()),
+              new cn.intentforge.channel.ChannelParticipant("sender-1", "Sender", false, Map.of()),
+              request.body(),
+              Map.of())),
+          new ChannelWebhookResponse(200, "text/plain; charset=utf-8", "OK", Map.of())));
     }
   }
 }
