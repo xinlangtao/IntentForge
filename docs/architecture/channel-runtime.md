@@ -86,3 +86,50 @@ Telegram and WeCom adapters should follow these rules:
 - map outbound send requests from `ChannelOutboundRequest`
 - use `ChannelAccountProfile.properties` and request metadata for connector-specific settings
 - keep routing and access control in shared contracts instead of hard-coded connector logic
+
+## Builtin Connector Coverage
+
+`intentforge-channel-connectors` now includes two concrete outbound connector implementations in addition to the loopback example.
+
+### Telegram
+
+- plugin id: `intentforge.channel.telegram`
+- runtime type: `ChannelType.TELEGRAM`
+- current scope: outbound text delivery via Telegram Bot API `sendMessage`
+- required account properties:
+  - `botToken`: Telegram bot token
+  - `baseUrl`: optional Bot API base URL, defaults to `https://api.telegram.org`
+- target mapping:
+  - `ChannelTarget.conversationId` -> `chat_id`
+  - `ChannelTarget.threadId` -> `message_thread_id`
+- outbound metadata mapping:
+  - `parseMode` -> `parse_mode`
+  - `disableNotification` -> `disable_notification`
+  - `disableWebPagePreview` -> `link_preview_options.is_disabled`
+
+### WeCom
+
+- plugin id: `intentforge.channel.wecom`
+- runtime type: `ChannelType.WECOM`
+- current scope: outbound text delivery for WeCom application messaging
+- required account properties:
+  - `corpId`: enterprise identifier
+  - `agentId`: application agent identifier
+  - `corpSecret`: application secret
+  - `baseUrl`: optional API base URL, defaults to `https://qyapi.weixin.qq.com`
+- token flow:
+  - fetch access token through `gettoken`
+  - cache the token inside the opened channel session until close to expiry
+- target mapping:
+  - prefer `ChannelTarget.recipientId` as `touser`
+  - otherwise use `ChannelTarget.conversationId` as `touser`
+- outbound metadata mapping:
+  - `toParty` -> `toparty`
+  - `toTag` -> `totag`
+  - `safe` -> `safe`
+
+### Current Limits
+
+- both connectors currently focus on outbound text delivery only
+- inbound webhook parsing and callback verification are still future work
+- Telegram media, WeCom rich-media, and advanced interactive payloads are not yet implemented

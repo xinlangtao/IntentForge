@@ -12,15 +12,15 @@ inside `intentforge-channel-connectors`.
 - [x] Provide a pluggable channel runtime spine with shared channel abstractions, manager SPI, local plugin loading, and Spring SPI bridge support.
 - [x] Keep the design ready for future Telegram and WeCom adapters without hard-coding vendor logic into the core module.
 - [x] Update architecture documentation to describe the new channel modules and plugin/runtime extension model.
-- [ ] Add builtin Telegram and WeCom connector plugins to `intentforge-channel-connectors`.
-- [ ] Support real outbound text delivery contracts for Telegram Bot API and WeCom application messaging with connector-specific account properties.
-- [ ] Cover connector descriptor exposure, request mapping, credential validation, and outbound delivery behavior with deterministic tests.
-- [ ] Update architecture documentation to describe the concrete Telegram and WeCom connector behavior and configuration expectations.
-- [ ] Pass `make test` without errors before delivery.
+- [x] Add builtin Telegram and WeCom connector plugins to `intentforge-channel-connectors`.
+- [x] Support real outbound text delivery contracts for Telegram Bot API and WeCom application messaging with connector-specific account properties.
+- [x] Cover connector descriptor exposure, request mapping, credential validation, and outbound delivery behavior with deterministic tests.
+- [x] Update architecture documentation to describe the concrete Telegram and WeCom connector behavior and configuration expectations.
+- [x] Pass `make test` without errors before delivery.
 
 ## Overall Status
 - status: running
-- process: 80%
+- process: 95%
 - current_step: 8
 
 ## Steps
@@ -31,8 +31,8 @@ inside `intentforge-channel-connectors`.
 | 3 | Implement channel core/local/spring/connectors modules and runtime wiring. | finished | commit: c454ec2 |
 | 4 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping. | finished | commit: 6fd8555 |
 | 5 | Refresh task scope for phase two, add red tests for Telegram and WeCom connectors, and verify the expected failing state. | finished | commit: 11196e4 |
-| 6 | Implement Telegram connector plugin, driver, session, and request mapping. | finished | commit: pending |
-| 7 | Implement WeCom connector plugin, driver, session, and token-aware outbound delivery support. | finished | commit: pending |
+| 6 | Implement Telegram connector plugin, driver, session, and request mapping. | finished | commit: dd81ac9 |
+| 7 | Implement WeCom connector plugin, driver, session, and token-aware outbound delivery support. | finished | commit: dd81ac9 |
 | 8 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for connector delivery. | running | commit: pending |
 
 ## Update Log
@@ -47,6 +47,7 @@ inside `intentforge-channel-connectors`.
 | 2026-03-16 08:55:31 +0800 | running | 5% | scope expanded to phase two connector delivery; reopened the task, added Telegram and WeCom connector acceptance criteria, and started the red-test phase |
 | 2026-03-16 08:57:54 +0800 | running | 20% | added red tests for Telegram and WeCom connector plugins plus bootstrap exposure, then verified the expected failing state because the concrete connector classes do not exist yet |
 | 2026-03-16 09:01:11 +0800 | running | 80% | implemented builtin Telegram and WeCom connector plugins, outbound session mapping, HTTP API clients, classpath SPI exposure, and verified the targeted connector plus boot-local tests passed |
+| 2026-03-16 09:02:11 +0800 | running | 95% | documented connector-specific account properties and target mapping, reran full `make test` outside the sandbox, and confirmed the full Maven reactor test suite passed with the new Telegram and WeCom connectors |
 
 ## Sequence Diagram
 
