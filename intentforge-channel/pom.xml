@@ -34,5 +34,7 @@
     <module>intentforge-channel-local</module>
     <module>intentforge-channel-spring</module>
     <module>intentforge-channel-connectors</module>
+    <module>intentforge-channel-telegram</module>
+    <module>intentforge-channel-wecom</module>
   </modules>
 </project>

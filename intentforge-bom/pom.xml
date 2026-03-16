@@ -96,6 +96,16 @@
       </dependency>
       <dependency>
         <groupId>cn.intentforge</groupId>
+        <artifactId>intentforge-channel-telegram</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>cn.intentforge</groupId>
+        <artifactId>intentforge-channel-wecom</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>cn.intentforge</groupId>
         <artifactId>intentforge-prompt-core</artifactId>
         <version>${project.version}</version>
       </dependency>
