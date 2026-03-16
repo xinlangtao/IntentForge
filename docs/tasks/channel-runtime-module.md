@@ -58,13 +58,13 @@ validation without expanding into non-channel upper-layer behaviors.
 - [x] Normalize Telegram `callback_query` updates into `ChannelInboundMessage`.
 - [x] Keep existing Telegram text-bearing message update handling backward compatible.
 - [x] Cover callback-query parsing, valid secret token, missing/invalid secret token, and legacy text updates with deterministic tests.
-- [ ] Update architecture docs to describe the expanded Telegram webhook behavior and configuration.
-- [ ] Pass `make test` without errors after the Telegram enhancement is added.
+- [x] Update architecture docs to describe the expanded Telegram webhook behavior and configuration.
+- [x] Pass `make test` without errors after the Telegram enhancement is added.
 
 ## Overall Status
 - status: running
-- process: 80%
-- current_step: 27
+- process: 98%
+- current_step: 28
 
 ## Steps
 | step | description | status | note |
@@ -94,9 +94,9 @@ validation without expanding into non-channel upper-layer behaviors.
 | 23 | Expose the persisting inbound processor through bootstrap integration and verify runtime behavior. | finished | commit: b2108f7 |
 | 24 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound session persistence. | finished | commit: aba4288 |
 | 25 | Reopen scope for Telegram-only enhancement, add red tests, and verify the expected failing state. | finished | commit: 078c249 |
-| 26 | Implement Telegram callback-query normalization and optional webhook secret-token validation. | finished | commit: pending |
-| 27 | Update docs and rerun validation for the Telegram enhancement. | running | commit: pending |
-| 28 | Finish Telegram-only task bookkeeping and refresh the final Mermaid diagrams. | notrun | commit: pending |
+| 26 | Implement Telegram callback-query normalization and optional webhook secret-token validation. | finished | commit: 0313ba4 |
+| 27 | Update docs and rerun validation for the Telegram enhancement. | finished | commit: pending |
+| 28 | Finish Telegram-only task bookkeeping and refresh the final Mermaid diagrams. | running | commit: pending |
 
 ## Update Log
 | time | status | process | update |
@@ -139,6 +139,8 @@ validation without expanding into non-channel upper-layer behaviors.
 | 2026-03-16 17:25:42 +0800 | running | 5% | scope narrowed to Telegram-only channel enhancement; reopened the task for callback-query normalization and optional webhook secret-token validation while leaving WeCom unchanged |
 | 2026-03-16 17:26:48 +0800 | running | 20% | added Telegram webhook red tests for callback-query parsing and optional secret-token validation, then confirmed the expected failing state because the current Telegram webhook handler still ignores callback queries and accepts unsigned requests |
 | 2026-03-16 17:27:49 +0800 | running | 80% | implemented Telegram callback-query normalization and optional `X-Telegram-Bot-Api-Secret-Token` validation, preserved legacy text-update handling, and verified the targeted Telegram module tests passed |
+| 2026-03-16 17:28:20 +0800 | running | 95% | updated the channel runtime architecture document to describe Telegram callback-query normalization and optional webhook secret-token configuration while keeping the WeCom scope untouched |
+| 2026-03-16 17:28:57 +0800 | running | 98% | reran `make test`, confirmed the full Maven reactor passed with the Telegram-only enhancement, and verified there were no regressions in the shared channel runtime, WeCom connector, or boot modules |
 
 ## Sequence Diagram
 

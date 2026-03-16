@@ -142,6 +142,7 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
 - required account properties:
   - `botToken`: Telegram bot token
   - `baseUrl`: optional Bot API base URL, defaults to `https://api.telegram.org`
+  - `webhookSecretToken`: optional webhook secret token that must match `X-Telegram-Bot-Api-Secret-Token` on inbound requests
 - target mapping:
   - `ChannelTarget.conversationId` -> `chat_id`
   - `ChannelTarget.threadId` -> `message_thread_id`
@@ -151,7 +152,9 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
   - `disableWebPagePreview` -> `link_preview_options.is_disabled`
 - inbound webhook behavior:
   - `POST` JSON updates are parsed through `ChannelWebhookHandler`
+  - when `webhookSecretToken` is configured, inbound requests must provide the matching `X-Telegram-Bot-Api-Secret-Token` header
   - `message`, `edited_message`, `channel_post`, and `edited_channel_post` with `text` are normalized into one `ChannelInboundMessage`
+  - `callback_query` updates with `data` or `game_short_name` are normalized into one `ChannelInboundMessage`, with the callback payload mapped into `text` and callback identifiers stored in metadata
   - non-text updates currently acknowledge with `200 OK` and produce no normalized messages
 
 ### WeCom
@@ -187,7 +190,7 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
 - inbound processing currently stops after `ChannelAccessPolicy` and `ChannelRouteResolver`; it does not yet create or resume agent runs
 - inbound processing currently persists only text-bearing user messages into `SessionManager`
 - inbound processing does not yet trigger `AgentRunGateway` automatically after session persistence
-- Telegram inbound support currently focuses on text-bearing updates only
+- Telegram inbound support currently focuses on text-bearing message updates and callback-query payloads only
 - WeCom inbound support currently focuses on verification echo and plaintext XML text callbacks only
 - WeCom signature verification, message decryption, and encrypted callback responses are still future work
 - Telegram media, WeCom rich-media, and advanced interactive payloads are not yet implemented
