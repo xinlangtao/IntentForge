@@ -13,6 +13,9 @@ that normalize Telegram and WeCom callback payloads into connector-local inbound
 After inbound normalization is complete, continue by wiring the normalized inbound messages into a
 local channel inbound pipeline that evaluates `ChannelAccessPolicy` and `ChannelRouteResolver` and
 exposes the pipeline through `AiAssetLocalRuntime`.
+After the inbound processing pipeline is complete, continue by persisting routed inbound channel
+messages into `SessionManager` through the local runtime so channel-originated user input can be
+recovered from session history.
 
 ## Acceptance Criteria
 - [x] Add a new `intentforge-channel` aggregate module with exactly four submodules wired into the Maven reactor.
@@ -41,11 +44,18 @@ exposes the pipeline through `AiAssetLocalRuntime`.
 - [x] Cover allow, deny, and route fallback cases with deterministic tests.
 - [x] Update architecture docs to describe the inbound processing pipeline and fallback behavior.
 - [x] Pass `make test` without errors after the inbound pipeline is added.
+- [ ] Persist allowed and routed inbound channel messages into `SessionManager`.
+- [ ] Create a session when the routed `sessionId` does not exist yet.
+- [ ] Avoid duplicating a session message when the same inbound message id is processed twice.
+- [ ] Keep session persistence in the local runtime layer instead of coupling `channel-local` to session storage.
+- [ ] Cover session creation, append, and duplicate-skip cases with deterministic tests.
+- [ ] Update architecture docs to describe the inbound session persistence behavior and remaining limits.
+- [ ] Pass `make test` without errors after inbound session persistence is added.
 
 ## Overall Status
-- status: finished
-- process: 100%
-- current_step: completed
+- status: running
+- process: 5%
+- current_step: 21
 
 ## Steps
 | step | description | status | note |
@@ -70,6 +80,10 @@ exposes the pipeline through `AiAssetLocalRuntime`.
 | 18 | Implement the local inbound pipeline and default access-policy plus route-resolution behavior. | finished | commit: 9ee07cd |
 | 19 | Expose the inbound pipeline through local runtime wiring and verify bootstrap integration. | finished | commit: 9ee07cd |
 | 20 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound pipeline support. | finished | commit: eee3fb8 |
+| 21 | Reopen scope for inbound session persistence, add red tests, and verify the expected failing state. | running | commit: pending |
+| 22 | Implement local inbound session persistence and duplicate-skip behavior. | notrun | commit: pending |
+| 23 | Expose the persisting inbound processor through bootstrap integration and verify runtime behavior. | notrun | commit: pending |
+| 24 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound session persistence. | notrun | commit: pending |
 
 ## Update Log
 | time | status | process | update |
@@ -103,6 +117,7 @@ exposes the pipeline through `AiAssetLocalRuntime`.
 | 2026-03-16 10:07:11 +0800 | running | 95% | updated architecture documents to describe the inbound processing pipeline, fallback route behavior, and current limits; final full-reactor validation remains pending |
 | 2026-03-16 10:07:29 +0800 | running | 98% | reran `make test` outside the sandbox, confirmed the full Maven reactor passed with the new inbound processing pipeline, and prepared the final task-bookkeeping update |
 | 2026-03-16 10:09:02 +0800 | finished | 100% | completed acceptance tracking for the inbound processing pipeline, refreshed the Mermaid diagrams to show access-policy and route-resolution flow, and recorded the final task-bookkeeping checkpoint |
+| 2026-03-16 10:14:28 +0800 | running | 5% | scope expanded to inbound session persistence; reopened the task, added session-write acceptance criteria, and started the TDD red phase for persisting routed channel messages into session history |
 
 ## Sequence Diagram
 
