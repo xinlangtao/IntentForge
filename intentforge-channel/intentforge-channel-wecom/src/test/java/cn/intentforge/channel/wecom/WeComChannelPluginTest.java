@@ -21,6 +21,7 @@ class WeComChannelPluginTest {
     Assertions.assertEquals("intentforge.channel.wecom", plugin.drivers().iterator().next().descriptor().id());
     Assertions.assertEquals(ChannelType.WECOM, plugin.drivers().iterator().next().descriptor().type());
     Assertions.assertTrue(plugin.drivers().iterator().next().descriptor().supports(ChannelCapability.SEND_MESSAGES));
+    Assertions.assertTrue(plugin.drivers().iterator().next().descriptor().supports(ChannelCapability.RECEIVE_MESSAGES));
   }
 
   @Test

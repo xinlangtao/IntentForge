@@ -21,6 +21,7 @@ class TelegramChannelPluginTest {
     Assertions.assertEquals("intentforge.channel.telegram", plugin.drivers().iterator().next().descriptor().id());
     Assertions.assertEquals(ChannelType.TELEGRAM, plugin.drivers().iterator().next().descriptor().type());
     Assertions.assertTrue(plugin.drivers().iterator().next().descriptor().supports(ChannelCapability.SEND_MESSAGES));
+    Assertions.assertTrue(plugin.drivers().iterator().next().descriptor().supports(ChannelCapability.RECEIVE_MESSAGES));
     Assertions.assertTrue(plugin.drivers().iterator().next().descriptor().supports(ChannelCapability.THREAD_REPLIES));
   }
 

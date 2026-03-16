@@ -3,6 +3,7 @@ package cn.intentforge.channel.registry;
 import cn.intentforge.channel.ChannelAccountProfile;
 import cn.intentforge.channel.ChannelDriver;
 import cn.intentforge.channel.ChannelSession;
+import cn.intentforge.channel.ChannelWebhookHandler;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +58,14 @@ public interface ChannelManager {
    * @return opened session when a supporting driver exists
    */
   Optional<ChannelSession> openSession(ChannelAccountProfile accountProfile);
+
+  /**
+   * Opens one webhook handler for the provided account profile.
+   *
+   * @param accountProfile account profile
+   * @return opened webhook handler when a supporting driver exists
+   */
+  Optional<ChannelWebhookHandler> openWebhookHandler(ChannelAccountProfile accountProfile);
 
   /**
    * Lists registered drivers.

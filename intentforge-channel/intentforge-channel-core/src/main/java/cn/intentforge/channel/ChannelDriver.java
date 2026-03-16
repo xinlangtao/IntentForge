@@ -1,6 +1,7 @@
 package cn.intentforge.channel;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Defines one pluggable channel driver.
@@ -33,4 +34,15 @@ public interface ChannelDriver {
    * @return opened session
    */
   ChannelSession openSession(ChannelAccountProfile accountProfile);
+
+  /**
+   * Opens one webhook handler for the provided account profile when inbound callbacks are supported.
+   *
+   * @param accountProfile account profile
+   * @return opened webhook handler when supported
+   */
+  default Optional<ChannelWebhookHandler> openWebhookHandler(ChannelAccountProfile accountProfile) {
+    Objects.requireNonNull(accountProfile, "accountProfile must not be null");
+    return Optional.empty();
+  }
 }
