@@ -18,16 +18,16 @@ inside `intentforge-channel-connectors`.
 - [x] Cover connector descriptor exposure, request mapping, credential validation, and outbound delivery behavior with deterministic tests.
 - [x] Update architecture documentation to describe the concrete Telegram and WeCom connector behavior and configuration expectations.
 - [x] Pass `make test` without errors before delivery.
-- [ ] Move Telegram connector code and SPI registration into `intentforge-channel-telegram`.
-- [ ] Move WeCom connector code and SPI registration into `intentforge-channel-wecom`.
-- [ ] Keep `intentforge-channel-connectors` focused on generic or loopback connector support after the split.
-- [ ] Update Maven reactor, BOM, bootstrap dependencies, and docs to reflect the new per-channel module layout.
-- [ ] Pass `make test` without errors after the module split.
+- [x] Move Telegram connector code and SPI registration into `intentforge-channel-telegram`.
+- [x] Move WeCom connector code and SPI registration into `intentforge-channel-wecom`.
+- [x] Keep `intentforge-channel-connectors` focused on generic or loopback connector support after the split.
+- [x] Update Maven reactor, BOM, bootstrap dependencies, and docs to reflect the new per-channel module layout.
+- [x] Pass `make test` without errors after the module split.
 
 ## Overall Status
-- status: running
-- process: 80%
-- current_step: 12
+- status: finished
+- process: 100%
+- current_step: completed
 
 ## Steps
 | step | description | status | note |
@@ -41,9 +41,9 @@ inside `intentforge-channel-connectors`.
 | 7 | Implement WeCom connector plugin, driver, session, and token-aware outbound delivery support. | finished | commit: dd81ac9 |
 | 8 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for connector delivery. | finished | commit: f724f0c |
 | 9 | Reopen scope for per-channel module split, add red tests and module assertions, and verify the expected failing state. | finished | commit: 4f89ddb |
-| 10 | Move Telegram implementation into `intentforge-channel-telegram` and update runtime wiring. | finished | commit: pending |
-| 11 | Move WeCom implementation into `intentforge-channel-wecom` and update runtime wiring. | finished | commit: pending |
-| 12 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for the module split. | running | commit: pending |
+| 10 | Move Telegram implementation into `intentforge-channel-telegram` and update runtime wiring. | finished | commit: 9d6bac2 |
+| 11 | Move WeCom implementation into `intentforge-channel-wecom` and update runtime wiring. | finished | commit: 9d6bac2 |
+| 12 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for the module split. | finished | commit: d804f3f |
 
 ## Update Log
 | time | status | process | update |
@@ -62,6 +62,9 @@ inside `intentforge-channel-connectors`.
 | 2026-03-16 09:28:40 +0800 | running | 5% | scope expanded again to split Telegram and WeCom into dedicated channel submodules; started the refactor red phase for reactor, BOM, and bootstrap wiring changes |
 | 2026-03-16 09:29:55 +0800 | running | 20% | added dedicated Telegram and WeCom module skeletons plus module-local tests, then verified the expected failing state because the implementations still live in `intentforge-channel-connectors` |
 | 2026-03-16 09:31:22 +0800 | running | 80% | moved Telegram and WeCom production code plus SPI resources into dedicated channel submodules, trimmed `intentforge-channel-connectors` back to loopback support, updated boot-local dependencies, and verified targeted module tests passed |
+| 2026-03-16 09:31:22 +0800 | running | 95% | updated README and architecture documents to reflect the new `intentforge-channel-telegram` and `intentforge-channel-wecom` module layout; final full-reactor validation remains pending |
+| 2026-03-16 09:34:13 +0800 | running | 98% | reran `make test` outside the sandbox, confirmed the full Maven reactor passed with the split `intentforge-channel-telegram` and `intentforge-channel-wecom` modules, and prepared the documentation checkpoint commit `d804f3f` |
+| 2026-03-16 09:36:02 +0800 | finished | 100% | recorded the final task-bookkeeping checkpoint, completed acceptance tracking for the per-channel module split, and refreshed the module relationship diagram to show the dedicated Telegram and WeCom child modules |
 
 ## Sequence Diagram
 
@@ -89,12 +92,16 @@ flowchart LR
     Core["intentforge-channel-core"] --> Local["intentforge-channel-local"]
     Core --> Spring["intentforge-channel-spring"]
     Core --> Connectors["intentforge-channel-connectors"]
-    Connectors --> Telegram["telegram package"]
-    Connectors --> WeCom["wecom package"]
+    Core --> Telegram["intentforge-channel-telegram"]
+    Core --> WeCom["intentforge-channel-wecom"]
     Spring -.discovery strategy.-> Local
     Connectors -.builtin ChannelPlugin SPI.-> Local
+    Telegram -.builtin ChannelPlugin SPI.-> Local
+    WeCom -.builtin ChannelPlugin SPI.-> Local
     Plugins["plugins/*.jar"] --> Local
     Local --> Boot["intentforge-boot-local"]
     Connectors --> Boot
+    Telegram --> Boot
+    WeCom --> Boot
     Boot --> Runtime["AiAssetLocalRuntime / RuntimeCatalog"]
 ```
