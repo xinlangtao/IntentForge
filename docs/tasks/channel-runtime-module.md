@@ -62,9 +62,9 @@ validation without expanding into non-channel upper-layer behaviors.
 - [x] Pass `make test` without errors after the Telegram enhancement is added.
 
 ## Overall Status
-- status: running
-- process: 98%
-- current_step: 28
+- status: finished
+- process: 100%
+- current_step: completed
 
 ## Steps
 | step | description | status | note |
@@ -95,8 +95,8 @@ validation without expanding into non-channel upper-layer behaviors.
 | 24 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound session persistence. | finished | commit: aba4288 |
 | 25 | Reopen scope for Telegram-only enhancement, add red tests, and verify the expected failing state. | finished | commit: 078c249 |
 | 26 | Implement Telegram callback-query normalization and optional webhook secret-token validation. | finished | commit: 0313ba4 |
-| 27 | Update docs and rerun validation for the Telegram enhancement. | finished | commit: pending |
-| 28 | Finish Telegram-only task bookkeeping and refresh the final Mermaid diagrams. | running | commit: pending |
+| 27 | Update docs and rerun validation for the Telegram enhancement. | finished | commit: 3371997 |
+| 28 | Finish Telegram-only task bookkeeping and refresh the final Mermaid diagrams. | finished | commit: 3371997 |
 
 ## Update Log
 | time | status | process | update |
@@ -141,6 +141,7 @@ validation without expanding into non-channel upper-layer behaviors.
 | 2026-03-16 17:27:49 +0800 | running | 80% | implemented Telegram callback-query normalization and optional `X-Telegram-Bot-Api-Secret-Token` validation, preserved legacy text-update handling, and verified the targeted Telegram module tests passed |
 | 2026-03-16 17:28:20 +0800 | running | 95% | updated the channel runtime architecture document to describe Telegram callback-query normalization and optional webhook secret-token configuration while keeping the WeCom scope untouched |
 | 2026-03-16 17:28:57 +0800 | running | 98% | reran `make test`, confirmed the full Maven reactor passed with the Telegram-only enhancement, and verified there were no regressions in the shared channel runtime, WeCom connector, or boot modules |
+| 2026-03-16 17:30:24 +0800 | finished | 100% | completed acceptance tracking for the Telegram-only enhancement, refreshed the diagrams to show webhook secret validation and callback-query branching, and closed the channel task bookkeeping again |
 
 ## Sequence Diagram
 
@@ -150,23 +151,33 @@ sequenceDiagram
     participant Persistor as PersistingChannelInboundProcessor
     participant Processor as DefaultChannelInboundProcessor
     participant Manager as ChannelManager
-    participant Handler as ChannelWebhookHandler
+    participant Handler as TelegramWebhookHandler
     participant Access as ChannelAccessPolicy
     participant Route as ChannelRouteResolver
     participant Session as SessionManager
     Runtime->>Persistor: process(accountProfile, request)
     Persistor->>Processor: process(accountProfile, request)
     Processor->>Manager: openWebhookHandler(accountProfile)
-    Manager-->>Processor: account-bound ChannelWebhookHandler
+    Manager-->>Processor: account-bound TelegramWebhookHandler
     Processor->>Handler: handle(ChannelWebhookRequest)
-    Handler-->>Processor: ChannelWebhookResult(messages, response)
-    loop each normalized inbound message
-        Processor->>Access: evaluate(message)
-        alt allowed
-            Processor->>Route: resolve(message)
-            Route-->>Processor: Optional<ChannelRouteDecision>
-        else denied
-            Processor-->>Processor: keep empty route decision
+    alt secret token mismatch
+        Handler-->>Processor: ChannelWebhookResult([], 401)
+    else webhook accepted
+        alt callback_query with data
+            Handler-->>Processor: ChannelWebhookResult(callback message, 200)
+        else text-bearing message update
+            Handler-->>Processor: ChannelWebhookResult(text message, 200)
+        else unsupported update
+            Handler-->>Processor: ChannelWebhookResult([], 200)
+        end
+        loop each normalized inbound message
+            Processor->>Access: evaluate(message)
+            alt allowed
+                Processor->>Route: resolve(message)
+                Route-->>Processor: Optional<ChannelRouteDecision>
+            else denied
+                Processor-->>Processor: keep empty route decision
+            end
         end
     end
     Processor-->>Persistor: ChannelInboundProcessingResult
@@ -197,6 +208,7 @@ flowchart LR
     WeCom -.builtin ChannelPlugin SPI.-> Local
     Plugins["plugins/*.jar"] --> Local
     Local --> Processor["DefaultChannelInboundProcessor"]
+    Telegram --> TelegramHandler["TelegramWebhookHandler"]
     Processor --> Webhook
     Processor --> Policy["ChannelAccessPolicy SPI"]
     Processor --> Resolver["ChannelRouteResolver SPI"]
@@ -204,7 +216,10 @@ flowchart LR
     Connectors --> Boot
     Telegram --> Boot
     WeCom --> Boot
-    Webhook --> Telegram
+    Webhook --> TelegramHandler
+    TelegramHandler --> Secret["Optional secret-token validation"]
+    TelegramHandler --> Callback["callback_query normalization"]
+    TelegramHandler --> Text["text update normalization"]
     Webhook --> WeCom
     Inbound --> Processor
     Boot --> Persistor["PersistingChannelInboundProcessor"]
