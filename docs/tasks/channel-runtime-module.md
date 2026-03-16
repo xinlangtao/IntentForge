@@ -54,17 +54,17 @@ validation without expanding into non-channel upper-layer behaviors.
 - [x] Cover session creation, append, and duplicate-skip cases with deterministic tests.
 - [x] Update architecture docs to describe the inbound session persistence behavior and remaining limits.
 - [x] Pass `make test` without errors after inbound session persistence is added.
-- [ ] Add optional Telegram webhook secret-token validation based on account properties.
-- [ ] Normalize Telegram `callback_query` updates into `ChannelInboundMessage`.
-- [ ] Keep existing Telegram text-bearing message update handling backward compatible.
-- [ ] Cover callback-query parsing, valid secret token, missing/invalid secret token, and legacy text updates with deterministic tests.
+- [x] Add optional Telegram webhook secret-token validation based on account properties.
+- [x] Normalize Telegram `callback_query` updates into `ChannelInboundMessage`.
+- [x] Keep existing Telegram text-bearing message update handling backward compatible.
+- [x] Cover callback-query parsing, valid secret token, missing/invalid secret token, and legacy text updates with deterministic tests.
 - [ ] Update architecture docs to describe the expanded Telegram webhook behavior and configuration.
 - [ ] Pass `make test` without errors after the Telegram enhancement is added.
 
 ## Overall Status
 - status: running
-- process: 20%
-- current_step: 26
+- process: 80%
+- current_step: 27
 
 ## Steps
 | step | description | status | note |
@@ -93,9 +93,9 @@ validation without expanding into non-channel upper-layer behaviors.
 | 22 | Implement local inbound session persistence and duplicate-skip behavior. | finished | commit: b2108f7 |
 | 23 | Expose the persisting inbound processor through bootstrap integration and verify runtime behavior. | finished | commit: b2108f7 |
 | 24 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound session persistence. | finished | commit: aba4288 |
-| 25 | Reopen scope for Telegram-only enhancement, add red tests, and verify the expected failing state. | finished | commit: pending |
-| 26 | Implement Telegram callback-query normalization and optional webhook secret-token validation. | running | commit: pending |
-| 27 | Update docs and rerun validation for the Telegram enhancement. | notrun | commit: pending |
+| 25 | Reopen scope for Telegram-only enhancement, add red tests, and verify the expected failing state. | finished | commit: 078c249 |
+| 26 | Implement Telegram callback-query normalization and optional webhook secret-token validation. | finished | commit: pending |
+| 27 | Update docs and rerun validation for the Telegram enhancement. | running | commit: pending |
 | 28 | Finish Telegram-only task bookkeeping and refresh the final Mermaid diagrams. | notrun | commit: pending |
 
 ## Update Log
@@ -138,6 +138,7 @@ validation without expanding into non-channel upper-layer behaviors.
 | 2026-03-16 10:14:37 +0800 | finished | 100% | completed acceptance tracking for inbound session persistence, refreshed the Mermaid diagrams to show the boot-local persistence decorator and `SessionManager` write path, and closed the task bookkeeping |
 | 2026-03-16 17:25:42 +0800 | running | 5% | scope narrowed to Telegram-only channel enhancement; reopened the task for callback-query normalization and optional webhook secret-token validation while leaving WeCom unchanged |
 | 2026-03-16 17:26:48 +0800 | running | 20% | added Telegram webhook red tests for callback-query parsing and optional secret-token validation, then confirmed the expected failing state because the current Telegram webhook handler still ignores callback queries and accepts unsigned requests |
+| 2026-03-16 17:27:49 +0800 | running | 80% | implemented Telegram callback-query normalization and optional `X-Telegram-Bot-Api-Secret-Token` validation, preserved legacy text-update handling, and verified the targeted Telegram module tests passed |
 
 ## Sequence Diagram
 

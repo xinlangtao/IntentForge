@@ -29,6 +29,9 @@ import java.util.Objects;
 final class TelegramWebhookHandler implements ChannelWebhookHandler {
   private static final ChannelWebhookResponse OK_RESPONSE =
       new ChannelWebhookResponse(200, "text/plain; charset=utf-8", "OK", Map.of());
+  private static final ChannelWebhookResponse UNAUTHORIZED_RESPONSE =
+      new ChannelWebhookResponse(401, "text/plain; charset=utf-8", "unauthorized", Map.of());
+  private static final String SECRET_TOKEN_HEADER = "X-Telegram-Bot-Api-Secret-Token";
 
   private final ChannelAccountProfile accountProfile;
   private final ObjectMapper objectMapper;
@@ -54,11 +57,22 @@ final class TelegramWebhookHandler implements ChannelWebhookHandler {
               "method not allowed",
               Map.of("Allow", "POST")));
     }
+    if (!secretTokenMatches(request)) {
+      return new ChannelWebhookResult(List.of(), UNAUTHORIZED_RESPONSE);
+    }
     JsonNode root = readPayload(requireText(request.body(), "body"));
+    JsonNode callbackQuery = root.get("callback_query");
+    if (callbackQuery != null && !callbackQuery.isNull()) {
+      return callbackQueryResult(root, callbackQuery);
+    }
     JsonNode message = firstMessageNode(root);
     if (message == null) {
       return new ChannelWebhookResult(List.of(), OK_RESPONSE);
     }
+    return messageResult(root, message);
+  }
+
+  private ChannelWebhookResult messageResult(JsonNode root, JsonNode message) {
     String text = textValue(message.get("text"));
     if (text == null) {
       return new ChannelWebhookResult(List.of(), OK_RESPONSE);
@@ -75,6 +89,7 @@ final class TelegramWebhookHandler implements ChannelWebhookHandler {
     putIfPresent(senderAttributes, "languageCode", textValue(sender.get("language_code")));
     Map<String, Object> metadata = new LinkedHashMap<>();
     putIfPresent(metadata, "updateId", longValue(root.get("update_id")));
+    putIfPresent(metadata, "updateKind", "message");
     putIfPresent(metadata, "chatId", chatId);
     putIfPresent(metadata, "messageId", inboundMessageId);
     putIfPresent(metadata, "chatType", textValue(chat.get("type")));
@@ -100,12 +115,77 @@ final class TelegramWebhookHandler implements ChannelWebhookHandler {
         OK_RESPONSE);
   }
 
+  private ChannelWebhookResult callbackQueryResult(JsonNode root, JsonNode callbackQuery) {
+    String callbackData = firstNonBlank(textValue(callbackQuery.get("data")), textValue(callbackQuery.get("game_short_name")));
+    if (callbackData == null) {
+      return new ChannelWebhookResult(List.of(), OK_RESPONSE);
+    }
+    JsonNode message = callbackQuery.get("message");
+    if (message == null || message.isNull()) {
+      return new ChannelWebhookResult(List.of(), OK_RESPONSE);
+    }
+    JsonNode chat = Objects.requireNonNull(message.get("chat"), "callback_query.message.chat must not be null");
+    JsonNode sender = Objects.requireNonNull(callbackQuery.get("from"), "callback_query.from must not be null");
+    String chatId = requireText(textValue(chat.get("id")), "callback_query.message.chat.id");
+    String callbackQueryId = requireText(textValue(callbackQuery.get("id")), "callback_query.id");
+    String originMessageId = requireText(textValue(message.get("message_id")), "callback_query.message.message_id");
+    Map<String, String> targetAttributes = new LinkedHashMap<>();
+    putIfPresent(targetAttributes, "chatType", textValue(chat.get("type")));
+    putIfPresent(targetAttributes, "chatTitle", textValue(chat.get("title")));
+    Map<String, String> senderAttributes = new LinkedHashMap<>();
+    putIfPresent(senderAttributes, "username", textValue(sender.get("username")));
+    putIfPresent(senderAttributes, "languageCode", textValue(sender.get("language_code")));
+    Map<String, Object> metadata = new LinkedHashMap<>();
+    putIfPresent(metadata, "updateId", longValue(root.get("update_id")));
+    putIfPresent(metadata, "updateKind", "callback_query");
+    putIfPresent(metadata, "callbackQueryId", callbackQueryId);
+    putIfPresent(metadata, "callbackData", callbackData);
+    putIfPresent(metadata, "chatId", chatId);
+    putIfPresent(metadata, "messageId", originMessageId);
+    putIfPresent(metadata, "chatType", textValue(chat.get("type")));
+    putIfPresent(metadata, "messageCreatedAt", instantValue(message.get("date")));
+    putIfPresent(metadata, "chatInstance", textValue(callbackQuery.get("chat_instance")));
+    // Map callback data into text so the existing inbound pipeline can route and persist it without new shared abstractions.
+    return new ChannelWebhookResult(
+        List.of(new ChannelInboundMessage(
+            "callback:" + callbackQueryId,
+            accountProfile.id(),
+            ChannelType.TELEGRAM,
+            new ChannelTarget(
+                accountProfile.id(),
+                chatId,
+                textValue(message.get("message_thread_id")),
+                null,
+                Map.copyOf(targetAttributes)),
+            new ChannelParticipant(
+                requireText(textValue(sender.get("id")), "callback_query.from.id"),
+                displayName(sender),
+                booleanValue(sender.get("is_bot")),
+                Map.copyOf(senderAttributes)),
+            callbackData,
+            Map.copyOf(metadata))),
+        OK_RESPONSE);
+  }
+
   private JsonNode readPayload(String body) {
     try {
       return objectMapper.readTree(body);
     } catch (IOException ex) {
       throw new IllegalArgumentException("invalid Telegram webhook payload", ex);
     }
+  }
+
+  private boolean secretTokenMatches(ChannelWebhookRequest request) {
+    String configuredSecretToken = configuredSecretToken();
+    if (configuredSecretToken == null) {
+      return true;
+    }
+    return configuredSecretToken.equals(request.firstHeader(SECRET_TOKEN_HEADER));
+  }
+
+  private String configuredSecretToken() {
+    Object configuredSecretToken = accountProfile.properties().get("webhookSecretToken");
+    return configuredSecretToken == null ? null : normalize(String.valueOf(configuredSecretToken));
   }
 
   private static JsonNode firstMessageNode(JsonNode root) {
@@ -144,6 +224,11 @@ final class TelegramWebhookHandler implements ChannelWebhookHandler {
       return null;
     }
     return normalize(node.asText());
+  }
+
+  private static String firstNonBlank(String preferred, String fallback) {
+    String normalizedPreferred = normalize(preferred);
+    return normalizedPreferred == null ? normalize(fallback) : normalizedPreferred;
   }
 
   private static Long longValue(JsonNode node) {
