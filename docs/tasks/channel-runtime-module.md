@@ -10,6 +10,9 @@ inside `intentforge-channel-connectors`.
 After the outbound delivery and module split work is complete, continue by adding inbound webhook adapters
 that normalize Telegram and WeCom callback payloads into connector-local inbound models and shared
 `ChannelInboundMessage` records.
+After inbound normalization is complete, continue by wiring the normalized inbound messages into a
+local channel inbound pipeline that evaluates `ChannelAccessPolicy` and `ChannelRouteResolver` and
+exposes the pipeline through `AiAssetLocalRuntime`.
 
 ## Acceptance Criteria
 - [x] Add a new `intentforge-channel` aggregate module with exactly four submodules wired into the Maven reactor.
@@ -32,11 +35,17 @@ that normalize Telegram and WeCom callback payloads into connector-local inbound
 - [x] Cover normal, boundary, and invalid inbound payload cases with deterministic tests.
 - [x] Update architecture docs to describe inbound webhook support and current limits.
 - [x] Pass `make test` without errors after inbound webhook support is added.
+- [ ] Add a local inbound channel pipeline that evaluates `ChannelAccessPolicy` for normalized webhook messages.
+- [ ] Add route resolution that maps allowed inbound channel messages into `ChannelRouteDecision`.
+- [ ] Expose the inbound pipeline through `AiAssetLocalRuntime`.
+- [ ] Cover allow, deny, and route fallback cases with deterministic tests.
+- [ ] Update architecture docs to describe the inbound processing pipeline and fallback behavior.
+- [ ] Pass `make test` without errors after the inbound pipeline is added.
 
 ## Overall Status
-- status: finished
-- process: 100%
-- current_step: completed
+- status: running
+- process: 5%
+- current_step: 17
 
 ## Steps
 | step | description | status | note |
@@ -57,6 +66,10 @@ that normalize Telegram and WeCom callback payloads into connector-local inbound
 | 14 | Implement Telegram inbound webhook normalization and update connector capabilities. | finished | commit: bbe9782 |
 | 15 | Implement WeCom inbound callback normalization and update connector capabilities. | finished | commit: bbe9782 |
 | 16 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound webhook support. | finished | commit: efc8809 |
+| 17 | Reopen scope for the inbound processing pipeline, add red tests, and verify the expected failing state. | running | commit: pending |
+| 18 | Implement the local inbound pipeline and default access-policy plus route-resolution behavior. | notrun | commit: pending |
+| 19 | Expose the inbound pipeline through local runtime wiring and verify bootstrap integration. | notrun | commit: pending |
+| 20 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound pipeline support. | notrun | commit: pending |
 
 ## Update Log
 | time | status | process | update |
@@ -84,6 +97,7 @@ that normalize Telegram and WeCom callback payloads into connector-local inbound
 | 2026-03-16 09:52:11 +0800 | running | 95% | updated architecture documents to describe the shared webhook abstractions plus Telegram and WeCom inbound normalization limits; final full-reactor validation remains pending |
 | 2026-03-16 09:52:34 +0800 | running | 98% | reran `make test` outside the sandbox, confirmed the full Maven reactor passed with the new channel inbound webhook support, and prepared the final task-bookkeeping update |
 | 2026-03-16 09:54:18 +0800 | finished | 100% | completed acceptance tracking for Telegram and WeCom inbound webhook normalization, refreshed the Mermaid diagrams to show the inbound flow, and recorded the final task-bookkeeping checkpoint |
+| 2026-03-16 10:00:42 +0800 | running | 5% | scope expanded to the inbound processing pipeline; reopened the task, added access-policy and route-resolution acceptance criteria, and started the TDD red phase for local runtime integration |
 
 ## Sequence Diagram
 
