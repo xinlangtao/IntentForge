@@ -4,6 +4,11 @@ import cn.intentforge.api.agent.AgentRunApplicationService;
 import cn.intentforge.api.agent.AgentRunController;
 import cn.intentforge.boot.local.AiAssetLocalBootstrap;
 import cn.intentforge.boot.local.AiAssetLocalRuntime;
+import cn.intentforge.hook.ChannelWebhookEndpointController;
+import cn.intentforge.hook.ChannelWebhookHttpExchangeHandler;
+import cn.intentforge.hook.HookAccountRegistry;
+import cn.intentforge.hook.HookHttpRouteRegistrar;
+import cn.intentforge.hook.InMemoryHookAccountRegistry;
 import cn.intentforge.space.SpaceRegistry;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
@@ -39,6 +44,7 @@ public final class AiAssetServerBootstrap {
    * @param pluginsDirectory plugin directory used by the local runtime
    * @param spaceConfigurer callback used to register initial spaces
    * @param runtimeConfigurer callback used to seed runtime state before the server starts
+   * @param hookConfigurer callback used to seed hook-visible channel accounts before the server starts
    * @return running server runtime
    * @throws IOException when the JDK HTTP server cannot be created
    */
@@ -46,7 +52,8 @@ public final class AiAssetServerBootstrap {
       InetSocketAddress bindAddress,
       Path pluginsDirectory,
       Consumer<SpaceRegistry> spaceConfigurer,
-      Consumer<AiAssetLocalRuntime> runtimeConfigurer
+      Consumer<AiAssetLocalRuntime> runtimeConfigurer,
+      Consumer<HookAccountRegistry> hookConfigurer
   ) throws IOException {
     InetSocketAddress nonNullBindAddress = Objects.requireNonNull(bindAddress, "bindAddress must not be null");
     Path nonNullPluginsDirectory = Objects.requireNonNull(pluginsDirectory, "pluginsDirectory must not be null");
@@ -54,6 +61,8 @@ public final class AiAssetServerBootstrap {
     } : spaceConfigurer;
     Consumer<AiAssetLocalRuntime> nonNullRuntimeConfigurer = runtimeConfigurer == null ? runtime -> {
     } : runtimeConfigurer;
+    Consumer<HookAccountRegistry> nonNullHookConfigurer = hookConfigurer == null ? registry -> {
+    } : hookConfigurer;
 
     AiAssetLocalRuntime localRuntime = AiAssetLocalBootstrap.bootstrap(nonNullPluginsDirectory, nonNullSpaceConfigurer);
     nonNullRuntimeConfigurer.accept(localRuntime);
@@ -69,6 +78,12 @@ public final class AiAssetServerBootstrap {
     AgentRunHttpExchangeHandler httpHandler = new AgentRunHttpExchangeHandler(
         controller,
         eventBroker);
+    InMemoryHookAccountRegistry hookAccountRegistry = new InMemoryHookAccountRegistry();
+    nonNullHookConfigurer.accept(hookAccountRegistry);
+    HookHttpRouteRegistrar.register(
+        server,
+        new ChannelWebhookHttpExchangeHandler(
+            new ChannelWebhookEndpointController(hookAccountRegistry, localRuntime.channelInboundProcessor())));
     server.createContext("/api/agent-runs", httpHandler::handleRunsRoot);
     server.createContext("/api/agent-runs/", httpHandler::handleRunResource);
     server.start();
@@ -82,6 +97,44 @@ public final class AiAssetServerBootstrap {
    * @param pluginsDirectory plugin directory used by the local runtime
    * @param spaceConfigurer callback used to register initial spaces
    * @param runtimeConfigurer callback used to seed runtime state before the server starts
+   * @param hookConfigurer callback used to seed hook-visible channel accounts before the server starts
+   * @return running server runtime
+   * @throws IOException when the JDK HTTP server cannot be created
+   */
+  public static AiAssetServerRuntime bootstrap(
+      Path pluginsDirectory,
+      Consumer<SpaceRegistry> spaceConfigurer,
+      Consumer<AiAssetLocalRuntime> runtimeConfigurer,
+      Consumer<HookAccountRegistry> hookConfigurer
+  ) throws IOException {
+    return bootstrap(new InetSocketAddress(DEFAULT_HOST, DEFAULT_PORT), pluginsDirectory, spaceConfigurer, runtimeConfigurer, hookConfigurer);
+  }
+
+  /**
+   * Bootstraps and starts the server with runtime customization hooks and no explicit hook-account seeding.
+   *
+   * @param bindAddress target bind address
+   * @param pluginsDirectory plugin directory used by the local runtime
+   * @param spaceConfigurer callback used to register initial spaces
+   * @param runtimeConfigurer callback used to seed runtime state before the server starts
+   * @return running server runtime
+   * @throws IOException when the JDK HTTP server cannot be created
+   */
+  public static AiAssetServerRuntime bootstrap(
+      InetSocketAddress bindAddress,
+      Path pluginsDirectory,
+      Consumer<SpaceRegistry> spaceConfigurer,
+      Consumer<AiAssetLocalRuntime> runtimeConfigurer
+  ) throws IOException {
+    return bootstrap(bindAddress, pluginsDirectory, spaceConfigurer, runtimeConfigurer, null);
+  }
+
+  /**
+   * Bootstraps and starts the server with default host and port and no explicit hook-account seeding.
+   *
+   * @param pluginsDirectory plugin directory used by the local runtime
+   * @param spaceConfigurer callback used to register initial spaces
+   * @param runtimeConfigurer callback used to seed runtime state before the server starts
    * @return running server runtime
    * @throws IOException when the JDK HTTP server cannot be created
    */
@@ -90,7 +143,7 @@ public final class AiAssetServerBootstrap {
       Consumer<SpaceRegistry> spaceConfigurer,
       Consumer<AiAssetLocalRuntime> runtimeConfigurer
   ) throws IOException {
-    return bootstrap(new InetSocketAddress(DEFAULT_HOST, DEFAULT_PORT), pluginsDirectory, spaceConfigurer, runtimeConfigurer);
+    return bootstrap(new InetSocketAddress(DEFAULT_HOST, DEFAULT_PORT), pluginsDirectory, spaceConfigurer, runtimeConfigurer, null);
   }
 
   private static URI baseUri(HttpServer server) {

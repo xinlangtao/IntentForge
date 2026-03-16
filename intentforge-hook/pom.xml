@@ -21,16 +21,6 @@
       <artifactId>intentforge-channel-core</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>cn.intentforge</groupId>
-      <artifactId>intentforge-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-json</artifactId>
-      <version>${spring.boot.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>

@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -94,6 +95,81 @@ class ChannelWebhookHttpExchangeHandlerTest {
           HttpResponse.BodyHandlers.ofString());
 
       Assertions.assertEquals(404, response.statusCode());
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void shouldForwardMethodHeadersAndQueryParametersToInboundProcessor() throws Exception {
+    InMemoryHookAccountRegistry accountRegistry = new InMemoryHookAccountRegistry();
+    accountRegistry.register(new ChannelAccountProfile(
+        "wecom-account",
+        ChannelType.WECOM,
+        "WeCom App",
+        Map.of("corpId", "corp-id", "agentId", "1000001", "corpSecret", "corp-secret")));
+    AtomicReference<ChannelWebhookRequest> capturedRequest = new AtomicReference<>();
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    try {
+      HookHttpRouteRegistrar.register(server, new ChannelWebhookHttpExchangeHandler(
+          new ChannelWebhookEndpointController(
+              accountRegistry,
+              (accountProfile, request) -> {
+                capturedRequest.set(request);
+                return new ChannelInboundProcessingResult(
+                    new ChannelWebhookResponse(200, "text/plain; charset=utf-8", request.firstQueryParameter("echostr"), Map.of()),
+                    List.of());
+              })));
+      server.start();
+
+      HttpResponse<String> response = HttpClient.newHttpClient().send(
+          HttpRequest.newBuilder(URI.create(
+                  "http://127.0.0.1:" + server.getAddress().getPort()
+                      + "/open-api/hooks/channels/wecom/accounts/wecom-account/webhook"
+                      + "?msg_signature=signature&timestamp=1710000000&nonce=random&echostr=hello%20world"))
+              .header("X-Test-Header", "header-value")
+              .GET()
+              .build(),
+          HttpResponse.BodyHandlers.ofString());
+
+      Assertions.assertEquals(200, response.statusCode());
+      Assertions.assertEquals("hello world", response.body());
+      Assertions.assertEquals("GET", capturedRequest.get().method());
+      Assertions.assertEquals("header-value", capturedRequest.get().firstHeader("x-test-header"));
+      Assertions.assertEquals("signature", capturedRequest.get().firstQueryParameter("msg_signature"));
+      Assertions.assertEquals("hello world", capturedRequest.get().firstQueryParameter("echostr"));
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void shouldReturnInternalServerErrorWhenInboundProcessorFails() throws Exception {
+    InMemoryHookAccountRegistry accountRegistry = new InMemoryHookAccountRegistry();
+    accountRegistry.register(new ChannelAccountProfile(
+        "telegram-account",
+        ChannelType.TELEGRAM,
+        "Telegram Bot",
+        Map.of("botToken", "bot-token")));
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    try {
+      HookHttpRouteRegistrar.register(server, new ChannelWebhookHttpExchangeHandler(
+          new ChannelWebhookEndpointController(accountRegistry, (accountProfile, request) -> {
+            throw new IllegalStateException("boom");
+          })));
+      server.start();
+
+      HttpResponse<String> response = HttpClient.newHttpClient().send(
+          HttpRequest.newBuilder(URI.create(
+                  "http://127.0.0.1:" + server.getAddress().getPort()
+                      + "/open-api/hooks/channels/telegram/accounts/telegram-account/webhook"))
+              .header("Content-Type", "application/json")
+              .POST(HttpRequest.BodyPublishers.ofString("{\"update_id\":9001}"))
+              .build(),
+          HttpResponse.BodyHandlers.ofString());
+
+      Assertions.assertEquals(500, response.statusCode());
+      Assertions.assertEquals("internal server error", response.body());
     } finally {
       server.stop(0);
     }

@@ -7,7 +7,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class HookBootstrapRedTest {
+class HookBootstrapIntegrationTest {
   @Test
   void shouldExposeGenericChannelHookRouteForTelegram() throws Exception {
     try (AiAssetServerRuntime runtime = AiAssetServerBootstrap.bootstrap(
