@@ -12,7 +12,9 @@ It is designed for pluggable multi-channel integrations such as Telegram and WeC
 | `intentforge-channel-core` | Shared channel descriptors, account/target/message models, routing contracts, and manager/plugin SPI |
 | `intentforge-channel-local` | In-memory `ChannelManager`, classpath plugin loading, and external plugin directory loading |
 | `intentforge-channel-spring` | Spring `spring.factories` discovery bridge that contributes `ChannelPlugin` instances through a dedicated SPI strategy |
-| `intentforge-channel-connectors` | Built-in connector implementations and reusable connector entrypoints |
+| `intentforge-channel-connectors` | Loopback and generic connector support entrypoints |
+| `intentforge-channel-telegram` | Telegram Bot API outbound connector |
+| `intentforge-channel-wecom` | WeCom application messaging outbound connector |
 
 ## Core Model
 
@@ -89,10 +91,11 @@ Telegram and WeCom adapters should follow these rules:
 
 ## Builtin Connector Coverage
 
-`intentforge-channel-connectors` now includes two concrete outbound connector implementations in addition to the loopback example.
+Concrete vendor connectors now live in dedicated child modules, while `intentforge-channel-connectors` keeps the loopback example.
 
 ### Telegram
 
+- module: `intentforge-channel-telegram`
 - plugin id: `intentforge.channel.telegram`
 - runtime type: `ChannelType.TELEGRAM`
 - current scope: outbound text delivery via Telegram Bot API `sendMessage`
@@ -109,6 +112,7 @@ Telegram and WeCom adapters should follow these rules:
 
 ### WeCom
 
+- module: `intentforge-channel-wecom`
 - plugin id: `intentforge.channel.wecom`
 - runtime type: `ChannelType.WECOM`
 - current scope: outbound text delivery for WeCom application messaging

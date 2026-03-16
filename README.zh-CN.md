@@ -66,7 +66,9 @@ intentforge/
 │  ├─ intentforge-channel-core             # 渠道描述、账号/目标/消息模型、路由契约、管理器/插件 SPI
 │  ├─ intentforge-channel-local            # 内存渠道管理器 Provider、classpath SPI 加载、本地 plugins 目录加载
 │  ├─ intentforge-channel-spring           # Spring factories 渠道插件发现桥接
-│  └─ intentforge-channel-connectors       # 内置连接器实现与可复用连接器入口
+│  ├─ intentforge-channel-connectors       # Loopback 与通用连接器支持入口
+│  ├─ intentforge-channel-telegram         # Telegram Bot API 渠道连接器
+│  └─ intentforge-channel-wecom            # 企业微信应用消息渠道连接器
 ├─ intentforge-prompt                      # 提示词聚合模块
 │  ├─ intentforge-prompt-core              # 提示词定义、变量、查询条件、注册中心 SPI、管理器 Provider SPI
 │  └─ intentforge-prompt-local             # 内存提示词管理 Provider、classpath SPI 加载、本地 plugins 目录加载

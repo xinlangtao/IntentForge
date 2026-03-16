@@ -66,7 +66,9 @@ intentforge/
 │  ├─ intentforge-channel-core             # Channel descriptors, account/target/message models, routing contracts, manager/plugin SPI
 │  ├─ intentforge-channel-local            # In-memory channel manager provider, classpath SPI loading, local plugin directory loading
 │  ├─ intentforge-channel-spring           # Spring factories bridge for channel plugin discovery
-│  └─ intentforge-channel-connectors       # Built-in connector implementations and reusable connector entrypoints
+│  ├─ intentforge-channel-connectors       # Loopback and generic connector support entrypoints
+│  ├─ intentforge-channel-telegram         # Telegram Bot API connector
+│  └─ intentforge-channel-wecom            # WeCom application messaging connector
 ├─ intentforge-prompt                      # Prompt aggregation module
 │  ├─ intentforge-prompt-core              # Prompt definitions, variables, queries, registry SPI, manager-provider SPI
 │  └─ intentforge-prompt-local             # In-memory prompt manager provider, classpath SPI loading, local plugin directory loading
