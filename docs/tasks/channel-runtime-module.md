@@ -35,7 +35,7 @@ that normalize Telegram and WeCom callback payloads into connector-local inbound
 
 ## Overall Status
 - status: running
-- process: 80%
+- process: 95%
 - current_step: 13
 
 ## Steps
@@ -54,8 +54,8 @@ that normalize Telegram and WeCom callback payloads into connector-local inbound
 | 11 | Move WeCom implementation into `intentforge-channel-wecom` and update runtime wiring. | finished | commit: 9d6bac2 |
 | 12 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for the module split. | finished | commit: d804f3f |
 | 13 | Reopen scope for inbound webhook adapters, add red tests, and verify the expected failing state. | finished | commit: da52016 |
-| 14 | Implement Telegram inbound webhook normalization and update connector capabilities. | finished | commit: pending |
-| 15 | Implement WeCom inbound callback normalization and update connector capabilities. | finished | commit: pending |
+| 14 | Implement Telegram inbound webhook normalization and update connector capabilities. | finished | commit: bbe9782 |
+| 15 | Implement WeCom inbound callback normalization and update connector capabilities. | finished | commit: bbe9782 |
 | 16 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound webhook support. | running | commit: pending |
 
 ## Update Log
@@ -81,6 +81,7 @@ that normalize Telegram and WeCom callback payloads into connector-local inbound
 | 2026-03-16 09:39:15 +0800 | running | 5% | scope expanded to inbound webhook adapters; reopened the task, added inbound parsing acceptance criteria, and started the TDD red phase for Telegram and WeCom inbound normalization |
 | 2026-03-16 09:46:28 +0800 | running | 20% | added inbound webhook tests for Telegram, WeCom, and channel manager exposure, then confirmed the expected red state because shared webhook abstractions and inbound-open APIs are not implemented yet |
 | 2026-03-16 09:49:51 +0800 | running | 80% | implemented shared webhook request/response abstractions, added driver and manager inbound-open support, normalized Telegram JSON updates and WeCom callback envelopes into `ChannelInboundMessage`, and verified the targeted inbound test suite passed |
+| 2026-03-16 09:52:11 +0800 | running | 95% | updated architecture documents to describe the shared webhook abstractions plus Telegram and WeCom inbound normalization limits; final full-reactor validation remains pending |
 
 ## Sequence Diagram
 

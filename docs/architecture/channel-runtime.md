@@ -26,6 +26,10 @@ The shared runtime model is intentionally transport-neutral:
 - `ChannelInboundMessage`: normalized inbound event payload
 - `ChannelOutboundRequest`: normalized outbound send request
 - `ChannelDeliveryResult`: normalized send result
+- `ChannelWebhookRequest`: normalized inbound webhook HTTP envelope
+- `ChannelWebhookResponse`: normalized webhook acknowledgement response
+- `ChannelWebhookResult`: normalized webhook parsing output
+- `ChannelWebhookHandler`: account-bound inbound webhook adapter
 - `ChannelRouteResolver`: resolves inbound messages into `space/session/agent`
 - `ChannelAccessPolicy`: evaluates whether one inbound event may enter the runtime
 
@@ -98,7 +102,9 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
 - module: `intentforge-channel-telegram`
 - plugin id: `intentforge.channel.telegram`
 - runtime type: `ChannelType.TELEGRAM`
-- current scope: outbound text delivery via Telegram Bot API `sendMessage`
+- current scope:
+  - outbound text delivery via Telegram Bot API `sendMessage`
+  - inbound webhook normalization for text-bearing updates
 - required account properties:
   - `botToken`: Telegram bot token
   - `baseUrl`: optional Bot API base URL, defaults to `https://api.telegram.org`
@@ -109,13 +115,19 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
   - `parseMode` -> `parse_mode`
   - `disableNotification` -> `disable_notification`
   - `disableWebPagePreview` -> `link_preview_options.is_disabled`
+- inbound webhook behavior:
+  - `POST` JSON updates are parsed through `ChannelWebhookHandler`
+  - `message`, `edited_message`, `channel_post`, and `edited_channel_post` with `text` are normalized into one `ChannelInboundMessage`
+  - non-text updates currently acknowledge with `200 OK` and produce no normalized messages
 
 ### WeCom
 
 - module: `intentforge-channel-wecom`
 - plugin id: `intentforge.channel.wecom`
 - runtime type: `ChannelType.WECOM`
-- current scope: outbound text delivery for WeCom application messaging
+- current scope:
+  - outbound text delivery for WeCom application messaging
+  - inbound callback normalization for verification handshakes and plaintext text callbacks
 - required account properties:
   - `corpId`: enterprise identifier
   - `agentId`: application agent identifier
@@ -131,9 +143,15 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
   - `toParty` -> `toparty`
   - `toTag` -> `totag`
   - `safe` -> `safe`
+- inbound webhook behavior:
+  - `GET` verification requests echo `echostr` without signature validation
+  - `POST` plaintext XML callbacks with `MsgType=text` are normalized into one `ChannelInboundMessage`
+  - non-text callbacks currently acknowledge with `success` and produce no normalized messages
 
 ### Current Limits
 
-- both connectors currently focus on outbound text delivery only
-- inbound webhook parsing and callback verification are still future work
+- inbound parsing currently stops at connector-local normalization and does not yet invoke `ChannelAccessPolicy` or `ChannelRouteResolver`
+- Telegram inbound support currently focuses on text-bearing updates only
+- WeCom inbound support currently focuses on verification echo and plaintext XML text callbacks only
+- WeCom signature verification, message decryption, and encrypted callback responses are still future work
 - Telegram media, WeCom rich-media, and advanced interactive payloads are not yet implemented
