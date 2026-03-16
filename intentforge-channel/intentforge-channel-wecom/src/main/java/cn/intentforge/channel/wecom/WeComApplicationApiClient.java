@@ -1,4 +1,4 @@
-package cn.intentforge.channel.connectors.wecom;
+package cn.intentforge.channel.wecom;
 
 interface WeComApplicationApiClient {
   WeComAccessTokenResult fetchAccessToken(WeComAccessTokenCommand command);

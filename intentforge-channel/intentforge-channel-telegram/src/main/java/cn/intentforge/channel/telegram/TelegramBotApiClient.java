@@ -1,4 +1,4 @@
-package cn.intentforge.channel.connectors.telegram;
+package cn.intentforge.channel.telegram;
 
 interface TelegramBotApiClient {
   TelegramSendResult sendMessage(TelegramSendCommand command);

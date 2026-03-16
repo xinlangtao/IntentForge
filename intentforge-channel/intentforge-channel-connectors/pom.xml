@@ -18,17 +18,8 @@
   <dependencies>
     <dependency>
       <groupId>cn.intentforge</groupId>
-      <artifactId>intentforge-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>cn.intentforge</groupId>
       <artifactId>intentforge-channel-core</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
     </dependency>
 
     <dependency>

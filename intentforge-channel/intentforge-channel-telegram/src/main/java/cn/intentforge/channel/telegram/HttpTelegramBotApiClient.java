@@ -1,4 +1,4 @@
-package cn.intentforge.channel.connectors.telegram;
+package cn.intentforge.channel.telegram;
 
 import static cn.intentforge.common.util.ValidationSupport.requireText;
 

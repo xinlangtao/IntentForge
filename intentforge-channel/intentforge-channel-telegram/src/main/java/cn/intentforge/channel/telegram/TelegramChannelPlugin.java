@@ -1,4 +1,4 @@
-package cn.intentforge.channel.connectors.telegram;
+package cn.intentforge.channel.telegram;
 
 import cn.intentforge.channel.ChannelDriver;
 import cn.intentforge.channel.spi.ChannelPlugin;

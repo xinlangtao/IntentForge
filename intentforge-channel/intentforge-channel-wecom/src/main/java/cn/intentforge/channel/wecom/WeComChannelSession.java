@@ -1,4 +1,4 @@
-package cn.intentforge.channel.connectors.wecom;
+package cn.intentforge.channel.wecom;
 
 import static cn.intentforge.common.util.ValidationSupport.normalize;
 

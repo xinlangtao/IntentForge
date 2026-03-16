@@ -1,4 +1,4 @@
-package cn.intentforge.channel.connectors.wecom;
+package cn.intentforge.channel.wecom;
 
 import cn.intentforge.channel.ChannelDriver;
 import cn.intentforge.channel.spi.ChannelPlugin;

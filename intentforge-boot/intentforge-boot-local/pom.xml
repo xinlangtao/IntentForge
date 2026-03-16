@@ -58,6 +58,16 @@
     </dependency>
     <dependency>
       <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-channel-telegram</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
+      <artifactId>intentforge-channel-wecom</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>cn.intentforge</groupId>
       <artifactId>intentforge-governance</artifactId>
       <version>${project.version}</version>
     </dependency>
