@@ -35,17 +35,17 @@ exposes the pipeline through `AiAssetLocalRuntime`.
 - [x] Cover normal, boundary, and invalid inbound payload cases with deterministic tests.
 - [x] Update architecture docs to describe inbound webhook support and current limits.
 - [x] Pass `make test` without errors after inbound webhook support is added.
-- [ ] Add a local inbound channel pipeline that evaluates `ChannelAccessPolicy` for normalized webhook messages.
-- [ ] Add route resolution that maps allowed inbound channel messages into `ChannelRouteDecision`.
-- [ ] Expose the inbound pipeline through `AiAssetLocalRuntime`.
-- [ ] Cover allow, deny, and route fallback cases with deterministic tests.
-- [ ] Update architecture docs to describe the inbound processing pipeline and fallback behavior.
-- [ ] Pass `make test` without errors after the inbound pipeline is added.
+- [x] Add a local inbound channel pipeline that evaluates `ChannelAccessPolicy` for normalized webhook messages.
+- [x] Add route resolution that maps allowed inbound channel messages into `ChannelRouteDecision`.
+- [x] Expose the inbound pipeline through `AiAssetLocalRuntime`.
+- [x] Cover allow, deny, and route fallback cases with deterministic tests.
+- [x] Update architecture docs to describe the inbound processing pipeline and fallback behavior.
+- [x] Pass `make test` without errors after the inbound pipeline is added.
 
 ## Overall Status
-- status: running
-- process: 95%
-- current_step: 17
+- status: finished
+- process: 100%
+- current_step: completed
 
 ## Steps
 | step | description | status | note |
@@ -69,7 +69,7 @@ exposes the pipeline through `AiAssetLocalRuntime`.
 | 17 | Reopen scope for the inbound processing pipeline, add red tests, and verify the expected failing state. | finished | commit: a564cf3 |
 | 18 | Implement the local inbound pipeline and default access-policy plus route-resolution behavior. | finished | commit: 9ee07cd |
 | 19 | Expose the inbound pipeline through local runtime wiring and verify bootstrap integration. | finished | commit: 9ee07cd |
-| 20 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound pipeline support. | running | commit: pending |
+| 20 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound pipeline support. | finished | commit: eee3fb8 |
 
 ## Update Log
 | time | status | process | update |
@@ -100,25 +100,35 @@ exposes the pipeline through `AiAssetLocalRuntime`.
 | 2026-03-16 10:00:42 +0800 | running | 5% | scope expanded to the inbound processing pipeline; reopened the task, added access-policy and route-resolution acceptance criteria, and started the TDD red phase for local runtime integration |
 | 2026-03-16 10:04:10 +0800 | running | 20% | added local inbound pipeline and bootstrap integration tests, then confirmed the expected red state because the processing pipeline abstractions, default policy-route behavior, and runtime exposure are not implemented yet |
 | 2026-03-16 10:06:06 +0800 | running | 80% | implemented the local inbound processing pipeline, added fallback access-policy and route-resolution behavior, exposed the pipeline through `AiAssetLocalRuntime`, and verified the targeted pipeline plus bootstrap tests passed |
-| 2026-03-16 10:08:11 +0800 | running | 95% | updated architecture documents to describe the inbound processing pipeline, fallback route behavior, and current limits; final full-reactor validation remains pending |
+| 2026-03-16 10:07:11 +0800 | running | 95% | updated architecture documents to describe the inbound processing pipeline, fallback route behavior, and current limits; final full-reactor validation remains pending |
+| 2026-03-16 10:07:29 +0800 | running | 98% | reran `make test` outside the sandbox, confirmed the full Maven reactor passed with the new inbound processing pipeline, and prepared the final task-bookkeeping update |
+| 2026-03-16 10:09:02 +0800 | finished | 100% | completed acceptance tracking for the inbound processing pipeline, refreshed the Mermaid diagrams to show access-policy and route-resolution flow, and recorded the final task-bookkeeping checkpoint |
 
 ## Sequence Diagram
 
 ```mermaid
 sequenceDiagram
     participant Runtime as AiAssetLocalRuntime
+    participant Processor as ChannelInboundProcessor
     participant Manager as ChannelManager
-    participant Driver as Telegram/WeComChannelDriver
     participant Handler as ChannelWebhookHandler
-    participant Payload as Telegram JSON / WeCom XML
-    Runtime->>Manager: openWebhookHandler(accountProfile)
-    Manager->>Driver: match account type and open webhook handler
-    Driver-->>Runtime: account-bound ChannelWebhookHandler
-    Runtime->>Handler: handle(ChannelWebhookRequest)
-    Handler->>Payload: parse update or callback envelope
-    Payload-->>Handler: normalized text-bearing fields
-    Handler-->>Runtime: ChannelWebhookResult(messages, response)
-    Note over Handler,Runtime: routing and access-policy execution are still future work
+    participant Access as ChannelAccessPolicy
+    participant Route as ChannelRouteResolver
+    Runtime->>Processor: process(accountProfile, request)
+    Processor->>Manager: openWebhookHandler(accountProfile)
+    Manager-->>Processor: account-bound ChannelWebhookHandler
+    Processor->>Handler: handle(ChannelWebhookRequest)
+    Handler-->>Processor: ChannelWebhookResult(messages, response)
+    loop each normalized inbound message
+        Processor->>Access: evaluate(message)
+        alt allowed
+            Processor->>Route: resolve(message)
+            Route-->>Processor: Optional<ChannelRouteDecision>
+        else denied
+            Processor-->>Processor: keep empty route decision
+        end
+    end
+    Processor-->>Runtime: ChannelInboundProcessingResult
 ```
 
 ## Module Relationship Diagram
@@ -131,16 +141,22 @@ flowchart LR
     Core --> Telegram["intentforge-channel-telegram"]
     Core --> WeCom["intentforge-channel-wecom"]
     Core --> Webhook["ChannelWebhookRequest/Response/Result/Handler"]
+    Core --> Inbound["ChannelInboundProcessor/Dispatch/ProcessingResult"]
     Spring -.discovery strategy.-> Local
     Connectors -.builtin ChannelPlugin SPI.-> Local
     Telegram -.builtin ChannelPlugin SPI.-> Local
     WeCom -.builtin ChannelPlugin SPI.-> Local
     Plugins["plugins/*.jar"] --> Local
+    Local --> Processor["DefaultChannelInboundProcessor"]
+    Processor --> Webhook
+    Processor --> Policy["ChannelAccessPolicy SPI"]
+    Processor --> Resolver["ChannelRouteResolver SPI"]
     Local --> Boot["intentforge-boot-local"]
     Connectors --> Boot
     Telegram --> Boot
     WeCom --> Boot
     Webhook --> Telegram
     Webhook --> WeCom
+    Inbound --> Processor
     Boot --> Runtime["AiAssetLocalRuntime / RuntimeCatalog"]
 ```
