@@ -200,7 +200,6 @@ public final class AiAssetLocalBootstrap {
     RuntimeImplementationDescriptor defaultChannelDescriptor = requireDefaultDescriptor(runtimeCatalog, RuntimeCapability.CHANNEL_MANAGER);
 
     ChannelManager channelManager = runtimeComponents.channelManager(defaultChannelDescriptor.id());
-    ChannelInboundProcessor channelInboundProcessor = DefaultChannelInboundProcessor.createAndLoad(channelManager, classLoader);
     DirectoryChannelPluginManager channelPluginManager = channelPluginManagers.get(defaultChannelDescriptor.id());
     PromptManager promptManager = runtimeComponents.promptManager(defaultPromptDescriptor.id());
     DirectoryPromptPluginManager promptPluginManager = promptPluginManagers.get(defaultPromptDescriptor.id());
@@ -226,6 +225,9 @@ public final class AiAssetLocalBootstrap {
     DirectoryToolPluginManager toolPluginManager = toolPluginManagers.get(defaultToolDescriptor.id());
     ToolGateway toolGateway = runtimeComponents.toolGateway(defaultToolDescriptor.id());
     SessionManager sessionManager = runtimeComponents.sessionManager(defaultSessionDescriptor.id());
+    ChannelInboundProcessor channelInboundProcessor = new PersistingChannelInboundProcessor(
+        DefaultChannelInboundProcessor.createAndLoad(channelManager, classLoader),
+        sessionManager);
     providerPluginManager = providerPluginManagers.get(defaultProviderDescriptor.id());
 
     LocalRuntimeComponentResolver runtimeResolver = new LocalRuntimeComponentResolver(
