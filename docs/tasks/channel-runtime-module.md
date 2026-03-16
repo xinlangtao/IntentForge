@@ -26,17 +26,17 @@ that normalize Telegram and WeCom callback payloads into connector-local inbound
 - [x] Keep `intentforge-channel-connectors` focused on generic or loopback connector support after the split.
 - [x] Update Maven reactor, BOM, bootstrap dependencies, and docs to reflect the new per-channel module layout.
 - [x] Pass `make test` without errors after the module split.
-- [ ] Add Telegram inbound webhook parsing that maps text updates into `ChannelInboundMessage`.
-- [ ] Add WeCom inbound callback parsing that maps callback envelopes into `ChannelInboundMessage`.
-- [ ] Keep inbound parsing logic inside the dedicated Telegram and WeCom channel modules.
-- [ ] Cover normal, boundary, and invalid inbound payload cases with deterministic tests.
-- [ ] Update architecture docs to describe inbound webhook support and current limits.
-- [ ] Pass `make test` without errors after inbound webhook support is added.
+- [x] Add Telegram inbound webhook parsing that maps text updates into `ChannelInboundMessage`.
+- [x] Add WeCom inbound callback parsing that maps callback envelopes into `ChannelInboundMessage`.
+- [x] Keep inbound parsing logic inside the dedicated Telegram and WeCom channel modules.
+- [x] Cover normal, boundary, and invalid inbound payload cases with deterministic tests.
+- [x] Update architecture docs to describe inbound webhook support and current limits.
+- [x] Pass `make test` without errors after inbound webhook support is added.
 
 ## Overall Status
-- status: running
-- process: 95%
-- current_step: 13
+- status: finished
+- process: 100%
+- current_step: completed
 
 ## Steps
 | step | description | status | note |
@@ -56,7 +56,7 @@ that normalize Telegram and WeCom callback payloads into connector-local inbound
 | 13 | Reopen scope for inbound webhook adapters, add red tests, and verify the expected failing state. | finished | commit: da52016 |
 | 14 | Implement Telegram inbound webhook normalization and update connector capabilities. | finished | commit: bbe9782 |
 | 15 | Implement WeCom inbound callback normalization and update connector capabilities. | finished | commit: bbe9782 |
-| 16 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound webhook support. | running | commit: pending |
+| 16 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound webhook support. | finished | commit: efc8809 |
 
 ## Update Log
 | time | status | process | update |
@@ -82,6 +82,8 @@ that normalize Telegram and WeCom callback payloads into connector-local inbound
 | 2026-03-16 09:46:28 +0800 | running | 20% | added inbound webhook tests for Telegram, WeCom, and channel manager exposure, then confirmed the expected red state because shared webhook abstractions and inbound-open APIs are not implemented yet |
 | 2026-03-16 09:49:51 +0800 | running | 80% | implemented shared webhook request/response abstractions, added driver and manager inbound-open support, normalized Telegram JSON updates and WeCom callback envelopes into `ChannelInboundMessage`, and verified the targeted inbound test suite passed |
 | 2026-03-16 09:52:11 +0800 | running | 95% | updated architecture documents to describe the shared webhook abstractions plus Telegram and WeCom inbound normalization limits; final full-reactor validation remains pending |
+| 2026-03-16 09:52:34 +0800 | running | 98% | reran `make test` outside the sandbox, confirmed the full Maven reactor passed with the new channel inbound webhook support, and prepared the final task-bookkeeping update |
+| 2026-03-16 09:54:18 +0800 | finished | 100% | completed acceptance tracking for Telegram and WeCom inbound webhook normalization, refreshed the Mermaid diagrams to show the inbound flow, and recorded the final task-bookkeeping checkpoint |
 
 ## Sequence Diagram
 
@@ -90,16 +92,16 @@ sequenceDiagram
     participant Runtime as AiAssetLocalRuntime
     participant Manager as ChannelManager
     participant Driver as Telegram/WeComChannelDriver
-    participant Session as ChannelSession
-    participant Vendor as Vendor HTTP API
-    Runtime->>Manager: openSession(accountProfile)
-    Manager->>Driver: match account type and open session
-    Driver-->>Runtime: account-bound ChannelSession
-    Runtime->>Session: send(ChannelOutboundRequest)
-    Session->>Vendor: map target and metadata to Bot API / WeCom API
-    Note over Session,Vendor: WeCom fetches and caches access token before send
-    Vendor-->>Session: platform message id and accepted timestamp
-    Session-->>Runtime: ChannelDeliveryResult
+    participant Handler as ChannelWebhookHandler
+    participant Payload as Telegram JSON / WeCom XML
+    Runtime->>Manager: openWebhookHandler(accountProfile)
+    Manager->>Driver: match account type and open webhook handler
+    Driver-->>Runtime: account-bound ChannelWebhookHandler
+    Runtime->>Handler: handle(ChannelWebhookRequest)
+    Handler->>Payload: parse update or callback envelope
+    Payload-->>Handler: normalized text-bearing fields
+    Handler-->>Runtime: ChannelWebhookResult(messages, response)
+    Note over Handler,Runtime: routing and access-policy execution are still future work
 ```
 
 ## Module Relationship Diagram
@@ -111,6 +113,7 @@ flowchart LR
     Core --> Connectors["intentforge-channel-connectors"]
     Core --> Telegram["intentforge-channel-telegram"]
     Core --> WeCom["intentforge-channel-wecom"]
+    Core --> Webhook["ChannelWebhookRequest/Response/Result/Handler"]
     Spring -.discovery strategy.-> Local
     Connectors -.builtin ChannelPlugin SPI.-> Local
     Telegram -.builtin ChannelPlugin SPI.-> Local
@@ -120,5 +123,7 @@ flowchart LR
     Connectors --> Boot
     Telegram --> Boot
     WeCom --> Boot
+    Webhook --> Telegram
+    Webhook --> WeCom
     Boot --> Runtime["AiAssetLocalRuntime / RuntimeCatalog"]
 ```
