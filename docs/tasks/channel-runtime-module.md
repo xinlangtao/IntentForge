@@ -5,6 +5,7 @@ Create a new `intentforge-channel` aggregate module with four submodules under t
 The implementation should reference the OpenClaw channel design, support pluggable multi-channel integrations,
 and provide Spring SPI friendly extension points. Code comments must use English.
 After the runtime spine is complete, continue by adding concrete Telegram and WeCom connector implementations
+inside dedicated `intentforge-channel-telegram` and `intentforge-channel-wecom` submodules instead of keeping them
 inside `intentforge-channel-connectors`.
 
 ## Acceptance Criteria
@@ -17,11 +18,16 @@ inside `intentforge-channel-connectors`.
 - [x] Cover connector descriptor exposure, request mapping, credential validation, and outbound delivery behavior with deterministic tests.
 - [x] Update architecture documentation to describe the concrete Telegram and WeCom connector behavior and configuration expectations.
 - [x] Pass `make test` without errors before delivery.
+- [ ] Move Telegram connector code and SPI registration into `intentforge-channel-telegram`.
+- [ ] Move WeCom connector code and SPI registration into `intentforge-channel-wecom`.
+- [ ] Keep `intentforge-channel-connectors` focused on generic or loopback connector support after the split.
+- [ ] Update Maven reactor, BOM, bootstrap dependencies, and docs to reflect the new per-channel module layout.
+- [ ] Pass `make test` without errors after the module split.
 
 ## Overall Status
-- status: finished
-- process: 100%
-- current_step: completed
+- status: running
+- process: 5%
+- current_step: 9
 
 ## Steps
 | step | description | status | note |
@@ -34,6 +40,10 @@ inside `intentforge-channel-connectors`.
 | 6 | Implement Telegram connector plugin, driver, session, and request mapping. | finished | commit: dd81ac9 |
 | 7 | Implement WeCom connector plugin, driver, session, and token-aware outbound delivery support. | finished | commit: dd81ac9 |
 | 8 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for connector delivery. | finished | commit: f724f0c |
+| 9 | Reopen scope for per-channel module split, add red tests and module assertions, and verify the expected failing state. | running | commit: pending |
+| 10 | Move Telegram implementation into `intentforge-channel-telegram` and update runtime wiring. | notrun | commit: pending |
+| 11 | Move WeCom implementation into `intentforge-channel-wecom` and update runtime wiring. | notrun | commit: pending |
+| 12 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for the module split. | notrun | commit: pending |
 
 ## Update Log
 | time | status | process | update |
@@ -49,6 +59,7 @@ inside `intentforge-channel-connectors`.
 | 2026-03-16 09:01:11 +0800 | running | 80% | implemented builtin Telegram and WeCom connector plugins, outbound session mapping, HTTP API clients, classpath SPI exposure, and verified the targeted connector plus boot-local tests passed |
 | 2026-03-16 09:02:11 +0800 | running | 95% | documented connector-specific account properties and target mapping, reran full `make test` outside the sandbox, and confirmed the full Maven reactor test suite passed with the new Telegram and WeCom connectors |
 | 2026-03-16 09:03:27 +0800 | finished | 100% | recorded the connector delivery checkpoint commit, completed task bookkeeping, and refreshed the Mermaid diagrams to show the concrete Telegram and WeCom outbound flow |
+| 2026-03-16 09:28:40 +0800 | running | 5% | scope expanded again to split Telegram and WeCom into dedicated channel submodules; started the refactor red phase for reactor, BOM, and bootstrap wiring changes |
 
 ## Sequence Diagram
 
