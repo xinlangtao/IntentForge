@@ -54,7 +54,7 @@ recovered from session history.
 
 ## Overall Status
 - status: running
-- process: 5%
+- process: 20%
 - current_step: 21
 
 ## Steps
@@ -80,8 +80,8 @@ recovered from session history.
 | 18 | Implement the local inbound pipeline and default access-policy plus route-resolution behavior. | finished | commit: 9ee07cd |
 | 19 | Expose the inbound pipeline through local runtime wiring and verify bootstrap integration. | finished | commit: 9ee07cd |
 | 20 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound pipeline support. | finished | commit: eee3fb8 |
-| 21 | Reopen scope for inbound session persistence, add red tests, and verify the expected failing state. | running | commit: pending |
-| 22 | Implement local inbound session persistence and duplicate-skip behavior. | notrun | commit: pending |
+| 21 | Reopen scope for inbound session persistence, add red tests, and verify the expected failing state. | finished | commit: pending |
+| 22 | Implement local inbound session persistence and duplicate-skip behavior. | running | commit: pending |
 | 23 | Expose the persisting inbound processor through bootstrap integration and verify runtime behavior. | notrun | commit: pending |
 | 24 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound session persistence. | notrun | commit: pending |
 
@@ -118,6 +118,7 @@ recovered from session history.
 | 2026-03-16 10:07:29 +0800 | running | 98% | reran `make test` outside the sandbox, confirmed the full Maven reactor passed with the new inbound processing pipeline, and prepared the final task-bookkeeping update |
 | 2026-03-16 10:09:02 +0800 | finished | 100% | completed acceptance tracking for the inbound processing pipeline, refreshed the Mermaid diagrams to show access-policy and route-resolution flow, and recorded the final task-bookkeeping checkpoint |
 | 2026-03-16 10:14:28 +0800 | running | 5% | scope expanded to inbound session persistence; reopened the task, added session-write acceptance criteria, and started the TDD red phase for persisting routed channel messages into session history |
+| 2026-03-16 10:10:38 +0800 | running | 20% | added boot-local session-persistence tests, then confirmed the expected red state because the persisting inbound processor decorator is not implemented and bootstrap still exposes the non-persisting processor |
 
 ## Sequence Diagram
 

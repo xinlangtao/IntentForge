@@ -49,5 +49,9 @@ class AiAssetLocalBootstrapChannelInboundIntegrationTest {
     Assertions.assertTrue(dispatch.accessDecision().allowed());
     Assertions.assertEquals("telegram-account", dispatch.routeDecision().orElseThrow().spaceId());
     Assertions.assertEquals("telegram:-100123", dispatch.routeDecision().orElseThrow().sessionId());
+    Assertions.assertTrue(runtime.sessionManager().find("telegram:-100123").isPresent());
+    Assertions.assertEquals(
+        "hello inbound",
+        runtime.sessionManager().find("telegram:-100123").orElseThrow().messages().getFirst().content());
   }
 }
