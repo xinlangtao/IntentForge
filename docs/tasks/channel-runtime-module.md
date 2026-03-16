@@ -44,18 +44,18 @@ recovered from session history.
 - [x] Cover allow, deny, and route fallback cases with deterministic tests.
 - [x] Update architecture docs to describe the inbound processing pipeline and fallback behavior.
 - [x] Pass `make test` without errors after the inbound pipeline is added.
-- [ ] Persist allowed and routed inbound channel messages into `SessionManager`.
-- [ ] Create a session when the routed `sessionId` does not exist yet.
-- [ ] Avoid duplicating a session message when the same inbound message id is processed twice.
-- [ ] Keep session persistence in the local runtime layer instead of coupling `channel-local` to session storage.
-- [ ] Cover session creation, append, and duplicate-skip cases with deterministic tests.
-- [ ] Update architecture docs to describe the inbound session persistence behavior and remaining limits.
-- [ ] Pass `make test` without errors after inbound session persistence is added.
+- [x] Persist allowed and routed inbound channel messages into `SessionManager`.
+- [x] Create a session when the routed `sessionId` does not exist yet.
+- [x] Avoid duplicating a session message when the same inbound message id is processed twice.
+- [x] Keep session persistence in the local runtime layer instead of coupling `channel-local` to session storage.
+- [x] Cover session creation, append, and duplicate-skip cases with deterministic tests.
+- [x] Update architecture docs to describe the inbound session persistence behavior and remaining limits.
+- [x] Pass `make test` without errors after inbound session persistence is added.
 
 ## Overall Status
-- status: running
-- process: 80%
-- current_step: 21
+- status: finished
+- process: 100%
+- current_step: completed
 
 ## Steps
 | step | description | status | note |
@@ -81,9 +81,9 @@ recovered from session history.
 | 19 | Expose the inbound pipeline through local runtime wiring and verify bootstrap integration. | finished | commit: 9ee07cd |
 | 20 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound pipeline support. | finished | commit: eee3fb8 |
 | 21 | Reopen scope for inbound session persistence, add red tests, and verify the expected failing state. | finished | commit: e63884d |
-| 22 | Implement local inbound session persistence and duplicate-skip behavior. | finished | commit: pending |
-| 23 | Expose the persisting inbound processor through bootstrap integration and verify runtime behavior. | finished | commit: pending |
-| 24 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound session persistence. | running | commit: pending |
+| 22 | Implement local inbound session persistence and duplicate-skip behavior. | finished | commit: b2108f7 |
+| 23 | Expose the persisting inbound processor through bootstrap integration and verify runtime behavior. | finished | commit: b2108f7 |
+| 24 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound session persistence. | finished | commit: aba4288 |
 
 ## Update Log
 | time | status | process | update |
@@ -117,21 +117,27 @@ recovered from session history.
 | 2026-03-16 10:07:11 +0800 | running | 95% | updated architecture documents to describe the inbound processing pipeline, fallback route behavior, and current limits; final full-reactor validation remains pending |
 | 2026-03-16 10:07:29 +0800 | running | 98% | reran `make test` outside the sandbox, confirmed the full Maven reactor passed with the new inbound processing pipeline, and prepared the final task-bookkeeping update |
 | 2026-03-16 10:09:02 +0800 | finished | 100% | completed acceptance tracking for the inbound processing pipeline, refreshed the Mermaid diagrams to show access-policy and route-resolution flow, and recorded the final task-bookkeeping checkpoint |
-| 2026-03-16 10:14:28 +0800 | running | 5% | scope expanded to inbound session persistence; reopened the task, added session-write acceptance criteria, and started the TDD red phase for persisting routed channel messages into session history |
+| 2026-03-16 10:09:48 +0800 | running | 5% | scope expanded to inbound session persistence; reopened the task, added session-write acceptance criteria, and started the TDD red phase for persisting routed channel messages into session history |
 | 2026-03-16 10:10:38 +0800 | running | 20% | added boot-local session-persistence tests, then confirmed the expected red state because the persisting inbound processor decorator is not implemented and bootstrap still exposes the non-persisting processor |
 | 2026-03-16 10:11:31 +0800 | running | 80% | implemented the boot-local persisting inbound processor, created sessions on first inbound message, skipped duplicate message ids on retries, wrapped the bootstrap inbound processor with session persistence, and verified the targeted session-persistence tests passed |
+| 2026-03-16 10:12:58 +0800 | running | 95% | updated architecture documents to describe boot-local inbound session persistence, clarified that `intentforge-channel-local` remains storage-agnostic, and recorded the documentation checkpoint commit `aba4288` |
+| 2026-03-16 10:14:25 +0800 | running | 98% | reran `make test`, confirmed the full Maven reactor passed with the persisting inbound processor enabled, and verified there were no regressions across the split channel modules or boot runtimes |
+| 2026-03-16 10:14:37 +0800 | finished | 100% | completed acceptance tracking for inbound session persistence, refreshed the Mermaid diagrams to show the boot-local persistence decorator and `SessionManager` write path, and closed the task bookkeeping |
 
 ## Sequence Diagram
 
 ```mermaid
 sequenceDiagram
     participant Runtime as AiAssetLocalRuntime
-    participant Processor as ChannelInboundProcessor
+    participant Persistor as PersistingChannelInboundProcessor
+    participant Processor as DefaultChannelInboundProcessor
     participant Manager as ChannelManager
     participant Handler as ChannelWebhookHandler
     participant Access as ChannelAccessPolicy
     participant Route as ChannelRouteResolver
-    Runtime->>Processor: process(accountProfile, request)
+    participant Session as SessionManager
+    Runtime->>Persistor: process(accountProfile, request)
+    Persistor->>Processor: process(accountProfile, request)
     Processor->>Manager: openWebhookHandler(accountProfile)
     Manager-->>Processor: account-bound ChannelWebhookHandler
     Processor->>Handler: handle(ChannelWebhookRequest)
@@ -145,7 +151,15 @@ sequenceDiagram
             Processor-->>Processor: keep empty route decision
         end
     end
-    Processor-->>Runtime: ChannelInboundProcessingResult
+    Processor-->>Persistor: ChannelInboundProcessingResult
+    loop each allowed dispatch with route
+        Persistor->>Session: find(route.sessionId)
+        alt missing session
+            Persistor->>Session: create(SessionDraft)
+        end
+        Persistor->>Session: appendMessage(SessionMessageDraft)
+    end
+    Persistor-->>Runtime: ChannelInboundProcessingResult
 ```
 
 ## Module Relationship Diagram
@@ -175,5 +189,8 @@ flowchart LR
     Webhook --> Telegram
     Webhook --> WeCom
     Inbound --> Processor
+    Boot --> Persistor["PersistingChannelInboundProcessor"]
+    Persistor --> Processor
+    Persistor --> Session["intentforge-session-local / SessionManager"]
     Boot --> Runtime["AiAssetLocalRuntime / RuntimeCatalog"]
 ```
