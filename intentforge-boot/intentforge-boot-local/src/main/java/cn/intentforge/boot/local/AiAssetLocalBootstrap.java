@@ -3,6 +3,8 @@ package cn.intentforge.boot.local;
 import cn.intentforge.agent.core.AgentGateway;
 import cn.intentforge.agent.core.AgentRunGateway;
 import cn.intentforge.agent.nativejava.NativeCodingAgentFactory;
+import cn.intentforge.channel.ChannelInboundProcessor;
+import cn.intentforge.channel.local.inbound.DefaultChannelInboundProcessor;
 import cn.intentforge.channel.local.plugin.DirectoryChannelPluginManager;
 import cn.intentforge.channel.registry.ChannelManager;
 import cn.intentforge.channel.spi.ChannelManagerProvider;
@@ -198,6 +200,7 @@ public final class AiAssetLocalBootstrap {
     RuntimeImplementationDescriptor defaultChannelDescriptor = requireDefaultDescriptor(runtimeCatalog, RuntimeCapability.CHANNEL_MANAGER);
 
     ChannelManager channelManager = runtimeComponents.channelManager(defaultChannelDescriptor.id());
+    ChannelInboundProcessor channelInboundProcessor = DefaultChannelInboundProcessor.createAndLoad(channelManager, classLoader);
     DirectoryChannelPluginManager channelPluginManager = channelPluginManagers.get(defaultChannelDescriptor.id());
     PromptManager promptManager = runtimeComponents.promptManager(defaultPromptDescriptor.id());
     DirectoryPromptPluginManager promptPluginManager = promptPluginManagers.get(defaultPromptDescriptor.id());
@@ -245,6 +248,7 @@ public final class AiAssetLocalBootstrap {
         runtimeCatalog,
         runtimeComponents,
         channelManager,
+        channelInboundProcessor,
         channelPluginManager,
         promptManager,
         promptPluginManager,

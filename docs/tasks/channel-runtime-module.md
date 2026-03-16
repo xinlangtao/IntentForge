@@ -44,7 +44,7 @@ exposes the pipeline through `AiAssetLocalRuntime`.
 
 ## Overall Status
 - status: running
-- process: 20%
+- process: 80%
 - current_step: 17
 
 ## Steps
@@ -66,10 +66,10 @@ exposes the pipeline through `AiAssetLocalRuntime`.
 | 14 | Implement Telegram inbound webhook normalization and update connector capabilities. | finished | commit: bbe9782 |
 | 15 | Implement WeCom inbound callback normalization and update connector capabilities. | finished | commit: bbe9782 |
 | 16 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound webhook support. | finished | commit: efc8809 |
-| 17 | Reopen scope for the inbound processing pipeline, add red tests, and verify the expected failing state. | finished | commit: pending |
-| 18 | Implement the local inbound pipeline and default access-policy plus route-resolution behavior. | running | commit: pending |
-| 19 | Expose the inbound pipeline through local runtime wiring and verify bootstrap integration. | notrun | commit: pending |
-| 20 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound pipeline support. | notrun | commit: pending |
+| 17 | Reopen scope for the inbound processing pipeline, add red tests, and verify the expected failing state. | finished | commit: a564cf3 |
+| 18 | Implement the local inbound pipeline and default access-policy plus route-resolution behavior. | finished | commit: pending |
+| 19 | Expose the inbound pipeline through local runtime wiring and verify bootstrap integration. | finished | commit: pending |
+| 20 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound pipeline support. | running | commit: pending |
 
 ## Update Log
 | time | status | process | update |
@@ -99,6 +99,7 @@ exposes the pipeline through `AiAssetLocalRuntime`.
 | 2026-03-16 09:54:18 +0800 | finished | 100% | completed acceptance tracking for Telegram and WeCom inbound webhook normalization, refreshed the Mermaid diagrams to show the inbound flow, and recorded the final task-bookkeeping checkpoint |
 | 2026-03-16 10:00:42 +0800 | running | 5% | scope expanded to the inbound processing pipeline; reopened the task, added access-policy and route-resolution acceptance criteria, and started the TDD red phase for local runtime integration |
 | 2026-03-16 10:04:10 +0800 | running | 20% | added local inbound pipeline and bootstrap integration tests, then confirmed the expected red state because the processing pipeline abstractions, default policy-route behavior, and runtime exposure are not implemented yet |
+| 2026-03-16 10:06:06 +0800 | running | 80% | implemented the local inbound processing pipeline, added fallback access-policy and route-resolution behavior, exposed the pipeline through `AiAssetLocalRuntime`, and verified the targeted pipeline plus bootstrap tests passed |
 
 ## Sequence Diagram
 
