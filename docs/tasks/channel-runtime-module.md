@@ -7,6 +7,9 @@ and provide Spring SPI friendly extension points. Code comments must use English
 After the runtime spine is complete, continue by adding concrete Telegram and WeCom connector implementations
 inside dedicated `intentforge-channel-telegram` and `intentforge-channel-wecom` submodules instead of keeping them
 inside `intentforge-channel-connectors`.
+After the outbound delivery and module split work is complete, continue by adding inbound webhook adapters
+that normalize Telegram and WeCom callback payloads into connector-local inbound models and shared
+`ChannelInboundMessage` records.
 
 ## Acceptance Criteria
 - [x] Add a new `intentforge-channel` aggregate module with exactly four submodules wired into the Maven reactor.
@@ -23,11 +26,17 @@ inside `intentforge-channel-connectors`.
 - [x] Keep `intentforge-channel-connectors` focused on generic or loopback connector support after the split.
 - [x] Update Maven reactor, BOM, bootstrap dependencies, and docs to reflect the new per-channel module layout.
 - [x] Pass `make test` without errors after the module split.
+- [ ] Add Telegram inbound webhook parsing that maps text updates into `ChannelInboundMessage`.
+- [ ] Add WeCom inbound callback parsing that maps callback envelopes into `ChannelInboundMessage`.
+- [ ] Keep inbound parsing logic inside the dedicated Telegram and WeCom channel modules.
+- [ ] Cover normal, boundary, and invalid inbound payload cases with deterministic tests.
+- [ ] Update architecture docs to describe inbound webhook support and current limits.
+- [ ] Pass `make test` without errors after inbound webhook support is added.
 
 ## Overall Status
-- status: finished
-- process: 100%
-- current_step: completed
+- status: running
+- process: 5%
+- current_step: 13
 
 ## Steps
 | step | description | status | note |
@@ -44,6 +53,10 @@ inside `intentforge-channel-connectors`.
 | 10 | Move Telegram implementation into `intentforge-channel-telegram` and update runtime wiring. | finished | commit: 9d6bac2 |
 | 11 | Move WeCom implementation into `intentforge-channel-wecom` and update runtime wiring. | finished | commit: 9d6bac2 |
 | 12 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for the module split. | finished | commit: d804f3f |
+| 13 | Reopen scope for inbound webhook adapters, add red tests, and verify the expected failing state. | running | commit: pending |
+| 14 | Implement Telegram inbound webhook normalization and update connector capabilities. | notrun | commit: pending |
+| 15 | Implement WeCom inbound callback normalization and update connector capabilities. | notrun | commit: pending |
+| 16 | Update docs, run validation, and finish with checkpoint commits and final task bookkeeping for inbound webhook support. | notrun | commit: pending |
 
 ## Update Log
 | time | status | process | update |
@@ -65,6 +78,7 @@ inside `intentforge-channel-connectors`.
 | 2026-03-16 09:31:22 +0800 | running | 95% | updated README and architecture documents to reflect the new `intentforge-channel-telegram` and `intentforge-channel-wecom` module layout; final full-reactor validation remains pending |
 | 2026-03-16 09:34:13 +0800 | running | 98% | reran `make test` outside the sandbox, confirmed the full Maven reactor passed with the split `intentforge-channel-telegram` and `intentforge-channel-wecom` modules, and prepared the documentation checkpoint commit `d804f3f` |
 | 2026-03-16 09:36:02 +0800 | finished | 100% | recorded the final task-bookkeeping checkpoint, completed acceptance tracking for the per-channel module split, and refreshed the module relationship diagram to show the dedicated Telegram and WeCom child modules |
+| 2026-03-16 09:39:15 +0800 | running | 5% | scope expanded to inbound webhook adapters; reopened the task, added inbound parsing acceptance criteria, and started the TDD red phase for Telegram and WeCom inbound normalization |
 
 ## Sequence Diagram
 
