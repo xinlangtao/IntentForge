@@ -57,7 +57,7 @@
 | `intentforge-channel-local` | In-memory channel manager provider, inbound processing pipeline, classpath SPI loading, and local plugin directory loading |
 | `intentforge-channel-spring` | Spring `spring.factories` bridge for channel plugin discovery |
 | `intentforge-channel-connectors` | Loopback and generic connector support entrypoints |
-| `intentforge-channel-telegram` | Telegram Bot API connector implementation |
+| `intentforge-channel-telegram` | Telegram Bot API connector implementation with driver, outbound, inbound, admin, and plugin package groups |
 | `intentforge-channel-wecom` | WeCom application messaging connector implementation |
 
 ### `intentforge-hook`
@@ -141,7 +141,7 @@
 | Module | Role |
 | --- | --- |
 | `intentforge-boot-local` | Local-first bootstrap, SPI runtime catalog discovery, runtime component registry assembly, space-aware per-run runtime selection, native agent gateway assembly, local exposure of both synchronous and event-driven run entrypoints, and boot-local channel inbound session persistence wiring |
-| `intentforge-boot-server` | Minimal JDK `HttpServer` bootstrap, route wiring, virtual-thread-backed request execution, thin `HttpExchange` adapters, delegated hook-route registration, SSE event fan-out, terminal server entrypoint, and Telegram-focused local webhook entrypoint |
+| `intentforge-boot-server` | Minimal JDK `HttpServer` bootstrap, route wiring, virtual-thread-backed request execution, thin `HttpExchange` adapters, delegated hook-route registration, SSE event fan-out, terminal server entrypoint, and Telegram-focused local inbound entrypoints for both long polling and webhook mode |
 
 ### `intentforge-desktop`
 

@@ -10,7 +10,8 @@ Current implementation:
 - create-run requests may auto-create one session when `sessionId` is omitted
 - paused runs expose `availableNextActions`, and resume requests explicitly choose `nextRole`, `nextAgentId`, or `complete=true`
 - terminal main: `cn.intentforge.boot.server.AiAssetServerMain`
-- Telegram-focused terminal main: `cn.intentforge.boot.server.TelegramWebhookServerMain`
+- Telegram-focused terminal main: `cn.intentforge.boot.server.TelegramServerMain`
+- Telegram webhook-only terminal main: `cn.intentforge.boot.server.TelegramWebhookServerMain`
 
 Minimal startup:
 
@@ -39,10 +40,10 @@ Startup output includes:
 
 For end-to-end demo data, use the integration fixtures under `src/test/java`.
 
-## Telegram Local Webhook Smoke Test
+## Telegram Local Inbound Smoke Test
 
-The Telegram-focused main starts the same HTTP server but manually registers one Telegram hook account from system properties or environment variables.
-This is the fastest way to validate the current Telegram inbound webhook path without writing a custom bootstrap class.
+`TelegramServerMain` starts the same HTTP server but adds one Telegram account whose inbound mode defaults to long polling.
+The same entrypoint can switch to webhook mode through explicit settings, so one local startup flow can cover both Telegram inbound styles without a custom bootstrap class.
 
 ### 1. Build the boot-server runtime classpath
 
@@ -72,6 +73,7 @@ export TG_WEBHOOK_SECRET="telegram-local-secret"
 
 Optional settings:
 
+- `TG_INBOUND_MODE`: `LONG_POLLING` or `WEBHOOK`; defaults to `LONG_POLLING`
 - `TG_WEBHOOK_BASE_URL`: public HTTPS base URL, for example from a reverse proxy or tunnel
 - `TG_WEBHOOK_URL`: full public webhook URL override
 - `TG_WEBHOOK_ALLOWED_UPDATES`: comma-separated Telegram update kinds such as `message,callback_query`
@@ -87,26 +89,67 @@ curl "https://api.telegram.org/bot${TG_BOT_TOKEN}/getMe"
 
 ### 3. Start the Telegram-focused server
 
+If you do not set `TG_INBOUND_MODE`, the server starts in long-polling mode.
+This mode does not need a public HTTP route because updates are pulled through Telegram Bot API `getUpdates`.
+
+```bash
+export TG_WEBHOOK_ALLOWED_UPDATES="message,callback_query"
+
+java -Dintentforge.server.port=18080 \
+  -cp "$CLASSPATH" \
+  cn.intentforge.boot.server.TelegramServerMain
+```
+
+Startup prints:
+
+- the local base URI
+- the selected Telegram inbound mode
+- the canonical Telegram webhook endpoint for `TG_ACCOUNT_ID`
+- whether startup-time automatic webhook reconciliation is enabled for webhook mode
+
+### 4. Verify the default long-polling mode
+
+`TelegramServerMain` deletes an existing webhook before it starts long polling, so Telegram is not left in webhook mode accidentally.
+You can inspect the upstream webhook state after the server starts:
+
+```bash
+curl "https://api.telegram.org/bot${TG_BOT_TOKEN}/getWebhookInfo"
+```
+
+The returned `url` should be empty or absent when long polling is active.
+Then send a text message to the bot from the Telegram client while the process keeps running.
+
+Current long-polling verification is intentionally minimal:
+
+- there is no dedicated HTTP endpoint yet for reading back the persisted Telegram session
+- the polled updates are consumed inside the in-process `SessionManager`
+
+### 5. Switch to webhook mode
+
+Webhook mode is opt-in.
 For a real Telegram callback, point `TG_WEBHOOK_BASE_URL` or `TG_WEBHOOK_URL` at a public HTTPS address that forwards traffic to this process.
 Telegram cannot deliver webhook traffic to `127.0.0.1` directly.
 
 ```bash
+export TG_INBOUND_MODE="WEBHOOK"
 export TG_WEBHOOK_BASE_URL="https://your-public-hook.example.com"
 export TG_WEBHOOK_ALLOWED_UPDATES="message,callback_query"
 export TG_WEBHOOK_AUTO_MANAGE="true"
 
 java -Dintentforge.server.port=18080 \
   -cp "$CLASSPATH" \
+  cn.intentforge.boot.server.TelegramServerMain
+```
+
+If you want a webhook-only compatibility entrypoint, this wrapper remains available:
+
+```bash
+java -Dintentforge.server.port=18080 \
+  -cp "$CLASSPATH" \
   cn.intentforge.boot.server.TelegramWebhookServerMain
 ```
 
-Startup prints:
-
-- the local base URI
-- the canonical Telegram webhook endpoint for `TG_ACCOUNT_ID`
-- whether startup-time automatic webhook reconciliation is enabled
-
-### 4. Verify startup-time automatic webhook management
+### 6. Verify webhook registration and the local hook route
 
 When `TG_WEBHOOK_AUTO_MANAGE=true` and a public webhook URL can be derived, startup reconciles Telegram webhook state automatically.
 You can inspect the registered webhook after the server starts:
@@ -122,8 +165,6 @@ ${TG_WEBHOOK_BASE_URL}/open-api/hooks/telegram/accounts/${TG_ACCOUNT_ID}/webhook
 ```
 
 or the explicit `TG_WEBHOOK_URL` when you set one.
-
-### 5. Smoke test the local route without Telegram delivery
 
 If you want to validate the hook path before involving Telegram, call the local endpoint directly.
 This works even when no public tunnel is available.
@@ -157,7 +198,7 @@ Expected response:
 OK
 ```
 
-### 6. Drive a real Telegram callback
+### 7. Drive a real Telegram callback
 
 Once the public HTTPS route is available and `getWebhookInfo` shows the expected URL:
 
@@ -170,7 +211,7 @@ Current inbound coverage is intentionally limited to:
 - text-bearing `message`, `edited_message`, `channel_post`, and `edited_channel_post`
 - `callback_query` payloads that carry `data` or `game_short_name`
 
-### 7. Manual webhook control when auto-management is disabled
+### 8. Manual webhook control when auto-management is disabled
 
 If you leave `TG_WEBHOOK_AUTO_MANAGE=false`, you can still register or remove the webhook yourself:
 

@@ -13,7 +13,7 @@ It is designed for pluggable multi-channel integrations such as Telegram and WeC
 | `intentforge-channel-local` | In-memory `ChannelManager`, inbound processing pipeline, classpath plugin loading, and external plugin directory loading |
 | `intentforge-channel-spring` | Spring `spring.factories` discovery bridge that contributes `ChannelPlugin` instances through a dedicated SPI strategy |
 | `intentforge-channel-connectors` | Loopback and generic connector support entrypoints |
-| `intentforge-channel-telegram` | Telegram Bot API outbound connector and inbound webhook normalization |
+| `intentforge-channel-telegram` | Telegram Bot API outbound connector, inbound long polling, inbound webhook normalization, and webhook administration |
 | `intentforge-channel-wecom` | WeCom application messaging outbound connector and inbound callback normalization |
 
 ## Core Model
@@ -162,13 +162,24 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
 - module: `intentforge-channel-telegram`
 - plugin id: `intentforge.channel.telegram`
 - runtime type: `ChannelType.TELEGRAM`
+- package layout:
+  - `plugin`: SPI entrypoint
+  - `driver`: pluggable driver and account-bound runtime wiring
+  - `outbound`: Bot API send client, command/result models, and outbound session
+  - `inbound.webhook`: webhook normalization
+  - `inbound.polling`: long-polling client and background ingress
+  - `admin`: webhook lifecycle administration
 - current scope:
   - outbound text delivery via Telegram Bot API `sendMessage`
+  - inbound long polling via Telegram Bot API `getUpdates`
   - inbound webhook normalization for text-bearing updates
   - outbound webhook lifecycle administration via Telegram Bot API `setWebhook`, `deleteWebhook`, and `getWebhookInfo`
 - required account properties:
   - `botToken`: Telegram bot token
   - `baseUrl`: optional Bot API base URL, defaults to `https://api.telegram.org`
+  - `inboundMode`: optional inbound mode, `LONG_POLLING` or `WEBHOOK`, defaults to `LONG_POLLING` in `TelegramServerMain`
+  - `pollingAllowedUpdates`: optional comma-separated Telegram update kinds used when long polling calls `getUpdates`
+  - `pollingDeleteWebhookOnStart`: optional boolean that controls whether long polling deletes an existing webhook before polling begins, defaults to `true`
   - `webhookSecretToken`: optional webhook secret token that must match `X-Telegram-Bot-Api-Secret-Token` on inbound requests
   - `webhookAutoManage`: optional boolean that enables startup-time automatic webhook reconciliation for the account
   - `webhookUrl`: optional full externally reachable webhook URL override used by automatic webhook reconciliation
@@ -185,13 +196,16 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
   - `disableNotification` -> `disable_notification`
   - `disableWebPagePreview` -> `link_preview_options.is_disabled`
 - inbound webhook behavior:
+  - `TelegramServerMain` defaults to `LONG_POLLING` and starts one background long-polling ingress for the configured Telegram account
+  - long polling uses `getUpdates`, forwards each raw update into the shared `ChannelInboundProcessor`, and deletes an existing webhook on startup unless `pollingDeleteWebhookOnStart=false`
+  - webhook mode is explicit through `inboundMode=WEBHOOK` or `TG_INBOUND_MODE=WEBHOOK`
   - `POST` JSON updates are parsed through `ChannelWebhookHandler`
   - when `webhookSecretToken` is configured, inbound requests must provide the matching `X-Telegram-Bot-Api-Secret-Token` header
   - hook ingress supports both the generic route and `/open-api/hooks/telegram/accounts/{accountId}/webhook`
   - when `webhookAutoManage=true`, the server bootstrap opens an account-bound webhook administration facade, derives the public webhook URL from `webhookUrl`, `webhookBaseUrl`, or the running server base URI, and then reconciles Telegram webhook state before startup completes
   - managed `webhookDesiredState=REGISTERED` triggers `setWebhook` followed by `getWebhookInfo`
   - managed `webhookDesiredState=UNREGISTERED` triggers `deleteWebhook` followed by `getWebhookInfo`
-  - `TelegramWebhookServerMain` accepts the same Telegram account settings via system properties or environment variables so a developer can start a Telegram-focused server without writing a custom bootstrap class
+  - `TelegramServerMain` accepts the same Telegram account settings via system properties or environment variables and keeps `TelegramWebhookServerMain` as a webhook-only compatibility wrapper
   - `message`, `edited_message`, `channel_post`, and `edited_channel_post` with `text` are normalized into one `ChannelInboundMessage`
   - `callback_query` updates with `data` or `game_short_name` are normalized into one `ChannelInboundMessage`, with the callback payload mapped into `text` and callback identifiers stored in metadata
   - non-text updates currently acknowledge with `200 OK` and produce no normalized messages
@@ -203,6 +217,7 @@ Telegram-focused local startup settings:
   - `intentforge.telegram.displayName`
   - `intentforge.telegram.botToken`
   - `intentforge.telegram.baseUrl`
+  - `intentforge.telegram.inboundMode`
   - `intentforge.telegram.webhookUrl`
   - `intentforge.telegram.webhookBaseUrl`
   - `intentforge.telegram.webhookSecretToken`
@@ -215,6 +230,7 @@ Telegram-focused local startup settings:
   - `TG_DISPLAY_NAME`
   - `TG_BOT_TOKEN`
   - `TG_BASE_URL`
+  - `TG_INBOUND_MODE`
   - `TG_WEBHOOK_URL`
   - `TG_WEBHOOK_BASE_URL`
   - `TG_WEBHOOK_SECRET`
