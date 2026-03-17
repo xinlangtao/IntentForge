@@ -20,14 +20,14 @@ Add a Telegram-specific boot-server entrypoint that manually registers one Teleg
 | --- | --- | --- | --- |
 | 1 | Add task scope and red tests for Telegram-specific server main settings and startup behavior | finished | commit: 87bae82 |
 | 2 | Implement Telegram-specific server main and manual hook account registration wiring | finished | commit: 87bae82 |
-| 3 | Update docs, run verification, and finalize checkpoints | finished | commits: pending, pending |
+| 3 | Update docs, run verification, and finalize checkpoints | finished | commit: a2e5fac |
 
 ## Update Log
 | time | status | process | update |
 | --- | --- | --- | --- |
 | 2026-03-17 10:33:57 +0800 | running | 5% | Initialized task for a Telegram-specific boot-server entrypoint that manually registers one hook account from properties or environment variables. |
 | 2026-03-17 10:37:29 +0800 | running | 85% | Added `TelegramWebhookServerMain`, account-settings resolution with environment fallback, manual hook-account registration wiring, and focused tests. Checkpoint commit: 87bae82. |
-| 2026-03-17 10:38:04 +0800 | finished | 100% | Updated architecture notes for the Telegram-focused startup entrypoint, reran the focused boot-server tests plus full `make test`, and prepared the final checkpoint bookkeeping for the new local webhook server main. |
+| 2026-03-17 10:40:20 +0800 | finished | 100% | Updated architecture notes for the Telegram-focused startup entrypoint, reran the focused boot-server tests plus full `make test`, recorded docs checkpoint `a2e5fac`, and synchronized the final task bookkeeping for the new local webhook server main. |
 
 ## Sequence Diagram
 
