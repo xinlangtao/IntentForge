@@ -26,7 +26,7 @@
 | `intentforge-audit` | Run/step/tool-call records, event snapshots, replay, audit services |
 | `intentforge-agent` | Agent abstraction family, routed execution contracts, and runtime integrations |
 | `intentforge-channel` | Channel abstractions, runtime managers, Spring SPI bridge, and pluggable connector adapters |
-| `intentforge-hook` | External hook ingress, generic webhook route adapters, and hook-visible channel account resolution |
+| `intentforge-hook` | External hook ingress, generic and platform-specific webhook route adapters, and hook-visible channel account resolution |
 | `intentforge-prompt` | Prompt definitions, registries, and pluggable prompt runtime |
 | `intentforge-model` | Model catalogs, capability metadata, and pluggable model runtime |
 | `intentforge-model-provider` | Model provider SPI, provider registries, and pluggable provider adapters |
@@ -64,7 +64,7 @@
 
 | Module | Role |
 | --- | --- |
-| `intentforge-hook` | Generic external hook ingress, hook-account registry, and HTTP route adapters that delegate into `ChannelInboundProcessor` |
+| `intentforge-hook` | Generic and platform-specific external hook ingress, hook-account registry, and HTTP route adapters that delegate into `ChannelInboundProcessor` |
 
 ### `intentforge-governance`
 

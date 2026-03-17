@@ -85,6 +85,144 @@ paths:
               schema:
                 type: string
                 example: internal server error
+  /open-api/hooks/telegram/accounts/{accountId}/webhook:
+    post:
+      summary: Receive one Telegram webhook callback
+      operationId: handleTelegramWebhook
+      tags:
+        - hooks
+      parameters:
+        - $ref: '#/components/parameters/ChannelAccountId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Raw Telegram Bot API update payload forwarded to the Telegram channel connector.
+              additionalProperties: true
+      responses:
+        '200':
+          description: Telegram acknowledgement payload
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+        '401':
+          description: Telegram webhook secret token mismatch
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: unauthorized
+        '404':
+          description: Hook path or registered account not found
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: hook account not found
+        '405':
+          description: Telegram connector only accepts POST on this route
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: method not allowed
+        '500':
+          description: Unexpected hook endpoint failure
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: internal server error
+  /open-api/hooks/wecom/accounts/{accountId}/callback:
+    get:
+      summary: Receive one WeCom verification callback
+      operationId: handleWeComVerificationCallback
+      tags:
+        - hooks
+      parameters:
+        - $ref: '#/components/parameters/ChannelAccountId'
+      responses:
+        '200':
+          description: WeCom verification acknowledgement payload
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: hello world
+        '404':
+          description: Hook path or registered account not found
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: hook account not found
+        '405':
+          description: Method not accepted by the selected connector
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: method not allowed
+        '500':
+          description: Unexpected hook endpoint failure
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: internal server error
+    post:
+      summary: Receive one WeCom message callback
+      operationId: handleWeComMessageCallback
+      tags:
+        - hooks
+      parameters:
+        - $ref: '#/components/parameters/ChannelAccountId'
+      requestBody:
+        required: false
+        content:
+          application/xml:
+            schema:
+              type: string
+              description: Raw WeCom callback XML forwarded to the WeCom channel connector.
+              example: '<xml><MsgType>text</MsgType></xml>'
+          text/plain:
+            schema:
+              type: string
+              description: Raw WeCom callback body when the upstream transport sends plaintext content.
+              example: '<xml><MsgType>text</MsgType></xml>'
+      responses:
+        '200':
+          description: WeCom callback acknowledgement payload
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: success
+        '404':
+          description: Hook path or registered account not found
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: hook account not found
+        '405':
+          description: Method not accepted by the selected connector
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: method not allowed
+        '500':
+          description: Unexpected hook endpoint failure
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: internal server error
   /api/agent-runs:
     post:
       summary: Create and start one agent run
@@ -202,6 +340,15 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
+    HookAccountId:
+      name: accountId
+      in: path
+      required: true
+      description: Stable channel account identifier resolved by the hook account registry on platform-specific hook routes.
+      schema:
+        type: string
+        minLength: 1
+        example: telegram-account
     ChannelType:
       name: channelType
       in: path

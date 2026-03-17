@@ -126,10 +126,15 @@ Current generic route:
 
 - `/open-api/hooks/channels/{channelType}/accounts/{accountId}/webhook`
 
+Current platform-specific routes:
+
+- Telegram: `/open-api/hooks/telegram/accounts/{accountId}/webhook`
+- WeCom: `/open-api/hooks/wecom/accounts/{accountId}/callback`
+
 Ingress behavior:
 
-- `HookHttpRouteRegistrar` registers the shared hook prefix on the JDK `HttpServer`
-- `ChannelWebhookHttpExchangeHandler` converts `HttpExchange` into `ChannelWebhookRequest`
+- `HookHttpRouteRegistrar` registers the generic and platform-specific hook prefixes on the JDK `HttpServer`
+- `ChannelWebhookHttpExchangeHandler`, `TelegramWebhookHttpExchangeHandler`, and `WeComWebhookHttpExchangeHandler` convert `HttpExchange` into `ChannelWebhookRequest`
 - `ChannelWebhookEndpointController` resolves the target `ChannelAccountProfile` through `HookAccountRegistry`
 - the resolved account and normalized request are delegated into `ChannelInboundProcessor`
 - `AiAssetServerBootstrap` seeds hook-visible accounts through the `hookConfigurer` callback before the server starts
@@ -172,6 +177,7 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
 - inbound webhook behavior:
   - `POST` JSON updates are parsed through `ChannelWebhookHandler`
   - when `webhookSecretToken` is configured, inbound requests must provide the matching `X-Telegram-Bot-Api-Secret-Token` header
+  - hook ingress supports both the generic route and `/open-api/hooks/telegram/accounts/{accountId}/webhook`
   - `message`, `edited_message`, `channel_post`, and `edited_channel_post` with `text` are normalized into one `ChannelInboundMessage`
   - `callback_query` updates with `data` or `game_short_name` are normalized into one `ChannelInboundMessage`, with the callback payload mapped into `text` and callback identifiers stored in metadata
   - non-text updates currently acknowledge with `200 OK` and produce no normalized messages
@@ -201,6 +207,7 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
   - `safe` -> `safe`
 - inbound webhook behavior:
   - `GET` verification requests echo `echostr` without signature validation
+  - hook ingress supports both the generic route and `/open-api/hooks/wecom/accounts/{accountId}/callback`
   - `POST` plaintext XML callbacks with `MsgType=text` are normalized into one `ChannelInboundMessage`
   - non-text callbacks currently acknowledge with `success` and produce no normalized messages
 
