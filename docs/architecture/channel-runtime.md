@@ -223,6 +223,8 @@ Telegram-focused local startup settings:
   - `TG_WEBHOOK_DROP_PENDING_UPDATES`
   - `TG_WEBHOOK_AUTO_MANAGE`
 
+For copy-paste startup commands plus a manual Telegram webhook smoke-test flow, see `intentforge-boot/intentforge-boot-server/README.md`.
+
 ### WeCom
 
 - module: `intentforge-channel-wecom`
