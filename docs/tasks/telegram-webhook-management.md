@@ -20,14 +20,14 @@ Add automatic Telegram webhook lifecycle management for manually registered hook
 | --- | --- | --- | --- |
 | 1 | Define webhook management task scope and add red tests for Telegram admin lifecycle and startup reconciliation | finished | commit: 8279fff |
 | 2 | Implement Telegram webhook administration and generic webhook auto-management wiring | finished | commit: 8279fff |
-| 3 | Update docs, run verification, and finalize checkpoints | finished | commit: pending |
+| 3 | Update docs, run verification, and finalize checkpoints | finished | commit: 8eb50af |
 
 ## Update Log
 | time | status | process | update |
 | --- | --- | --- | --- |
 | 2026-03-17 10:15:07 +0800 | running | 5% | Initialized task for Telegram automatic webhook lifecycle management on top of manual hook account registration. |
 | 2026-03-17 10:21:15 +0800 | running | 85% | Added shared webhook administration SPI, Telegram webhook admin client and lifecycle adapter, startup-time hook webhook auto-manager, and passing targeted tests. Checkpoint commit: 8279fff. |
-| 2026-03-17 10:23:48 +0800 | finished | 100% | Updated architecture docs, verified targeted integration tests plus full `make test`, and prepared the final documentation checkpoint. |
+| 2026-03-17 10:23:48 +0800 | finished | 100% | Updated architecture docs, verified targeted integration tests plus full `make test`, and recorded documentation checkpoint commit 8eb50af. |
 
 ## Sequence Diagram
 
