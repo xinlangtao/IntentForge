@@ -139,6 +139,7 @@ Ingress behavior:
 - the resolved account and normalized request are delegated into `ChannelInboundProcessor`
 - `AiAssetServerBootstrap` seeds hook-visible accounts through the `hookConfigurer` callback before the server starts
 - `HookWebhookAutoManager` inspects manually registered hook-visible accounts and reconciles managed webhook lifecycles before the server starts accepting traffic
+- `TelegramWebhookServerMain` in `intentforge-boot-server` is a convenience terminal entrypoint for local Telegram testing; it resolves one manual Telegram account from system properties or environment variables and delegates into the same bootstrap path
 - unknown hook paths and unregistered hook accounts return `404`
 - unexpected ingress failures return `500`
 
@@ -190,9 +191,37 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
   - when `webhookAutoManage=true`, the server bootstrap opens an account-bound webhook administration facade, derives the public webhook URL from `webhookUrl`, `webhookBaseUrl`, or the running server base URI, and then reconciles Telegram webhook state before startup completes
   - managed `webhookDesiredState=REGISTERED` triggers `setWebhook` followed by `getWebhookInfo`
   - managed `webhookDesiredState=UNREGISTERED` triggers `deleteWebhook` followed by `getWebhookInfo`
+  - `TelegramWebhookServerMain` accepts the same Telegram account settings via system properties or environment variables so a developer can start a Telegram-focused server without writing a custom bootstrap class
   - `message`, `edited_message`, `channel_post`, and `edited_channel_post` with `text` are normalized into one `ChannelInboundMessage`
   - `callback_query` updates with `data` or `game_short_name` are normalized into one `ChannelInboundMessage`, with the callback payload mapped into `text` and callback identifiers stored in metadata
   - non-text updates currently acknowledge with `200 OK` and produce no normalized messages
+
+Telegram-focused local startup settings:
+
+- system properties:
+  - `intentforge.telegram.accountId`
+  - `intentforge.telegram.displayName`
+  - `intentforge.telegram.botToken`
+  - `intentforge.telegram.baseUrl`
+  - `intentforge.telegram.webhookUrl`
+  - `intentforge.telegram.webhookBaseUrl`
+  - `intentforge.telegram.webhookSecretToken`
+  - `intentforge.telegram.webhookAllowedUpdates`
+  - `intentforge.telegram.webhookMaxConnections`
+  - `intentforge.telegram.webhookDropPendingUpdates`
+  - `intentforge.telegram.webhookAutoManage`
+- environment variables:
+  - `TG_ACCOUNT_ID`
+  - `TG_DISPLAY_NAME`
+  - `TG_BOT_TOKEN`
+  - `TG_BASE_URL`
+  - `TG_WEBHOOK_URL`
+  - `TG_WEBHOOK_BASE_URL`
+  - `TG_WEBHOOK_SECRET`
+  - `TG_WEBHOOK_ALLOWED_UPDATES`
+  - `TG_WEBHOOK_MAX_CONNECTIONS`
+  - `TG_WEBHOOK_DROP_PENDING_UPDATES`
+  - `TG_WEBHOOK_AUTO_MANAGE`
 
 ### WeCom
 

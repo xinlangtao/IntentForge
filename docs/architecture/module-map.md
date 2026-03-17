@@ -141,7 +141,7 @@
 | Module | Role |
 | --- | --- |
 | `intentforge-boot-local` | Local-first bootstrap, SPI runtime catalog discovery, runtime component registry assembly, space-aware per-run runtime selection, native agent gateway assembly, local exposure of both synchronous and event-driven run entrypoints, and boot-local channel inbound session persistence wiring |
-| `intentforge-boot-server` | Minimal JDK `HttpServer` bootstrap, route wiring, virtual-thread-backed request execution, thin `HttpExchange` adapters, delegated hook-route registration, SSE event fan-out, and terminal server entrypoint |
+| `intentforge-boot-server` | Minimal JDK `HttpServer` bootstrap, route wiring, virtual-thread-backed request execution, thin `HttpExchange` adapters, delegated hook-route registration, SSE event fan-out, terminal server entrypoint, and Telegram-focused local webhook entrypoint |
 
 ### `intentforge-desktop`
 

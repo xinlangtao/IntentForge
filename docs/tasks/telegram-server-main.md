@@ -4,25 +4,66 @@
 Add a Telegram-specific boot-server entrypoint that manually registers one Telegram hook account from system properties or environment variables so local end-to-end webhook testing does not require a custom bootstrap class.
 
 ## Acceptance Criteria
-- [ ] `intentforge-boot-server` provides a Telegram-specific main class for local server startup.
-- [ ] The Telegram-specific main can resolve account settings from system properties with environment-variable fallback.
-- [ ] The Telegram-specific main manually registers the Telegram hook account and exposes the Telegram webhook route.
-- [ ] Documentation describes the new Telegram-specific startup entrypoint and its supported settings.
-- [ ] Validation covers settings resolution, invalid input, integration behavior, and full `make test`.
+- [x] `intentforge-boot-server` provides a Telegram-specific main class for local server startup.
+- [x] The Telegram-specific main can resolve account settings from system properties with environment-variable fallback.
+- [x] The Telegram-specific main manually registers the Telegram hook account and exposes the Telegram webhook route.
+- [x] Documentation describes the new Telegram-specific startup entrypoint and its supported settings.
+- [x] Validation covers settings resolution, invalid input, integration behavior, and full `make test`.
 
 ## Overall Status
-- status: running
-- process: 5%
-- current_step: 1
+- status: finished
+- process: 100%
+- current_step: completed
 
 ## Steps
 | step | description | status | note |
 | --- | --- | --- | --- |
-| 1 | Add task scope and red tests for Telegram-specific server main settings and startup behavior | running | commit: pending |
-| 2 | Implement Telegram-specific server main and manual hook account registration wiring | notrun | commit: pending |
-| 3 | Update docs, run verification, and finalize checkpoints | notrun | commit: pending |
+| 1 | Add task scope and red tests for Telegram-specific server main settings and startup behavior | finished | commit: 87bae82 |
+| 2 | Implement Telegram-specific server main and manual hook account registration wiring | finished | commit: 87bae82 |
+| 3 | Update docs, run verification, and finalize checkpoints | finished | commits: pending, pending |
 
 ## Update Log
 | time | status | process | update |
 | --- | --- | --- | --- |
 | 2026-03-17 10:33:57 +0800 | running | 5% | Initialized task for a Telegram-specific boot-server entrypoint that manually registers one hook account from properties or environment variables. |
+| 2026-03-17 10:37:29 +0800 | running | 85% | Added `TelegramWebhookServerMain`, account-settings resolution with environment fallback, manual hook-account registration wiring, and focused tests. Checkpoint commit: 87bae82. |
+| 2026-03-17 10:38:04 +0800 | finished | 100% | Updated architecture notes for the Telegram-focused startup entrypoint, reran the focused boot-server tests plus full `make test`, and prepared the final checkpoint bookkeeping for the new local webhook server main. |
+
+## Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant User as Local Operator
+    participant Main as TelegramWebhookServerMain
+    participant Settings as TelegramWebhookServerSettings
+    participant Bootstrap as AiAssetServerBootstrap
+    participant Registry as HookAccountRegistry
+    participant Auto as HookWebhookAutoManager
+    participant Server as HttpServer
+
+    User->>Main: start process with system properties or environment variables
+    Main->>Settings: resolveSettings(...)
+    Settings-->>Main: ChannelAccountProfile-ready settings
+    Main->>Bootstrap: bootstrap(bindAddress, pluginsDir, hookConfigurer)
+    Bootstrap->>Registry: register Telegram account profile
+    Bootstrap->>Auto: reconcile managed webhooks
+    Auto-->>Bootstrap: webhook state synchronized when enabled
+    Bootstrap-->>Main: AiAssetServerRuntime
+    Main-->>User: print base URI and Telegram webhook endpoint
+    Main->>Server: await requests
+```
+
+## Module Relationship Diagram
+
+```mermaid
+flowchart LR
+    A[intentforge-boot-server] --> B[TelegramWebhookServerMain]
+    B --> C[TelegramWebhookServerSettings]
+    B --> D[AiAssetServerBootstrap]
+    D --> E[intentforge-hook]
+    E --> F[HookAccountRegistry]
+    E --> G[HookWebhookAutoManager]
+    D --> H[intentforge-boot-local]
+    H --> I[intentforge-channel-local]
+    I --> J[intentforge-channel-telegram]
+```
