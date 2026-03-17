@@ -45,4 +45,16 @@ public interface ChannelDriver {
     Objects.requireNonNull(accountProfile, "accountProfile must not be null");
     return Optional.empty();
   }
+
+  /**
+   * Opens one webhook administration facade for the provided account profile when the channel platform
+   * supports upstream webhook lifecycle management.
+   *
+   * @param accountProfile account profile
+   * @return webhook administration facade when supported
+   */
+  default Optional<ChannelWebhookAdministration> openWebhookAdministration(ChannelAccountProfile accountProfile) {
+    Objects.requireNonNull(accountProfile, "accountProfile must not be null");
+    return Optional.empty();
+  }
 }

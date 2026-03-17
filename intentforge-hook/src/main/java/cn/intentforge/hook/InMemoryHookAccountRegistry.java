@@ -2,6 +2,7 @@ package cn.intentforge.hook;
 
 import cn.intentforge.channel.ChannelAccountProfile;
 import cn.intentforge.channel.ChannelType;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,6 +39,16 @@ public final class InMemoryHookAccountRegistry implements HookAccountRegistry {
     return Optional.ofNullable(accounts.get(new Key(
         Objects.requireNonNull(channelType, "channelType must not be null"),
         Objects.requireNonNull(accountId, "accountId must not be null"))));
+  }
+
+  /**
+   * Lists all currently registered hook-visible channel accounts.
+   *
+   * @return immutable registered account list
+   */
+  @Override
+  public List<ChannelAccountProfile> list() {
+    return List.copyOf(accounts.values());
   }
 
   private record Key(ChannelType channelType, String accountId) {

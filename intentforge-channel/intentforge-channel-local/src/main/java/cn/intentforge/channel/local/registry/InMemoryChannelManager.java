@@ -5,6 +5,7 @@ import static cn.intentforge.common.util.ValidationSupport.normalize;
 import cn.intentforge.channel.ChannelAccountProfile;
 import cn.intentforge.channel.ChannelDriver;
 import cn.intentforge.channel.ChannelSession;
+import cn.intentforge.channel.ChannelWebhookAdministration;
 import cn.intentforge.channel.ChannelWebhookHandler;
 import cn.intentforge.channel.registry.ChannelManager;
 import cn.intentforge.channel.spi.ChannelPlugin;
@@ -112,6 +113,12 @@ public final class InMemoryChannelManager implements ChannelManager {
   public synchronized Optional<ChannelWebhookHandler> openWebhookHandler(ChannelAccountProfile accountProfile) {
     return findDriver(accountProfile)
         .flatMap(driver -> driver.openWebhookHandler(accountProfile));
+  }
+
+  @Override
+  public synchronized Optional<ChannelWebhookAdministration> openWebhookAdministration(ChannelAccountProfile accountProfile) {
+    return findDriver(accountProfile)
+        .flatMap(driver -> driver.openWebhookAdministration(accountProfile));
   }
 
   @Override

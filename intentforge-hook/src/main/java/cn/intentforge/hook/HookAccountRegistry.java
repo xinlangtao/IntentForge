@@ -2,6 +2,7 @@ package cn.intentforge.hook;
 
 import cn.intentforge.channel.ChannelAccountProfile;
 import cn.intentforge.channel.ChannelType;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -25,4 +26,11 @@ public interface HookAccountRegistry {
    * @return matching account profile when registered
    */
   Optional<ChannelAccountProfile> find(ChannelType channelType, String accountId);
+
+  /**
+   * Lists all registered hook-visible channel accounts.
+   *
+   * @return immutable account profile list
+   */
+  List<ChannelAccountProfile> list();
 }
