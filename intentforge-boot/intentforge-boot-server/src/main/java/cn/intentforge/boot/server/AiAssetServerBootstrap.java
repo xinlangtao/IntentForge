@@ -5,7 +5,6 @@ import cn.intentforge.api.agent.AgentRunController;
 import cn.intentforge.boot.local.AiAssetLocalBootstrap;
 import cn.intentforge.boot.local.AiAssetLocalRuntime;
 import cn.intentforge.hook.ChannelWebhookEndpointController;
-import cn.intentforge.hook.ChannelWebhookHttpExchangeHandler;
 import cn.intentforge.hook.HookAccountRegistry;
 import cn.intentforge.hook.HookHttpRouteRegistrar;
 import cn.intentforge.hook.InMemoryHookAccountRegistry;
@@ -82,8 +81,7 @@ public final class AiAssetServerBootstrap {
     nonNullHookConfigurer.accept(hookAccountRegistry);
     HookHttpRouteRegistrar.register(
         server,
-        new ChannelWebhookHttpExchangeHandler(
-            new ChannelWebhookEndpointController(hookAccountRegistry, localRuntime.channelInboundProcessor())));
+        new ChannelWebhookEndpointController(hookAccountRegistry, localRuntime.channelInboundProcessor()));
     server.createContext("/api/agent-runs", httpHandler::handleRunsRoot);
     server.createContext("/api/agent-runs/", httpHandler::handleRunResource);
     server.start();

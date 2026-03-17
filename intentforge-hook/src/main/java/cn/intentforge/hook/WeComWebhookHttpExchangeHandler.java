@@ -1,21 +1,19 @@
 package cn.intentforge.hook;
 
-import cn.intentforge.channel.ChannelInboundProcessingResult;
-import cn.intentforge.channel.ChannelType;
 import com.sun.net.httpserver.HttpExchange;
 import java.io.IOException;
 import java.util.Objects;
 
 /**
- * JDK {@code HttpExchange} adapter for generic channel webhook endpoints.
+ * JDK {@code HttpExchange} adapter for WeCom-specific hook endpoints.
  *
  * @since 1.0.0
  */
-public final class ChannelWebhookHttpExchangeHandler {
+public final class WeComWebhookHttpExchangeHandler {
   /**
-   * Shared path prefix for all externally exposed hook endpoints.
+   * Shared path prefix for WeCom callback endpoints.
    */
-  public static final String CHANNEL_WEBHOOK_PREFIX = "/open-api/hooks/channels/";
+  public static final String WECOM_CALLBACK_PREFIX = "/open-api/hooks/wecom/accounts/";
 
   private final ChannelWebhookEndpointController controller;
 
@@ -24,12 +22,12 @@ public final class ChannelWebhookHttpExchangeHandler {
    *
    * @param controller transport-neutral webhook controller
    */
-  public ChannelWebhookHttpExchangeHandler(ChannelWebhookEndpointController controller) {
+  public WeComWebhookHttpExchangeHandler(ChannelWebhookEndpointController controller) {
     this.controller = Objects.requireNonNull(controller, "controller must not be null");
   }
 
   /**
-   * Handles one webhook HTTP exchange routed under the shared hook prefix.
+   * Handles one WeCom callback HTTP exchange routed under the WeCom-specific hook prefix.
    *
    * @param exchange incoming HTTP exchange
    * @throws IOException when the request or response body cannot be processed
@@ -38,31 +36,26 @@ public final class ChannelWebhookHttpExchangeHandler {
     HookHttpExchangeSupport.handle(exchange, controller, path -> Route.parse(path).resolvedRoute());
   }
 
-  private record Route(ChannelType channelType, String accountId) {
+  private record Route(String accountId) {
     private static Route parse(String path) {
       String[] segments = path == null ? new String[0] : path.split("/");
-      if (segments.length != 8
+      if (segments.length != 7
           || !"open-api".equals(segments[1])
           || !"hooks".equals(segments[2])
-          || !"channels".equals(segments[3])
-          || !"accounts".equals(segments[5])
-          || !"webhook".equals(segments[7])) {
+          || !"wecom".equals(segments[3])
+          || !"accounts".equals(segments[4])
+          || !"callback".equals(segments[6])) {
         throw new HookEndpointException(404, "hook path not found");
       }
-      ChannelType channelType = switch (segments[4]) {
-        case "telegram" -> ChannelType.TELEGRAM;
-        case "wecom" -> ChannelType.WECOM;
-        default -> throw new HookEndpointException(404, "hook path not found");
-      };
-      String accountId = segments[6];
+      String accountId = segments[5];
       if (accountId.isBlank()) {
         throw new HookEndpointException(404, "hook path not found");
       }
-      return new Route(channelType, accountId);
+      return new Route(accountId);
     }
 
     private HookHttpExchangeSupport.ResolvedRoute resolvedRoute() {
-      return HookHttpExchangeSupport.resolvedRoute(channelType, accountId);
+      return HookHttpExchangeSupport.resolvedRoute(cn.intentforge.channel.ChannelType.WECOM, accountId);
     }
   }
 }
