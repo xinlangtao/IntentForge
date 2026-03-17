@@ -4,13 +4,18 @@ import cn.intentforge.channel.ChannelAccountProfile;
 import cn.intentforge.channel.ChannelInboundProcessingResult;
 import cn.intentforge.channel.ChannelInboundProcessor;
 import cn.intentforge.channel.ChannelType;
+import cn.intentforge.channel.ChannelWebhookAdministration;
 import cn.intentforge.channel.ChannelWebhookDeletion;
+import cn.intentforge.channel.ChannelWebhookRegistration;
 import cn.intentforge.channel.ChannelWebhookRequest;
 import cn.intentforge.channel.ChannelWebhookResponse;
+import cn.intentforge.channel.ChannelWebhookStatus;
+import cn.intentforge.channel.telegram.config.TelegramChannelPropertyNames;
 import cn.intentforge.channel.telegram.inbound.TelegramInboundMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -61,9 +66,9 @@ class TelegramLongPollingIngressTest {
     RecordingWebhookAdministration administration = new RecordingWebhookAdministration();
     TelegramLongPollingIngress ingress = new TelegramLongPollingIngress(
         accountProfile(Map.of(
-            "botToken", "bot-token",
-            "inboundMode", TelegramInboundMode.LONG_POLLING.name(),
-            "pollingAllowedUpdates", "message,callback_query")),
+            TelegramChannelPropertyNames.BOT_TOKEN, "bot-token",
+            TelegramChannelPropertyNames.INBOUND_MODE, TelegramInboundMode.LONG_POLLING.name(),
+            TelegramChannelPropertyNames.POLLING_ALLOWED_UPDATES, "message,callback_query")),
         inboundProcessor,
         apiClient,
         administration);
@@ -91,9 +96,9 @@ class TelegramLongPollingIngressTest {
     RecordingWebhookAdministration administration = new RecordingWebhookAdministration();
     TelegramLongPollingIngress ingress = new TelegramLongPollingIngress(
         accountProfile(Map.of(
-            "botToken", "bot-token",
-            "inboundMode", TelegramInboundMode.LONG_POLLING.name(),
-            "pollingDeleteWebhookOnStart", "false")),
+            TelegramChannelPropertyNames.BOT_TOKEN, "bot-token",
+            TelegramChannelPropertyNames.INBOUND_MODE, TelegramInboundMode.LONG_POLLING.name(),
+            TelegramChannelPropertyNames.POLLING_DELETE_WEBHOOK_ON_START, "false")),
         inboundProcessor,
         apiClient,
         administration);
@@ -138,12 +143,22 @@ class TelegramLongPollingIngressTest {
     }
   }
 
-  private static final class RecordingWebhookAdministration implements TelegramWebhookDeleteSupport {
+  private static final class RecordingWebhookAdministration implements ChannelWebhookAdministration {
     private final List<ChannelWebhookDeletion> deletions = new ArrayList<>();
+
+    @Override
+    public void setWebhook(ChannelWebhookRegistration registration) {
+      throw new UnsupportedOperationException("setWebhook is not used by this test");
+    }
 
     @Override
     public void deleteWebhook(ChannelWebhookDeletion deletion) {
       deletions.add(deletion);
+    }
+
+    @Override
+    public Optional<ChannelWebhookStatus> getWebhookInfo() {
+      return Optional.empty();
     }
   }
 }

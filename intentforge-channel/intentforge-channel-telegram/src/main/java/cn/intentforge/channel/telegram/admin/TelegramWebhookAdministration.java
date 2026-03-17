@@ -1,4 +1,4 @@
-package cn.intentforge.channel.telegram;
+package cn.intentforge.channel.telegram.admin;
 
 import cn.intentforge.channel.ChannelWebhookAdministration;
 import cn.intentforge.channel.ChannelWebhookDeletion;
@@ -14,12 +14,19 @@ import java.util.Optional;
  *
  * @since 1.0.0
  */
-final class TelegramWebhookAdministration implements ChannelWebhookAdministration {
+public final class TelegramWebhookAdministration implements ChannelWebhookAdministration {
   private final String baseUrl;
   private final String botToken;
   private final TelegramWebhookApiClient apiClient;
 
-  TelegramWebhookAdministration(String baseUrl, String botToken, TelegramWebhookApiClient apiClient) {
+  /**
+   * Creates one account-bound webhook administration facade.
+   *
+   * @param baseUrl Telegram Bot API base URL
+   * @param botToken Telegram bot token
+   * @param apiClient webhook administration client
+   */
+  public TelegramWebhookAdministration(String baseUrl, String botToken, TelegramWebhookApiClient apiClient) {
     this.baseUrl = Objects.requireNonNull(baseUrl, "baseUrl must not be null");
     this.botToken = Objects.requireNonNull(botToken, "botToken must not be null");
     this.apiClient = Objects.requireNonNull(apiClient, "apiClient must not be null");

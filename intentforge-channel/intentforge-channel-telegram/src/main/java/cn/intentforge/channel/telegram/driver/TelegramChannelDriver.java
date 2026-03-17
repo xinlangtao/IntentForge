@@ -1,4 +1,4 @@
-package cn.intentforge.channel.telegram;
+package cn.intentforge.channel.telegram.driver;
 
 import static cn.intentforge.common.util.ValidationSupport.requireText;
 import static cn.intentforge.common.util.ValidationSupport.textOrDefault;
@@ -11,13 +11,25 @@ import cn.intentforge.channel.ChannelSession;
 import cn.intentforge.channel.ChannelType;
 import cn.intentforge.channel.ChannelWebhookAdministration;
 import cn.intentforge.channel.ChannelWebhookHandler;
+import cn.intentforge.channel.telegram.admin.HttpTelegramWebhookApiClient;
+import cn.intentforge.channel.telegram.admin.TelegramWebhookAdministration;
+import cn.intentforge.channel.telegram.admin.TelegramWebhookApiClient;
+import cn.intentforge.channel.telegram.inbound.webhook.TelegramWebhookHandler;
+import cn.intentforge.channel.telegram.outbound.HttpTelegramBotApiClient;
+import cn.intentforge.channel.telegram.outbound.TelegramBotApiClient;
+import cn.intentforge.channel.telegram.outbound.TelegramChannelSession;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-final class TelegramChannelDriver implements ChannelDriver {
-  static final String DRIVER_ID = "intentforge.channel.telegram";
+/**
+ * Pluggable Telegram channel driver.
+ *
+ * @since 1.0.0
+ */
+public final class TelegramChannelDriver implements ChannelDriver {
+  public static final String DRIVER_ID = "intentforge.channel.telegram";
   private static final String DEFAULT_BASE_URL = "https://api.telegram.org";
   private static final ChannelDescriptor DESCRIPTOR = new ChannelDescriptor(
       DRIVER_ID,
@@ -29,15 +41,29 @@ final class TelegramChannelDriver implements ChannelDriver {
   private final TelegramBotApiClient apiClient;
   private final TelegramWebhookApiClient webhookApiClient;
 
-  TelegramChannelDriver() {
+  /**
+   * Creates one Telegram driver with the default outbound and webhook API clients.
+   */
+  public TelegramChannelDriver() {
     this(new HttpTelegramBotApiClient(), new HttpTelegramWebhookApiClient());
   }
 
-  TelegramChannelDriver(TelegramBotApiClient apiClient) {
+  /**
+   * Creates one Telegram driver with a custom outbound API client.
+   *
+   * @param apiClient outbound Telegram API client
+   */
+  public TelegramChannelDriver(TelegramBotApiClient apiClient) {
     this(apiClient, new HttpTelegramWebhookApiClient());
   }
 
-  TelegramChannelDriver(TelegramBotApiClient apiClient, TelegramWebhookApiClient webhookApiClient) {
+  /**
+   * Creates one Telegram driver with custom outbound and webhook API clients.
+   *
+   * @param apiClient outbound Telegram API client
+   * @param webhookApiClient webhook administration API client
+   */
+  public TelegramChannelDriver(TelegramBotApiClient apiClient, TelegramWebhookApiClient webhookApiClient) {
     this.apiClient = Objects.requireNonNull(apiClient, "apiClient must not be null");
     this.webhookApiClient = Objects.requireNonNull(webhookApiClient, "webhookApiClient must not be null");
   }

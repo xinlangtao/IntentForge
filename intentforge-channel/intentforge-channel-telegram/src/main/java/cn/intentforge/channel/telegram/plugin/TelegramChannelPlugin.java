@@ -1,6 +1,7 @@
-package cn.intentforge.channel.telegram;
+package cn.intentforge.channel.telegram.plugin;
 
 import cn.intentforge.channel.ChannelDriver;
+import cn.intentforge.channel.telegram.driver.TelegramChannelDriver;
 import cn.intentforge.channel.spi.ChannelPlugin;
 import java.util.Collection;
 import java.util.List;

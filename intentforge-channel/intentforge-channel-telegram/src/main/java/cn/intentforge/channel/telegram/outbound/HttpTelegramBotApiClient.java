@@ -1,4 +1,4 @@
-package cn.intentforge.channel.telegram;
+package cn.intentforge.channel.telegram.outbound;
 
 import static cn.intentforge.common.util.ValidationSupport.requireText;
 
@@ -16,11 +16,19 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-final class HttpTelegramBotApiClient implements TelegramBotApiClient {
+/**
+ * HTTP-based Telegram Bot API client for outbound message delivery.
+ *
+ * @since 1.0.0
+ */
+public final class HttpTelegramBotApiClient implements TelegramBotApiClient {
   private final HttpClient httpClient;
   private final ObjectMapper objectMapper;
 
-  HttpTelegramBotApiClient() {
+  /**
+   * Creates one client with the default HTTP and JSON support.
+   */
+  public HttpTelegramBotApiClient() {
     this(
         HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build(),
         new ObjectMapper());

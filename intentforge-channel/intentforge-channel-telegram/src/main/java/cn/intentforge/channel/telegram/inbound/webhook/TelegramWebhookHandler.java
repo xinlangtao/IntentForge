@@ -1,4 +1,4 @@
-package cn.intentforge.channel.telegram;
+package cn.intentforge.channel.telegram.inbound.webhook;
 
 import static cn.intentforge.common.util.ValidationSupport.normalize;
 import static cn.intentforge.common.util.ValidationSupport.requireText;
@@ -26,7 +26,7 @@ import java.util.Objects;
  *
  * @since 1.0.0
  */
-final class TelegramWebhookHandler implements ChannelWebhookHandler {
+public final class TelegramWebhookHandler implements ChannelWebhookHandler {
   private static final ChannelWebhookResponse OK_RESPONSE =
       new ChannelWebhookResponse(200, "text/plain; charset=utf-8", "OK", Map.of());
   private static final ChannelWebhookResponse UNAUTHORIZED_RESPONSE =
@@ -36,7 +36,12 @@ final class TelegramWebhookHandler implements ChannelWebhookHandler {
   private final ChannelAccountProfile accountProfile;
   private final ObjectMapper objectMapper;
 
-  TelegramWebhookHandler(ChannelAccountProfile accountProfile) {
+  /**
+   * Creates one webhook handler with the default JSON mapper.
+   *
+   * @param accountProfile Telegram account profile
+   */
+  public TelegramWebhookHandler(ChannelAccountProfile accountProfile) {
     this(accountProfile, new ObjectMapper());
   }
 

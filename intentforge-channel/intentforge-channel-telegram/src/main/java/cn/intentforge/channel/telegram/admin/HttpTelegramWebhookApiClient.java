@@ -1,4 +1,4 @@
-package cn.intentforge.channel.telegram;
+package cn.intentforge.channel.telegram.admin;
 
 import static cn.intentforge.common.util.ValidationSupport.requireText;
 
@@ -17,11 +17,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-final class HttpTelegramWebhookApiClient implements TelegramWebhookApiClient {
+/**
+ * HTTP-based Telegram Bot API client for webhook lifecycle administration.
+ *
+ * @since 1.0.0
+ */
+public final class HttpTelegramWebhookApiClient implements TelegramWebhookApiClient {
   private final HttpClient httpClient;
   private final ObjectMapper objectMapper;
 
-  HttpTelegramWebhookApiClient() {
+  /**
+   * Creates one client with the default HTTP and JSON support.
+   */
+  public HttpTelegramWebhookApiClient() {
     this(
         HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build(),
         new ObjectMapper());

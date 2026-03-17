@@ -1,4 +1,4 @@
-package cn.intentforge.channel.telegram;
+package cn.intentforge.channel.telegram.admin;
 
 import static cn.intentforge.common.util.ValidationSupport.requireText;
 
@@ -18,7 +18,7 @@ import java.util.Objects;
  * @param dropPendingUpdates whether queued updates should be dropped
  * @since 1.0.0
  */
-record TelegramSetWebhookCommand(
+public record TelegramSetWebhookCommand(
     String baseUrl,
     String botToken,
     URI webhookUrl,
@@ -27,7 +27,10 @@ record TelegramSetWebhookCommand(
     Integer maxConnections,
     boolean dropPendingUpdates
 ) {
-  TelegramSetWebhookCommand {
+  /**
+   * Creates one validated Telegram webhook registration command.
+   */
+  public TelegramSetWebhookCommand {
     baseUrl = requireText(baseUrl, "baseUrl");
     botToken = requireText(botToken, "botToken");
     webhookUrl = Objects.requireNonNull(webhookUrl, "webhookUrl must not be null");

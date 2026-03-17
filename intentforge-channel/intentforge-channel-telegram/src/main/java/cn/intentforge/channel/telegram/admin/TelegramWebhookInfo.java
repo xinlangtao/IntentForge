@@ -1,4 +1,4 @@
-package cn.intentforge.channel.telegram;
+package cn.intentforge.channel.telegram.admin;
 
 import java.net.URI;
 import java.time.Instant;
@@ -17,7 +17,7 @@ import java.util.Objects;
  * @param allowedUpdates configured allowed updates
  * @since 1.0.0
  */
-record TelegramWebhookInfo(
+public record TelegramWebhookInfo(
     URI url,
     Integer pendingUpdateCount,
     Integer maxConnections,
@@ -26,7 +26,10 @@ record TelegramWebhookInfo(
     String lastErrorMessage,
     List<String> allowedUpdates
 ) {
-  TelegramWebhookInfo {
+  /**
+   * Creates one validated Telegram webhook information snapshot.
+   */
+  public TelegramWebhookInfo {
     url = Objects.requireNonNull(url, "url must not be null");
     allowedUpdates = allowedUpdates == null ? List.of() : List.copyOf(allowedUpdates);
   }

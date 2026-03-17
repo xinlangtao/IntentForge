@@ -1,11 +1,11 @@
-package cn.intentforge.channel.telegram;
+package cn.intentforge.channel.telegram.admin;
 
 /**
  * Telegram Bot API client for webhook lifecycle administration.
  *
  * @since 1.0.0
  */
-interface TelegramWebhookApiClient {
+public interface TelegramWebhookApiClient {
   /**
    * Calls Telegram Bot API {@code setWebhook}.
    *
