@@ -138,6 +138,7 @@ Ingress behavior:
 - `ChannelWebhookEndpointController` resolves the target `ChannelAccountProfile` through `HookAccountRegistry`
 - the resolved account and normalized request are delegated into `ChannelInboundProcessor`
 - `AiAssetServerBootstrap` seeds hook-visible accounts through the `hookConfigurer` callback before the server starts
+- `HookWebhookAutoManager` inspects manually registered hook-visible accounts and reconciles managed webhook lifecycles before the server starts accepting traffic
 - unknown hook paths and unregistered hook accounts return `404`
 - unexpected ingress failures return `500`
 
@@ -163,10 +164,18 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
 - current scope:
   - outbound text delivery via Telegram Bot API `sendMessage`
   - inbound webhook normalization for text-bearing updates
+  - outbound webhook lifecycle administration via Telegram Bot API `setWebhook`, `deleteWebhook`, and `getWebhookInfo`
 - required account properties:
   - `botToken`: Telegram bot token
   - `baseUrl`: optional Bot API base URL, defaults to `https://api.telegram.org`
   - `webhookSecretToken`: optional webhook secret token that must match `X-Telegram-Bot-Api-Secret-Token` on inbound requests
+  - `webhookAutoManage`: optional boolean that enables startup-time automatic webhook reconciliation for the account
+  - `webhookUrl`: optional full externally reachable webhook URL override used by automatic webhook reconciliation
+  - `webhookBaseUrl`: optional externally reachable base URL used to compose the canonical Telegram hook path
+  - `webhookDesiredState`: optional desired managed lifecycle state, `REGISTERED` or `UNREGISTERED`, defaults to `REGISTERED`
+  - `webhookAllowedUpdates`: optional comma-separated Telegram update kinds used when automatic webhook reconciliation registers the webhook
+  - `webhookMaxConnections`: optional `max_connections` override used during automatic webhook reconciliation
+  - `webhookDropPendingUpdates`: optional boolean applied to both managed `setWebhook` and managed `deleteWebhook`
 - target mapping:
   - `ChannelTarget.conversationId` -> `chat_id`
   - `ChannelTarget.threadId` -> `message_thread_id`
@@ -178,6 +187,9 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
   - `POST` JSON updates are parsed through `ChannelWebhookHandler`
   - when `webhookSecretToken` is configured, inbound requests must provide the matching `X-Telegram-Bot-Api-Secret-Token` header
   - hook ingress supports both the generic route and `/open-api/hooks/telegram/accounts/{accountId}/webhook`
+  - when `webhookAutoManage=true`, the server bootstrap opens an account-bound webhook administration facade, derives the public webhook URL from `webhookUrl`, `webhookBaseUrl`, or the running server base URI, and then reconciles Telegram webhook state before startup completes
+  - managed `webhookDesiredState=REGISTERED` triggers `setWebhook` followed by `getWebhookInfo`
+  - managed `webhookDesiredState=UNREGISTERED` triggers `deleteWebhook` followed by `getWebhookInfo`
   - `message`, `edited_message`, `channel_post`, and `edited_channel_post` with `text` are normalized into one `ChannelInboundMessage`
   - `callback_query` updates with `data` or `game_short_name` are normalized into one `ChannelInboundMessage`, with the callback payload mapped into `text` and callback identifiers stored in metadata
   - non-text updates currently acknowledge with `200 OK` and produce no normalized messages
