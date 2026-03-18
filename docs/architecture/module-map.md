@@ -53,11 +53,11 @@
 
 | Module | Role |
 | --- | --- |
-| `intentforge-channel-core` | Channel descriptors, account/target/message/webhook models, routing contracts, and manager/plugin SPI |
-| `intentforge-channel-local` | In-memory channel manager provider, inbound processing pipeline, classpath SPI loading, and local plugin directory loading |
+| `intentforge-channel-core` | Channel descriptors, account/target/message/webhook models, webhook-level and message-level inbound processing contracts, routing contracts, and manager/plugin SPI |
+| `intentforge-channel-local` | In-memory channel manager provider, webhook-level and message-level inbound processing pipeline, classpath SPI loading, and local plugin directory loading |
 | `intentforge-channel-spring` | Spring `spring.factories` bridge for channel plugin discovery |
 | `intentforge-channel-connectors` | Loopback and generic connector support entrypoints |
-| `intentforge-channel-telegram` | Telegram Bot API connector implementation with driver, outbound, inbound, admin, and plugin package groups |
+| `intentforge-channel-telegram` | Telegram Bot API connector implementation with driver, outbound, shared inbound normalization, polling, webhook, admin, and plugin package groups |
 | `intentforge-channel-wecom` | WeCom application messaging connector implementation |
 
 ### `intentforge-hook`

@@ -44,6 +44,7 @@ For end-to-end demo data, use the integration fixtures under `src/test/java`.
 
 `TelegramServerMain` starts the same HTTP server but adds one Telegram account whose inbound mode defaults to long polling.
 The same entrypoint can switch to webhook mode through explicit settings, so one local startup flow can cover both Telegram inbound styles without a custom bootstrap class.
+Webhook and long polling now share the same Telegram update normalizer and then converge into the same message-level inbound processor inside the local runtime.
 
 ### 1. Build the boot-server runtime classpath
 

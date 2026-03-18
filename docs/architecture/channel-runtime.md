@@ -9,8 +9,8 @@ It is designed for pluggable multi-channel integrations such as Telegram and WeC
 
 | Module | Responsibility |
 | --- | --- |
-| `intentforge-channel-core` | Shared channel descriptors, account/target/message/webhook models, inbound processing contracts, routing contracts, and manager/plugin SPI |
-| `intentforge-channel-local` | In-memory `ChannelManager`, inbound processing pipeline, classpath plugin loading, and external plugin directory loading |
+| `intentforge-channel-core` | Shared channel descriptors, account/target/message/webhook models, message-level and webhook-level inbound processing contracts, routing contracts, and manager/plugin SPI |
+| `intentforge-channel-local` | In-memory `ChannelManager`, webhook-level and message-level inbound processing pipeline, classpath plugin loading, and external plugin directory loading |
 | `intentforge-channel-spring` | Spring `spring.factories` discovery bridge that contributes `ChannelPlugin` instances through a dedicated SPI strategy |
 | `intentforge-channel-connectors` | Loopback and generic connector support entrypoints |
 | `intentforge-channel-telegram` | Telegram Bot API outbound connector, inbound long polling, inbound webhook normalization, and webhook administration |
@@ -30,6 +30,9 @@ The shared runtime model is intentionally transport-neutral:
 - `ChannelWebhookResponse`: normalized webhook acknowledgement response
 - `ChannelWebhookResult`: normalized webhook parsing output
 - `ChannelWebhookHandler`: account-bound inbound webhook adapter
+- `ChannelInboundSource`: describes whether normalized messages came from webhook or long polling
+- `ChannelInboundMessageProcessor`: runtime entrypoint that processes already normalized inbound messages
+- `ChannelInboundMessageProcessingResult`: aggregated message-level processing result
 - `ChannelInboundDispatch`: per-message access and route evaluation result
 - `ChannelInboundProcessingResult`: aggregated inbound pipeline result
 - `ChannelInboundProcessor`: runtime entrypoint that chains webhook parsing, access policy, and route resolution
@@ -62,11 +65,23 @@ There are three extension layers:
 - direct classpath `ChannelPlugin` providers
 - additional `ChannelPluginDiscoveryStrategy` providers
 
-`DefaultChannelInboundProcessor` in `intentforge-channel-local` chains:
+`DefaultChannelInboundProcessor` in `intentforge-channel-local` now exposes two layers:
+
+- webhook-level processing through `ChannelInboundProcessor`
+- message-level processing through `ChannelInboundMessageProcessor`
+
+The webhook-level path chains:
 
 - `ChannelManager.openWebhookHandler(accountProfile)`
+- connector-specific webhook parsing into `ChannelInboundMessage`
+- delegation into the shared message-level processor
+
+The shared message-level path chains:
+
 - ordered `ChannelAccessPolicy` implementations loaded from classpath `ServiceLoader`
 - ordered `ChannelRouteResolver` implementations loaded from classpath `ServiceLoader`
+
+When messages enter through the message-level processor, the local runtime injects `metadata.inboundSourceType` and optional `metadata.inboundSource.*` attributes before access and route evaluation.
 
 Fallback behavior:
 
@@ -101,9 +116,19 @@ The selected channel manager is exposed through:
 - `LocalRuntimeComponentRegistry`
 - `AiAssetLocalRuntime`
 
-The local runtime also exposes one `ChannelInboundProcessor` that executes:
+The local runtime now exposes:
+
+- one `ChannelInboundProcessor` for raw webhook requests
+- one `ChannelInboundMessageProcessor` for already normalized inbound message batches
+
+The webhook-level runtime path executes:
 
 - webhook normalization inside the selected connector module
+- delegation into the shared message-level processor
+- session persistence into `SessionManager` for allowed and routed inbound text messages
+
+The shared message-level runtime path executes:
+
 - access-policy evaluation
 - route resolution with fallback behavior
 - session persistence into `SessionManager` for allowed and routed inbound text messages
@@ -166,6 +191,7 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
   - `plugin`: SPI entrypoint
   - `driver`: pluggable driver and account-bound runtime wiring
   - `outbound`: Bot API send client, command/result models, and outbound session
+  - `inbound.common`: shared Telegram update normalization
   - `inbound.webhook`: webhook normalization
   - `inbound.polling`: long-polling client and background ingress
   - `admin`: webhook lifecycle administration
@@ -197,9 +223,10 @@ Concrete vendor connectors now live in dedicated child modules, while `intentfor
   - `disableWebPagePreview` -> `link_preview_options.is_disabled`
 - inbound webhook behavior:
   - `TelegramServerMain` defaults to `LONG_POLLING` and starts one background long-polling ingress for the configured Telegram account
-  - long polling uses `getUpdates`, forwards each raw update into the shared `ChannelInboundProcessor`, and deletes an existing webhook on startup unless `pollingDeleteWebhookOnStart=false`
+  - both webhook and long polling reuse `TelegramInboundUpdateNormalizer` so Telegram update parsing lives in one place
+  - long polling uses `getUpdates`, normalizes each raw update into `ChannelInboundMessage`, forwards the normalized batch into the shared `ChannelInboundMessageProcessor`, and deletes an existing webhook on startup unless `pollingDeleteWebhookOnStart=false`
   - webhook mode is explicit through `inboundMode=WEBHOOK` or `TG_INBOUND_MODE=WEBHOOK`
-  - `POST` JSON updates are parsed through `ChannelWebhookHandler`
+  - `POST` JSON updates are validated through `ChannelWebhookHandler`, normalized through the shared Telegram normalizer, and then delegated into the shared message-level processor
   - when `webhookSecretToken` is configured, inbound requests must provide the matching `X-Telegram-Bot-Api-Secret-Token` header
   - hook ingress supports both the generic route and `/open-api/hooks/telegram/accounts/{accountId}/webhook`
   - when `webhookAutoManage=true`, the server bootstrap opens an account-bound webhook administration facade, derives the public webhook URL from `webhookUrl`, `webhookBaseUrl`, or the running server base URI, and then reconciles Telegram webhook state before startup completes
