@@ -2,6 +2,9 @@ package cn.intentforge.boot.server;
 
 import cn.intentforge.channel.ChannelAccountProfile;
 import cn.intentforge.channel.ChannelType;
+import cn.intentforge.channel.wecom.crypto.WeComEncryptedResponse;
+import cn.intentforge.channel.wecom.crypto.WeComJsonCryptor;
+import cn.intentforge.channel.wecom.shared.WeComPropertyNames;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
@@ -18,6 +21,8 @@ import org.junit.jupiter.api.Test;
 
 class HookBootstrapIntegrationTest {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final String WECOM_CALLBACK_TOKEN = "robot-token";
+  private static final String WECOM_CALLBACK_AES_KEY = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG";
 
   @Test
   void shouldExposeGenericChannelHookRouteForTelegram() throws Exception {
@@ -107,6 +112,8 @@ class HookBootstrapIntegrationTest {
 
   @Test
   void shouldExposeWeComSpecificCallbackRoute() throws Exception {
+    WeComJsonCryptor cryptor = new WeComJsonCryptor(WECOM_CALLBACK_TOKEN, WECOM_CALLBACK_AES_KEY, "robot-receive-id");
+    WeComEncryptedResponse encrypted = cryptor.encrypt("hello world", "1710000000", "random");
     try (AiAssetServerRuntime runtime = AiAssetServerBootstrap.bootstrap(
         Files.createTempDirectory("boot-server-hook-plugins"),
         null,
@@ -114,16 +121,21 @@ class HookBootstrapIntegrationTest {
         hookAccounts -> hookAccounts.register(new ChannelAccountProfile(
             "wecom-account",
             ChannelType.WECOM,
-            "WeCom App",
+            "WeCom Robot",
             Map.of(
-                "corpId", "corp-id",
-                "agentId", "1000001",
-                "corpSecret", "corp-secret"))))) {
+                WeComPropertyNames.CALLBACK_TOKEN, WECOM_CALLBACK_TOKEN,
+                WeComPropertyNames.CALLBACK_ENCODING_AES_KEY, WECOM_CALLBACK_AES_KEY,
+                WeComPropertyNames.RECEIVE_ID, "robot-receive-id",
+                WeComPropertyNames.ROBOT_ID, "robot-123",
+                WeComPropertyNames.ROBOT_SECRET, "robot-secret"))))) {
       java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
       java.net.http.HttpResponse<String> response = client.send(
           java.net.http.HttpRequest.newBuilder(
                   runtime.baseUri().resolve("/open-api/hooks/wecom/accounts/wecom-account/callback"
-                      + "?msg_signature=signature&timestamp=1710000000&nonce=random&echostr=hello%20world"))
+                      + "?msg_signature=" + encrypted.messageSignature()
+                      + "&timestamp=" + encrypted.timestamp()
+                      + "&nonce=" + encrypted.nonce()
+                      + "&echostr=" + java.net.URLEncoder.encode(encrypted.encrypt(), java.nio.charset.StandardCharsets.UTF_8)))
               .GET()
               .build(),
           java.net.http.HttpResponse.BodyHandlers.ofString());

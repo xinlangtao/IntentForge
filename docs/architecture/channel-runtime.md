@@ -14,7 +14,7 @@ It is designed for pluggable multi-channel integrations such as Telegram and WeC
 | `intentforge-channel-spring` | Spring `spring.factories` discovery bridge that contributes `ChannelPlugin` instances through a dedicated SPI strategy |
 | `intentforge-channel-connectors` | Loopback and generic connector support entrypoints |
 | `intentforge-channel-telegram` | Telegram Bot API outbound connector, inbound long polling, inbound webhook normalization, and webhook administration |
-| `intentforge-channel-wecom` | WeCom application messaging outbound connector and inbound callback normalization |
+| `intentforge-channel-wecom` | WeCom intelligent-robot outbound connector, callback crypto, and inbound callback normalization |
 
 ## Core Model
 
@@ -274,27 +274,32 @@ For copy-paste startup commands plus a manual Telegram webhook smoke-test flow, 
 - plugin id: `intentforge.channel.wecom`
 - runtime type: `ChannelType.WECOM`
 - current scope:
-  - outbound text delivery for WeCom application messaging
-  - inbound callback normalization for verification handshakes and plaintext text callbacks
+  - outbound text delivery for WeCom intelligent robots
+  - inbound intelligent-robot callback verification, signature validation, AES decryption, and text callback normalization
+  - package layout:
+    - `plugin`: SPI entrypoint
+    - `driver`: pluggable driver and account-bound runtime wiring
+    - `shared`: property names and JSON helpers
+    - `crypto`: callback signature verification and AES encryption/decryption
+    - `inbound.common`: decrypted robot event normalization
+    - `inbound.callback`: callback handling
+    - `outbound`: robot send client, command/result models, and outbound session
 - required account properties:
-  - `corpId`: enterprise identifier
-  - `agentId`: application agent identifier
-  - `corpSecret`: application secret
+  - `callbackToken`: callback signature token
+  - `callbackEncodingAesKey`: callback AES key
+  - `robotId`: robot identifier
+  - `robotSecret`: robot secret used by outbound message APIs
+  - `receiveId`: optional callback receive-id validation target
   - `baseUrl`: optional API base URL, defaults to `https://qyapi.weixin.qq.com`
-- token flow:
-  - fetch access token through `gettoken`
-  - cache the token inside the opened channel session until close to expiry
 - target mapping:
-  - prefer `ChannelTarget.recipientId` as `touser`
-  - otherwise use `ChannelTarget.conversationId` as `touser`
+  - `ChannelTarget.conversationId` -> `chatid`
+  - `ChannelTarget.recipientId` -> `userid`
 - outbound metadata mapping:
-  - `toParty` -> `toparty`
-  - `toTag` -> `totag`
-  - `safe` -> `safe`
+  - `sessionId` -> `session_id`
 - inbound webhook behavior:
-  - `GET` verification requests echo `echostr` without signature validation
+  - `GET` verification requests verify `msg_signature`, decrypt `echostr`, and echo the decrypted challenge
   - hook ingress supports both the generic route and `/open-api/hooks/wecom/accounts/{accountId}/callback`
-  - `POST` plaintext XML callbacks with `MsgType=text` are normalized into one `ChannelInboundMessage`
+  - `POST` JSON callbacks extract `encrypt`, validate `msg_signature`, decrypt the payload, and normalize text events into one `ChannelInboundMessage`
   - non-text callbacks currently acknowledge with `success` and produce no normalized messages
 
 ### Current Limits
@@ -303,6 +308,5 @@ For copy-paste startup commands plus a manual Telegram webhook smoke-test flow, 
 - inbound processing currently persists only text-bearing user messages into `SessionManager`
 - inbound processing does not yet trigger `AgentRunGateway` automatically after session persistence
 - Telegram inbound support currently focuses on text-bearing message updates and callback-query payloads only
-- WeCom inbound support currently focuses on verification echo and plaintext XML text callbacks only
-- WeCom signature verification, message decryption, and encrypted callback responses are still future work
+- WeCom inbound support currently focuses on intelligent-robot verification echo and decrypted text callbacks only
 - Telegram media, WeCom rich-media, and advanced interactive payloads are not yet implemented

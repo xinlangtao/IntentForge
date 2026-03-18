@@ -23,8 +23,12 @@ class WeComWebhookHttpExchangeHandlerTest {
     accountRegistry.register(new ChannelAccountProfile(
         "wecom-account",
         ChannelType.WECOM,
-        "WeCom App",
-        Map.of("corpId", "corp-id", "agentId", "1000001", "corpSecret", "corp-secret")));
+        "WeCom Robot",
+        Map.of(
+            "callbackToken", "robot-token",
+            "callbackEncodingAesKey", "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG",
+            "robotId", "robot-123",
+            "robotSecret", "robot-secret")));
     AtomicReference<String> echo = new AtomicReference<>();
     HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
     try {

@@ -58,7 +58,7 @@
 | `intentforge-channel-spring` | Spring `spring.factories` bridge for channel plugin discovery |
 | `intentforge-channel-connectors` | Loopback and generic connector support entrypoints |
 | `intentforge-channel-telegram` | Telegram Bot API connector implementation with driver, outbound, shared inbound normalization, polling, webhook, admin, and plugin package groups |
-| `intentforge-channel-wecom` | WeCom application messaging connector implementation |
+| `intentforge-channel-wecom` | WeCom intelligent-robot connector implementation |
 
 ### `intentforge-hook`
 

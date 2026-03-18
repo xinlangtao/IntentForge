@@ -68,7 +68,7 @@ intentforge/
 │  ├─ intentforge-channel-spring           # Spring factories bridge for channel plugin discovery
 │  ├─ intentforge-channel-connectors       # Loopback and generic connector support entrypoints
 │  ├─ intentforge-channel-telegram         # Telegram Bot API connector
-│  └─ intentforge-channel-wecom            # WeCom application messaging connector
+│  └─ intentforge-channel-wecom            # WeCom intelligent-robot connector
 ├─ intentforge-prompt                      # Prompt aggregation module
 │  ├─ intentforge-prompt-core              # Prompt definitions, variables, queries, registry SPI, manager-provider SPI
 │  └─ intentforge-prompt-local             # In-memory prompt manager provider, classpath SPI loading, local plugin directory loading
