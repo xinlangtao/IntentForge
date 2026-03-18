@@ -1,13 +1,17 @@
 package cn.intentforge.channel.telegram.inbound.polling;
 
 import cn.intentforge.channel.ChannelAccountProfile;
+import cn.intentforge.channel.ChannelInboundDispatch;
+import cn.intentforge.channel.ChannelInboundMessage;
+import cn.intentforge.channel.ChannelInboundMessageProcessingResult;
+import cn.intentforge.channel.ChannelInboundMessageProcessor;
 import cn.intentforge.channel.ChannelInboundProcessingResult;
-import cn.intentforge.channel.ChannelInboundProcessor;
+import cn.intentforge.channel.ChannelInboundSource;
+import cn.intentforge.channel.ChannelInboundSourceType;
 import cn.intentforge.channel.ChannelType;
 import cn.intentforge.channel.ChannelWebhookAdministration;
 import cn.intentforge.channel.ChannelWebhookDeletion;
 import cn.intentforge.channel.ChannelWebhookRegistration;
-import cn.intentforge.channel.ChannelWebhookRequest;
 import cn.intentforge.channel.ChannelWebhookResponse;
 import cn.intentforge.channel.ChannelWebhookStatus;
 import cn.intentforge.channel.telegram.config.TelegramChannelPropertyNames;
@@ -62,7 +66,7 @@ class TelegramLongPollingIngressTest {
               }
             }
             """)));
-    RecordingInboundProcessor inboundProcessor = new RecordingInboundProcessor();
+    RecordingInboundMessageProcessor inboundProcessor = new RecordingInboundMessageProcessor();
     RecordingWebhookAdministration administration = new RecordingWebhookAdministration();
     TelegramLongPollingIngress ingress = new TelegramLongPollingIngress(
         accountProfile(Map.of(
@@ -82,17 +86,17 @@ class TelegramLongPollingIngressTest {
     Assertions.assertEquals("bot-token", apiClient.command.botToken());
     Assertions.assertNull(apiClient.command.offset());
     Assertions.assertEquals(List.of("message", "callback_query"), apiClient.command.allowedUpdates());
-    Assertions.assertEquals(2, inboundProcessor.requests.size());
-    Assertions.assertEquals("POST", inboundProcessor.requests.getFirst().method());
-    Assertions.assertTrue(inboundProcessor.requests.getFirst().body().contains("\"update_id\": 10"));
-    Assertions.assertTrue(inboundProcessor.requests.get(1).body().contains("\"callback_query\""));
+    Assertions.assertEquals(2, inboundProcessor.batches.size());
+    Assertions.assertEquals(ChannelInboundSourceType.LONG_POLLING, inboundProcessor.batches.getFirst().source().type());
+    Assertions.assertEquals("hello polling", inboundProcessor.batches.getFirst().messages().getFirst().text());
+    Assertions.assertEquals("approve", inboundProcessor.batches.get(1).messages().getFirst().text());
     Assertions.assertEquals(13L, nextOffset);
   }
 
   @Test
   void shouldSkipWebhookDeletionWhenPollingDeleteWebhookOnStartIsDisabled() {
     RecordingLongPollingApiClient apiClient = new RecordingLongPollingApiClient(List.of());
-    RecordingInboundProcessor inboundProcessor = new RecordingInboundProcessor();
+    RecordingInboundMessageProcessor inboundProcessor = new RecordingInboundMessageProcessor();
     RecordingWebhookAdministration administration = new RecordingWebhookAdministration();
     TelegramLongPollingIngress ingress = new TelegramLongPollingIngress(
         accountProfile(Map.of(
@@ -109,7 +113,7 @@ class TelegramLongPollingIngressTest {
     Assertions.assertTrue(administration.deletions.isEmpty());
     Assertions.assertEquals(51L, apiClient.command.offset());
     Assertions.assertEquals(51L, nextOffset);
-    Assertions.assertTrue(inboundProcessor.requests.isEmpty());
+    Assertions.assertTrue(inboundProcessor.batches.isEmpty());
   }
 
   private static ChannelAccountProfile accountProfile(Map<String, String> properties) {
@@ -131,16 +135,23 @@ class TelegramLongPollingIngressTest {
     }
   }
 
-  private static final class RecordingInboundProcessor implements ChannelInboundProcessor {
-    private final List<ChannelWebhookRequest> requests = new ArrayList<>();
+  private static final class RecordingInboundMessageProcessor implements ChannelInboundMessageProcessor {
+    private final List<RecordedBatch> batches = new ArrayList<>();
 
     @Override
-    public ChannelInboundProcessingResult process(ChannelAccountProfile accountProfile, ChannelWebhookRequest request) {
-      requests.add(request);
-      return new ChannelInboundProcessingResult(
-          new ChannelWebhookResponse(200, "text/plain; charset=utf-8", "OK", Map.of()),
+    public ChannelInboundMessageProcessingResult process(
+        ChannelAccountProfile accountProfile,
+        ChannelInboundSource source,
+        List<ChannelInboundMessage> messages
+    ) {
+      batches.add(new RecordedBatch(source, messages));
+      return new ChannelInboundMessageProcessingResult(
+          source,
           List.of());
     }
+  }
+
+  private record RecordedBatch(ChannelInboundSource source, List<ChannelInboundMessage> messages) {
   }
 
   private static final class RecordingWebhookAdministration implements ChannelWebhookAdministration {

@@ -4,8 +4,12 @@ import cn.intentforge.channel.ChannelAccessDecision;
 import cn.intentforge.channel.ChannelAccountProfile;
 import cn.intentforge.channel.ChannelInboundDispatch;
 import cn.intentforge.channel.ChannelInboundMessage;
+import cn.intentforge.channel.ChannelInboundMessageProcessingResult;
+import cn.intentforge.channel.ChannelInboundMessageProcessor;
 import cn.intentforge.channel.ChannelInboundProcessingResult;
 import cn.intentforge.channel.ChannelInboundProcessor;
+import cn.intentforge.channel.ChannelInboundSource;
+import cn.intentforge.channel.ChannelInboundSourceType;
 import cn.intentforge.channel.ChannelParticipant;
 import cn.intentforge.channel.ChannelRouteDecision;
 import cn.intentforge.channel.ChannelTarget;
@@ -88,6 +92,35 @@ class PersistingChannelInboundProcessorTest {
     Assertions.assertEquals("message-3", session.messages().getFirst().id());
   }
 
+  @Test
+  void shouldPersistNormalizedInboundMessagesFromSharedMessageProcessor() {
+    InMemorySessionManager sessionManager = new InMemorySessionManager(
+        getClass().getClassLoader(),
+        Clock.fixed(Instant.ofEpochSecond(1_700_000_300L), ZoneOffset.UTC));
+    PersistingChannelInboundProcessor processor = new PersistingChannelInboundProcessor(
+        fixedDelegate(singleDispatch("message-4", "hello from polling", "application-alpha", "session-alpha")),
+        fixedMessageDelegate(singleDispatch("message-4", "hello from polling", "application-alpha", "session-alpha")),
+        sessionManager);
+
+    ChannelInboundMessageProcessingResult result = processor.process(
+        accountProfile(),
+        new ChannelInboundSource(ChannelInboundSourceType.LONG_POLLING, Map.of()),
+        List.of(new ChannelInboundMessage(
+            "message-4",
+            "telegram-account",
+            ChannelType.TELEGRAM,
+            new ChannelTarget("telegram-account", "chat-1", null, null, Map.of()),
+            new ChannelParticipant("sender-1", "Sender", false, Map.of()),
+            "hello from polling",
+            Map.of("inboundSourceType", "LONG_POLLING"))));
+
+    Assertions.assertEquals(1, result.dispatches().size());
+    Session session = sessionManager.find("session-alpha").orElseThrow();
+    Assertions.assertEquals(1, session.messages().size());
+    Assertions.assertEquals("message-4", session.messages().getFirst().id());
+    Assertions.assertEquals("hello from polling", session.messages().getFirst().content());
+  }
+
   private static ChannelAccountProfile accountProfile() {
     return new ChannelAccountProfile("telegram-account", ChannelType.TELEGRAM, "Telegram Bot", Map.of("botToken", "demo"));
   }
@@ -95,6 +128,12 @@ class PersistingChannelInboundProcessorTest {
   private static ChannelInboundProcessor fixedDelegate(ChannelInboundDispatch dispatch) {
     return (accountProfile, request) -> new ChannelInboundProcessingResult(
         new ChannelWebhookResponse(200, "text/plain; charset=utf-8", "OK", Map.of()),
+        List.of(dispatch));
+  }
+
+  private static ChannelInboundMessageProcessor fixedMessageDelegate(ChannelInboundDispatch dispatch) {
+    return (accountProfile, source, messages) -> new ChannelInboundMessageProcessingResult(
+        source,
         List.of(dispatch));
   }
 
