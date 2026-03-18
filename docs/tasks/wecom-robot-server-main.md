@@ -14,19 +14,20 @@ The new entrypoint should manually register one WeCom robot hook account from sy
 
 ## Overall Status
 - status: running
-- process: 60%
-- current_step: 3
+- process: 90%
+- current_step: 4
 
 ## Steps
 | step | description | status | note |
 | --- | --- | --- | --- |
-| 1 | Add task scope and red tests for WeCom robot server settings and hook registration. | finished | commit: pending |
-| 2 | Implement the WeCom robot server main and settings mapping in boot-server. | finished | commit: pending |
-| 3 | Document the local WeCom robot smoke-test flow and update architecture notes. | running | commit: pending |
-| 4 | Run full validation, finalize bookkeeping, and close the task. | notrun | commit: pending |
+| 1 | Add task scope and red tests for WeCom robot server settings and hook registration. | finished | commit: 54af351 |
+| 2 | Implement the WeCom robot server main and settings mapping in boot-server. | finished | commit: 54af351 |
+| 3 | Document the local WeCom robot smoke-test flow and update architecture notes. | finished | commit: pending |
+| 4 | Run full validation, finalize bookkeeping, and close the task. | running | commit: pending |
 
 ## Update Log
 | time | status | process | update |
 | --- | --- | --- | --- |
 | 2026-03-18 15:35:00 +0800 | running | 5% | Initialized task for adding a WeCom intelligent-robot boot-server entrypoint and local smoke-test documentation. |
 | 2026-03-18 15:52:00 +0800 | running | 60% | Added `WeComRobotServerMain` and `WeComRobotServerSettings`, and the targeted `WeComRobotServerMainTest` now passes. |
+| 2026-03-18 16:21:01 +0800 | running | 90% | Updated boot-server and architecture documentation for the WeCom robot entrypoint, and `make test` passed. |

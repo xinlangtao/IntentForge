@@ -12,6 +12,7 @@ Current implementation:
 - terminal main: `cn.intentforge.boot.server.AiAssetServerMain`
 - Telegram-focused terminal main: `cn.intentforge.boot.server.TelegramServerMain`
 - Telegram webhook-only terminal main: `cn.intentforge.boot.server.TelegramWebhookServerMain`
+- WeCom robot-focused terminal main: `cn.intentforge.boot.server.WeComRobotServerMain`
 
 Minimal startup:
 
@@ -223,3 +224,94 @@ curl -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/setWebhook" \
 
 curl -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/deleteWebhook?drop_pending_updates=true"
 ```
+
+## WeCom Robot Local Inbound Smoke Test
+
+`WeComRobotServerMain` starts the same HTTP server but registers one hook-visible WeCom intelligent robot account from system properties or environment variables.
+Unlike Telegram, WeCom intelligent-robot callbacks are configured from the WeCom console, so this entrypoint focuses on callback handling and local verification instead of upstream webhook lifecycle management.
+
+### 1. Reuse the boot-server runtime classpath
+
+Run the same classpath build step from "Telegram Local Inbound Smoke Test" first, then keep the resulting `CLASSPATH` shell variable.
+
+### 2. Prepare WeCom robot settings
+
+At minimum, set the callback credentials and robot credentials:
+
+```bash
+export WECOM_ACCOUNT_ID="wecom-demo"
+export WECOM_DISPLAY_NAME="WeCom Demo Robot"
+export WECOM_CALLBACK_TOKEN="replace-with-console-token"
+export WECOM_CALLBACK_AES_KEY="replace-with-console-encoding-aes-key"
+export WECOM_RECEIVE_ID="replace-with-receive-id"
+export WECOM_ROBOT_ID="replace-with-robot-id"
+export WECOM_ROBOT_SECRET="replace-with-robot-secret"
+```
+
+Optional settings:
+
+- `WECOM_BASE_URL`: alternate WeCom API base URL, defaults to `https://qyapi.weixin.qq.com`
+- `WECOM_CALLBACK_ENCODING_AES_KEY`: alternate environment variable name for the callback AES key
+
+### 3. Start the WeCom-focused server
+
+```bash
+java -Dintentforge.server.port=18080 \
+  -cp "$CLASSPATH" \
+  cn.intentforge.boot.server.WeComRobotServerMain
+```
+
+Startup prints:
+
+- the local base URI
+- the canonical WeCom callback route for `WECOM_ACCOUNT_ID`
+- that request handling prefers virtual threads
+
+### 4. Validate the local callback route without WeCom
+
+If you want a deterministic local smoke test before exposing a public callback URL, run the targeted test that encrypts a verification echo and a text callback against the same boot-server wiring:
+
+```bash
+./mvnw -q \
+  -pl intentforge-boot/intentforge-boot-server \
+  -am \
+  test \
+  -Dtest=WeComRobotServerMainTest \
+  -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+This covers:
+
+- system-property and environment-variable settings resolution
+- encrypted `GET` verification echo handling
+- encrypted `POST` text callback handling
+- local session persistence for the normalized inbound text message
+
+### 5. Expose a public HTTPS callback URL
+
+WeCom cannot call `127.0.0.1` directly, so expose the local server through a reverse proxy, tunnel, or public deployment.
+The callback path printed at startup has this canonical form:
+
+```text
+https://your-public-host.example.com/open-api/hooks/wecom/accounts/${WECOM_ACCOUNT_ID}/callback
+```
+
+### 6. Configure the intelligent robot callback in WeCom
+
+In the WeCom intelligent-robot console, register:
+
+- the public callback URL
+- the same callback token as `WECOM_CALLBACK_TOKEN`
+- the same AES key as `WECOM_CALLBACK_AES_KEY`
+
+If your robot callback requires receive-id validation, keep `WECOM_RECEIVE_ID` aligned with the WeCom-side configuration.
+
+### 7. Drive a real callback
+
+Once the public callback URL is active:
+
+1. Complete the console-side verification step so WeCom sends the encrypted `GET` challenge.
+2. Send a text message to the intelligent robot from WeCom.
+3. Keep the server process running so WeCom can deliver the encrypted `POST` callback.
+
+Current WeCom inbound coverage is intentionally limited to intelligent-robot verification echoes and decrypted text callbacks.

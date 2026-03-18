@@ -165,6 +165,7 @@ Ingress behavior:
 - `AiAssetServerBootstrap` seeds hook-visible accounts through the `hookConfigurer` callback before the server starts
 - `HookWebhookAutoManager` inspects manually registered hook-visible accounts and reconciles managed webhook lifecycles before the server starts accepting traffic
 - `TelegramWebhookServerMain` in `intentforge-boot-server` is a convenience terminal entrypoint for local Telegram testing; it resolves one manual Telegram account from system properties or environment variables and delegates into the same bootstrap path
+- `WeComRobotServerMain` in `intentforge-boot-server` is a convenience terminal entrypoint for local WeCom intelligent-robot testing; it resolves one manual WeCom robot account from system properties or environment variables and delegates into the same bootstrap path
 - unknown hook paths and unregistered hook accounts return `404`
 - unexpected ingress failures return `500`
 
@@ -301,6 +302,30 @@ For copy-paste startup commands plus a manual Telegram webhook smoke-test flow, 
   - hook ingress supports both the generic route and `/open-api/hooks/wecom/accounts/{accountId}/callback`
   - `POST` JSON callbacks extract `encrypt`, validate `msg_signature`, decrypt the payload, and normalize text events into one `ChannelInboundMessage`
   - non-text callbacks currently acknowledge with `success` and produce no normalized messages
+
+WeCom-focused local startup settings:
+
+- system properties:
+  - `intentforge.wecom.accountId`
+  - `intentforge.wecom.displayName`
+  - `intentforge.wecom.callbackToken`
+  - `intentforge.wecom.callbackEncodingAesKey`
+  - `intentforge.wecom.receiveId`
+  - `intentforge.wecom.robotId`
+  - `intentforge.wecom.robotSecret`
+  - `intentforge.wecom.baseUrl`
+- environment variables:
+  - `WECOM_ACCOUNT_ID`
+  - `WECOM_DISPLAY_NAME`
+  - `WECOM_CALLBACK_TOKEN`
+  - `WECOM_CALLBACK_AES_KEY`
+  - `WECOM_CALLBACK_ENCODING_AES_KEY`
+  - `WECOM_RECEIVE_ID`
+  - `WECOM_ROBOT_ID`
+  - `WECOM_ROBOT_SECRET`
+  - `WECOM_BASE_URL`
+
+For copy-paste startup commands plus a local WeCom robot smoke-test flow, see `intentforge-boot/intentforge-boot-server/README.md`.
 
 ### Current Limits
 
