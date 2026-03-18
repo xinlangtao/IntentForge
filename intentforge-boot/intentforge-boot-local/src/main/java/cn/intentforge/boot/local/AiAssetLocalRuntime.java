@@ -2,6 +2,7 @@ package cn.intentforge.boot.local;
 
 import cn.intentforge.agent.core.AgentGateway;
 import cn.intentforge.agent.core.AgentRunGateway;
+import cn.intentforge.channel.ChannelInboundMessageProcessor;
 import cn.intentforge.channel.ChannelInboundProcessor;
 import cn.intentforge.channel.local.plugin.DirectoryChannelPluginManager;
 import cn.intentforge.channel.registry.ChannelManager;
@@ -27,6 +28,7 @@ import cn.intentforge.tool.core.registry.ToolRegistry;
  * @param runtimeComponents discovered runtime component instances keyed by implementation identifier
  * @param channelManager channel manager implementation in use
  * @param channelInboundProcessor channel inbound processing pipeline
+ * @param channelInboundMessageProcessor channel inbound processing pipeline for already normalized messages
  * @param channelPluginManager channel plugin directory manager
  * @param promptManager prompt manager implementation in use
  * @param promptPluginManager prompt plugin directory manager
@@ -49,6 +51,7 @@ public record AiAssetLocalRuntime(
     LocalRuntimeComponentRegistry runtimeComponents,
     ChannelManager channelManager,
     ChannelInboundProcessor channelInboundProcessor,
+    ChannelInboundMessageProcessor channelInboundMessageProcessor,
     DirectoryChannelPluginManager channelPluginManager,
     PromptManager promptManager,
     DirectoryPromptPluginManager promptPluginManager,

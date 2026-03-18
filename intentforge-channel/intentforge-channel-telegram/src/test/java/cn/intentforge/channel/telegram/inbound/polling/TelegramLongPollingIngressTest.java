@@ -1,20 +1,18 @@
 package cn.intentforge.channel.telegram.inbound.polling;
 
 import cn.intentforge.channel.ChannelAccountProfile;
-import cn.intentforge.channel.ChannelInboundDispatch;
 import cn.intentforge.channel.ChannelInboundMessage;
 import cn.intentforge.channel.ChannelInboundMessageProcessingResult;
 import cn.intentforge.channel.ChannelInboundMessageProcessor;
-import cn.intentforge.channel.ChannelInboundProcessingResult;
 import cn.intentforge.channel.ChannelInboundSource;
 import cn.intentforge.channel.ChannelInboundSourceType;
 import cn.intentforge.channel.ChannelType;
 import cn.intentforge.channel.ChannelWebhookAdministration;
 import cn.intentforge.channel.ChannelWebhookDeletion;
 import cn.intentforge.channel.ChannelWebhookRegistration;
-import cn.intentforge.channel.ChannelWebhookResponse;
 import cn.intentforge.channel.ChannelWebhookStatus;
 import cn.intentforge.channel.telegram.config.TelegramChannelPropertyNames;
+import cn.intentforge.channel.telegram.inbound.common.TelegramInboundUpdateNormalizer;
 import cn.intentforge.channel.telegram.inbound.TelegramInboundMode;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,7 +73,8 @@ class TelegramLongPollingIngressTest {
             TelegramChannelPropertyNames.POLLING_ALLOWED_UPDATES, "message,callback_query")),
         inboundProcessor,
         apiClient,
-        administration);
+        administration,
+        new TelegramInboundUpdateNormalizer());
 
     ingress.prepareStart();
     Long nextOffset = ingress.pollOnce(null);
@@ -105,7 +104,8 @@ class TelegramLongPollingIngressTest {
             TelegramChannelPropertyNames.POLLING_DELETE_WEBHOOK_ON_START, "false")),
         inboundProcessor,
         apiClient,
-        administration);
+        administration,
+        new TelegramInboundUpdateNormalizer());
 
     ingress.prepareStart();
     Long nextOffset = ingress.pollOnce(51L);

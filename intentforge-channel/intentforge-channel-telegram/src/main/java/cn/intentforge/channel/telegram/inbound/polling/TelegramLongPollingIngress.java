@@ -6,12 +6,13 @@ import static cn.intentforge.channel.ChannelWebhookPropertyNames.WEBHOOK_DROP_PE
 import static cn.intentforge.channel.ChannelWebhookPropertyNames.WEBHOOK_EVENT_TYPES;
 
 import cn.intentforge.channel.ChannelAccountProfile;
-import cn.intentforge.channel.ChannelInboundProcessingResult;
-import cn.intentforge.channel.ChannelInboundProcessor;
+import cn.intentforge.channel.ChannelInboundMessageProcessor;
+import cn.intentforge.channel.ChannelInboundSource;
+import cn.intentforge.channel.ChannelInboundSourceType;
 import cn.intentforge.channel.ChannelWebhookAdministration;
 import cn.intentforge.channel.ChannelWebhookDeletion;
-import cn.intentforge.channel.ChannelWebhookRequest;
 import cn.intentforge.channel.telegram.config.TelegramChannelPropertyNames;
+import cn.intentforge.channel.telegram.inbound.common.TelegramInboundUpdateNormalizer;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,9 +31,10 @@ public final class TelegramLongPollingIngress implements AutoCloseable {
   static final long DEFAULT_IDLE_MILLIS = 1_000L;
 
   private final ChannelAccountProfile accountProfile;
-  private final ChannelInboundProcessor inboundProcessor;
+  private final ChannelInboundMessageProcessor inboundMessageProcessor;
   private final TelegramLongPollingApiClient apiClient;
   private final ChannelWebhookAdministration webhookAdministration;
+  private final TelegramInboundUpdateNormalizer normalizer;
   private final AtomicBoolean closed = new AtomicBoolean();
 
   private volatile Thread worker;
@@ -41,37 +43,44 @@ public final class TelegramLongPollingIngress implements AutoCloseable {
    * Creates one long-polling ingress with the default Telegram Bot API client.
    *
    * @param accountProfile Telegram account profile
-   * @param inboundProcessor shared inbound processor
+   * @param inboundMessageProcessor shared inbound message processor
    */
-  public TelegramLongPollingIngress(ChannelAccountProfile accountProfile, ChannelInboundProcessor inboundProcessor) {
-    this(accountProfile, inboundProcessor, new HttpTelegramLongPollingApiClient(), null);
+  public TelegramLongPollingIngress(ChannelAccountProfile accountProfile, ChannelInboundMessageProcessor inboundMessageProcessor) {
+    this(accountProfile, inboundMessageProcessor, new HttpTelegramLongPollingApiClient(), null, new TelegramInboundUpdateNormalizer());
   }
 
   /**
    * Creates one long-polling ingress with optional webhook administration support.
    *
    * @param accountProfile Telegram account profile
-   * @param inboundProcessor shared inbound processor
+   * @param inboundMessageProcessor shared inbound message processor
    * @param webhookAdministration optional webhook administration used to disable an existing webhook before polling
    */
   public TelegramLongPollingIngress(
       ChannelAccountProfile accountProfile,
-      ChannelInboundProcessor inboundProcessor,
+      ChannelInboundMessageProcessor inboundMessageProcessor,
       ChannelWebhookAdministration webhookAdministration
   ) {
-    this(accountProfile, inboundProcessor, new HttpTelegramLongPollingApiClient(), webhookAdministration);
+    this(
+        accountProfile,
+        inboundMessageProcessor,
+        new HttpTelegramLongPollingApiClient(),
+        webhookAdministration,
+        new TelegramInboundUpdateNormalizer());
   }
 
   TelegramLongPollingIngress(
       ChannelAccountProfile accountProfile,
-      ChannelInboundProcessor inboundProcessor,
+      ChannelInboundMessageProcessor inboundMessageProcessor,
       TelegramLongPollingApiClient apiClient,
-      ChannelWebhookAdministration webhookAdministration
+      ChannelWebhookAdministration webhookAdministration,
+      TelegramInboundUpdateNormalizer normalizer
   ) {
     this.accountProfile = Objects.requireNonNull(accountProfile, "accountProfile must not be null");
-    this.inboundProcessor = Objects.requireNonNull(inboundProcessor, "inboundProcessor must not be null");
+    this.inboundMessageProcessor = Objects.requireNonNull(inboundMessageProcessor, "inboundMessageProcessor must not be null");
     this.apiClient = Objects.requireNonNull(apiClient, "apiClient must not be null");
     this.webhookAdministration = webhookAdministration;
+    this.normalizer = Objects.requireNonNull(normalizer, "normalizer must not be null");
   }
 
   /**
@@ -131,11 +140,10 @@ public final class TelegramLongPollingIngress implements AutoCloseable {
     long nextOffset = currentOffset == null ? 0L : currentOffset;
     boolean advanced = false;
     for (TelegramFetchedUpdate update : updates) {
-      ChannelInboundProcessingResult ignored = inboundProcessor.process(accountProfile, new ChannelWebhookRequest(
-          "POST",
-          Map.of(),
-          Map.of(),
-          update.payload()));
+      inboundMessageProcessor.process(
+          accountProfile,
+          new ChannelInboundSource(ChannelInboundSourceType.LONG_POLLING, Map.of("updateId", update.updateId())),
+          normalizer.normalize(accountProfile, update.payload()));
       nextOffset = Math.max(nextOffset, update.updateId() + 1L);
       advanced = true;
     }

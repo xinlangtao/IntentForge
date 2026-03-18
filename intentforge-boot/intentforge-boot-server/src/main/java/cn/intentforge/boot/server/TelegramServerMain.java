@@ -197,7 +197,7 @@ public final class TelegramServerMain {
   private static AutoCloseable startLongPolling(ChannelAccountProfile accountProfile, AiAssetLocalRuntime localRuntime) {
     TelegramLongPollingIngress ingress = new TelegramLongPollingIngress(
         accountProfile,
-        localRuntime.channelInboundProcessor(),
+        localRuntime.channelInboundMessageProcessor(),
         localRuntime.channelManager().openWebhookAdministration(accountProfile).orElse(null));
     ingress.start();
     return ingress;

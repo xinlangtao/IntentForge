@@ -5,9 +5,12 @@ import static cn.intentforge.common.util.ValidationSupport.normalize;
 import cn.intentforge.channel.ChannelAccountProfile;
 import cn.intentforge.channel.ChannelInboundDispatch;
 import cn.intentforge.channel.ChannelInboundMessage;
+import cn.intentforge.channel.ChannelInboundMessageProcessingResult;
+import cn.intentforge.channel.ChannelInboundMessageProcessor;
 import cn.intentforge.channel.ChannelInboundProcessingResult;
 import cn.intentforge.channel.ChannelInboundProcessor;
 import cn.intentforge.channel.ChannelRouteDecision;
+import cn.intentforge.channel.ChannelInboundSource;
 import cn.intentforge.channel.ChannelWebhookRequest;
 import cn.intentforge.session.model.Session;
 import cn.intentforge.session.model.SessionDraft;
@@ -18,18 +21,46 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-final class PersistingChannelInboundProcessor implements ChannelInboundProcessor {
+final class PersistingChannelInboundProcessor implements ChannelInboundProcessor, ChannelInboundMessageProcessor {
   private final ChannelInboundProcessor delegate;
+  private final ChannelInboundMessageProcessor messageDelegate;
   private final SessionManager sessionManager;
 
   PersistingChannelInboundProcessor(ChannelInboundProcessor delegate, SessionManager sessionManager) {
+    this(delegate, delegate instanceof ChannelInboundMessageProcessor channelInboundMessageProcessor
+        ? channelInboundMessageProcessor
+        : null, sessionManager);
+  }
+
+  PersistingChannelInboundProcessor(
+      ChannelInboundProcessor delegate,
+      ChannelInboundMessageProcessor messageDelegate,
+      SessionManager sessionManager
+  ) {
     this.delegate = Objects.requireNonNull(delegate, "delegate must not be null");
+    this.messageDelegate = messageDelegate;
     this.sessionManager = Objects.requireNonNull(sessionManager, "sessionManager must not be null");
   }
 
   @Override
   public ChannelInboundProcessingResult process(ChannelAccountProfile accountProfile, ChannelWebhookRequest request) {
     ChannelInboundProcessingResult result = delegate.process(accountProfile, request);
+    for (ChannelInboundDispatch dispatch : result.dispatches()) {
+      persist(dispatch);
+    }
+    return result;
+  }
+
+  @Override
+  public ChannelInboundMessageProcessingResult process(
+      ChannelAccountProfile accountProfile,
+      ChannelInboundSource source,
+      java.util.List<ChannelInboundMessage> messages
+  ) {
+    if (messageDelegate == null) {
+      throw new IllegalStateException("no inbound message processor delegate available");
+    }
+    ChannelInboundMessageProcessingResult result = messageDelegate.process(accountProfile, source, messages);
     for (ChannelInboundDispatch dispatch : result.dispatches()) {
       persist(dispatch);
     }

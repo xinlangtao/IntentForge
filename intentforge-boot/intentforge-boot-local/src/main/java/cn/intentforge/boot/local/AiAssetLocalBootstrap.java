@@ -3,6 +3,7 @@ package cn.intentforge.boot.local;
 import cn.intentforge.agent.core.AgentGateway;
 import cn.intentforge.agent.core.AgentRunGateway;
 import cn.intentforge.agent.nativejava.NativeCodingAgentFactory;
+import cn.intentforge.channel.ChannelInboundMessageProcessor;
 import cn.intentforge.channel.ChannelInboundProcessor;
 import cn.intentforge.channel.local.inbound.DefaultChannelInboundProcessor;
 import cn.intentforge.channel.local.plugin.DirectoryChannelPluginManager;
@@ -225,9 +226,12 @@ public final class AiAssetLocalBootstrap {
     DirectoryToolPluginManager toolPluginManager = toolPluginManagers.get(defaultToolDescriptor.id());
     ToolGateway toolGateway = runtimeComponents.toolGateway(defaultToolDescriptor.id());
     SessionManager sessionManager = runtimeComponents.sessionManager(defaultSessionDescriptor.id());
-    ChannelInboundProcessor channelInboundProcessor = new PersistingChannelInboundProcessor(
-        DefaultChannelInboundProcessor.createAndLoad(channelManager, classLoader),
+    DefaultChannelInboundProcessor defaultChannelInboundProcessor = DefaultChannelInboundProcessor.createAndLoad(channelManager, classLoader);
+    PersistingChannelInboundProcessor channelInboundProcessor = new PersistingChannelInboundProcessor(
+        defaultChannelInboundProcessor,
+        defaultChannelInboundProcessor,
         sessionManager);
+    ChannelInboundMessageProcessor channelInboundMessageProcessor = channelInboundProcessor;
     providerPluginManager = providerPluginManagers.get(defaultProviderDescriptor.id());
 
     LocalRuntimeComponentResolver runtimeResolver = new LocalRuntimeComponentResolver(
@@ -251,6 +255,7 @@ public final class AiAssetLocalBootstrap {
         runtimeComponents,
         channelManager,
         channelInboundProcessor,
+        channelInboundMessageProcessor,
         channelPluginManager,
         promptManager,
         promptPluginManager,

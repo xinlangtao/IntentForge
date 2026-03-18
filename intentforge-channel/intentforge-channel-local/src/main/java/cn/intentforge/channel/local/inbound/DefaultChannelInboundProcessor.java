@@ -7,8 +7,12 @@ import cn.intentforge.channel.ChannelAccessPolicy;
 import cn.intentforge.channel.ChannelAccountProfile;
 import cn.intentforge.channel.ChannelInboundDispatch;
 import cn.intentforge.channel.ChannelInboundMessage;
+import cn.intentforge.channel.ChannelInboundMessageProcessingResult;
+import cn.intentforge.channel.ChannelInboundMessageProcessor;
 import cn.intentforge.channel.ChannelInboundProcessingResult;
 import cn.intentforge.channel.ChannelInboundProcessor;
+import cn.intentforge.channel.ChannelInboundSource;
+import cn.intentforge.channel.ChannelInboundSourceType;
 import cn.intentforge.channel.ChannelRouteDecision;
 import cn.intentforge.channel.ChannelRouteResolver;
 import cn.intentforge.channel.ChannelType;
@@ -29,7 +33,10 @@ import java.util.ServiceLoader;
  *
  * @since 1.0.0
  */
-public final class DefaultChannelInboundProcessor implements ChannelInboundProcessor {
+public final class DefaultChannelInboundProcessor implements ChannelInboundProcessor, ChannelInboundMessageProcessor {
+  private static final String INBOUND_SOURCE_TYPE = "inboundSourceType";
+  private static final String INBOUND_SOURCE_ATTRIBUTE_PREFIX = "inboundSource.";
+
   private final ChannelManager channelManager;
   private final List<ChannelAccessPolicy> accessPolicies;
   private final List<ChannelRouteResolver> routeResolvers;
@@ -85,15 +92,53 @@ public final class DefaultChannelInboundProcessor implements ChannelInboundProce
     ChannelWebhookHandler webhookHandler = channelManager.openWebhookHandler(accountProfile)
         .orElseThrow(() -> new IllegalStateException("no channel webhook handler available for account " + accountProfile.id()));
     ChannelWebhookResult webhookResult = webhookHandler.handle(request);
+    ChannelInboundMessageProcessingResult messageProcessingResult = process(
+        accountProfile,
+        new ChannelInboundSource(ChannelInboundSourceType.WEBHOOK, Map.of("method", request.method())),
+        webhookResult.messages());
+    return new ChannelInboundProcessingResult(webhookResult.response(), messageProcessingResult.dispatches());
+  }
+
+  @Override
+  public ChannelInboundMessageProcessingResult process(
+      ChannelAccountProfile accountProfile,
+      ChannelInboundSource source,
+      List<ChannelInboundMessage> messages
+  ) {
+    Objects.requireNonNull(accountProfile, "accountProfile must not be null");
+    Objects.requireNonNull(source, "source must not be null");
+    Objects.requireNonNull(messages, "messages must not be null");
     List<ChannelInboundDispatch> dispatches = new ArrayList<>();
-    for (ChannelInboundMessage message : webhookResult.messages()) {
-      ChannelAccessDecision accessDecision = evaluateAccess(message);
+    for (ChannelInboundMessage message : messages) {
+      ChannelInboundMessage messageWithSource = withSourceMetadata(message, source);
+      ChannelAccessDecision accessDecision = evaluateAccess(messageWithSource);
       Optional<ChannelRouteDecision> routeDecision = accessDecision.allowed()
-          ? resolveRoute(message)
+          ? resolveRoute(messageWithSource)
           : Optional.empty();
-      dispatches.add(new ChannelInboundDispatch(message, accessDecision, routeDecision));
+      dispatches.add(new ChannelInboundDispatch(messageWithSource, accessDecision, routeDecision));
     }
-    return new ChannelInboundProcessingResult(webhookResult.response(), dispatches);
+    return new ChannelInboundMessageProcessingResult(source, dispatches);
+  }
+
+  private static ChannelInboundMessage withSourceMetadata(ChannelInboundMessage message, ChannelInboundSource source) {
+    Objects.requireNonNull(message, "message must not be null");
+    Objects.requireNonNull(source, "source must not be null");
+    Map<String, Object> metadata = new LinkedHashMap<>(message.metadata());
+    metadata.put(INBOUND_SOURCE_TYPE, source.type().name());
+    for (Map.Entry<String, Object> entry : source.attributes().entrySet()) {
+      if (entry.getKey() == null || entry.getValue() == null) {
+        continue;
+      }
+      metadata.put(INBOUND_SOURCE_ATTRIBUTE_PREFIX + entry.getKey(), entry.getValue());
+    }
+    return new ChannelInboundMessage(
+        message.messageId(),
+        message.accountId(),
+        message.type(),
+        message.target(),
+        message.sender(),
+        message.text(),
+        Map.copyOf(metadata));
   }
 
   private ChannelAccessDecision evaluateAccess(ChannelInboundMessage message) {
